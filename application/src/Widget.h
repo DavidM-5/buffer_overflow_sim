@@ -27,11 +27,7 @@ namespace application
         SDL_Color m_dragColor;
 
         bool m_isDragging;
-        vector2i m_dragOffset;
-
-
-    private:
-        
+        vector2i m_dragOffset;       
 
     };
     

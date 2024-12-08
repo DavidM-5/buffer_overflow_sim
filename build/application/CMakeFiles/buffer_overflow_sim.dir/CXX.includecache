@@ -34,10 +34,6 @@ TextBlock.h
 Panel.h
 /home/david/buffer_overflow_sim/application/src/Panel.h
 
-/home/david/buffer_overflow_sim/application/src/Panel.cpp
-Panel.h
-/home/david/buffer_overflow_sim/application/src/Panel.h
-
 /home/david/buffer_overflow_sim/application/src/Panel.h
 ../../core/src/config.h
 /home/david/buffer_overflow_sim/core/src/config.h
@@ -64,10 +60,6 @@ unordered_map
 ../../core/src/Texture.h
 /home/david/buffer_overflow_sim/core/src/Texture.h
 
-/home/david/buffer_overflow_sim/application/src/Widget.cpp
-Widget.h
-/home/david/buffer_overflow_sim/application/src/Widget.h
-
 /home/david/buffer_overflow_sim/application/src/Widget.h
 SDL2/SDL.h
 /home/david/buffer_overflow_sim/application/src/SDL2/SDL.h
@@ -77,12 +69,6 @@ SDL2/SDL.h
 /home/david/buffer_overflow_sim/core/src/InputManager.h
 ../../core/src/Renderer.h
 /home/david/buffer_overflow_sim/core/src/Renderer.h
-
-/home/david/buffer_overflow_sim/application/src/main.cpp
-iostream
--
-Application.h
-/home/david/buffer_overflow_sim/application/src/Application.h
 
 /home/david/buffer_overflow_sim/core/src/InputManager.h
 SDL2/SDL.h

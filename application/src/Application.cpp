@@ -1,20 +1,15 @@
 #include "Application.h"
 
-application::Application::Application() : m_window("Attack Simulator", WINDOW_WIDTH, WINODW_HEIGHT),
-                                          widget_asm(WINDOW_WIDTH/2, 0, WINDOW_WIDTH/2, WINODW_HEIGHT, {0x60, 0x5f, 0x5f, 0xff}),
+application::Application::Application() : m_window("Buffer Overflow Simulator", WINDOW_WIDTH, WINODW_HEIGHT),
+                                          m_codeWidget(2*WINDOW_WIDTH/3-100, 0, WINDOW_WIDTH/3+100, WINODW_HEIGHT, {0x60, 0x5f, 0x5f, 0xff}),
+                                          m_stackWidget(0, 0, 2*WINDOW_WIDTH/3-100, 2*WINODW_HEIGHT/3, {0x60, 0x5f, 0xff, 0xff}),
+                                          m_consoleWidget(0, 2*WINODW_HEIGHT/3, 2*WINDOW_WIDTH/3-100, WINODW_HEIGHT/3, {0x60, 0xff, 0x5f, 0xff}),
                                           txtb(400)
 {
     // temporary
-    TTF_Init();
-    font = TTF_OpenFont("resources/fonts/Arial.ttf", 30); // temporary
-    if (font == nullptr)
-        std::cout << "font not loaded: " << TTF_GetError() << std::endl;
-    // temporary end
-
-    /*
     std::string str = "Hello, world!\nDoes this work? awdawdawdjaoiwjfijawf awfjawfjpaiwnf awnfawjofijaoiegnj rgjarehjoaidrjohi asjrh ojtenohsnstrh st.bernard, jhonathan";
     txtb.setText(str);
-    */
+    // temporary
 }
 
 bool application::Application::init()
@@ -44,8 +39,8 @@ void application::Application::run()
             }
             // temporary end
         }
-        widget_asm.handleEvents(inptmng); // temporary
-        widget_asm.handleWindowResize(WINDOW_WIDTH/2, 0, 0.5, 1);
+        m_codeWidget.handleEvents(inptmng); // temporary
+        //m_codeWidget.handleWindowResize(WINDOW_WIDTH/2, 0, 0.5, 1); // temporary?
         inptmng.update(); // temporary
 
 
@@ -60,7 +55,9 @@ void application::Application::render() // temporary implementation
 {
     m_renderer.clear({0, 0, 0, 255});
 
-    widget_asm.render(m_renderer);
+    m_codeWidget.render(m_renderer);
+    m_stackWidget.render(m_renderer);
+    m_consoleWidget.render(m_renderer);
 
    //  txtb.render(400, 200, m_renderer);
 

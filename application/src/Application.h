@@ -32,7 +32,11 @@ namespace application
 
         core::InputManager inptmng; // temporary
         TTF_Font* font; // temporary
-        application::Widget widget_asm; // temporary
+
+        application::Widget m_codeWidget; // temporary?
+        application::Widget m_stackWidget; // temporary?
+        application::Widget m_consoleWidget; // temporary?
+        
         application::TextBlock txtb; // temporary
 
 
