@@ -4,7 +4,7 @@ application::TextBlock::TextBlock(int lineWidth) : m_lineWidth(lineWidth), m_def
 {
     TTF_Init();
 
-    m_font = TTF_OpenFont("resources/fonts/Arial.ttf", 14);
+    m_font = TTF_OpenFont("resources/fonts/Arial.ttf", 16);
     if (m_font == nullptr) {
         std::cerr << "Font load error: " << TTF_GetError() << std::endl;
     }

@@ -1,6 +1,6 @@
 #pragma once
 
-extern int WINODW_WIDTH;
+extern int WINDOW_WIDTH;
 extern int WINODW_HEIGHT;
 
 

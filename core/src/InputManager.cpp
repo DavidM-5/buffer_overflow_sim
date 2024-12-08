@@ -1,6 +1,6 @@
 #include "InputManager.h"
 
-core::InputManager::InputManager() : m_mousePosition({WINODW_WIDTH / 2, WINODW_HEIGHT / 2})
+core::InputManager::InputManager() : m_mousePosition({WINDOW_WIDTH / 2, WINODW_HEIGHT / 2})
 {
     // initialize key states to false
     for (int i = 0; i < SDL_NUM_SCANCODES; ++i) {

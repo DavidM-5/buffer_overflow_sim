@@ -1,6 +1,5 @@
 #include <iostream>
-
-#include "../../application/src/Application.h"
+#include "Application.h"
 
 int main(int argc, char* argv[]) {
     

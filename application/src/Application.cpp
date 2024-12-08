@@ -1,6 +1,8 @@
 #include "Application.h"
 
-application::Application::Application() : m_window("Attack Simulator", WINODW_WIDTH, WINODW_HEIGHT), panelasm(WINODW_WIDTH/2, 0, WINODW_WIDTH/2, WINODW_HEIGHT), txtb(400)
+application::Application::Application() : m_window("Attack Simulator", WINDOW_WIDTH, WINODW_HEIGHT),
+                                          widget_asm(WINDOW_WIDTH/2, 0, WINDOW_WIDTH/2, WINODW_HEIGHT, {0x60, 0x5f, 0x5f, 0xff}),
+                                          txtb(400)
 {
     // temporary
     TTF_Init();
@@ -9,8 +11,10 @@ application::Application::Application() : m_window("Attack Simulator", WINODW_WI
         std::cout << "font not loaded: " << TTF_GetError() << std::endl;
     // temporary end
 
+    /*
     std::string str = "Hello, world!\nDoes this work? awdawdawdjaoiwjfijawf awfjawfjpaiwnf awnfawjofijaoiegnj rgjarehjoaidrjohi asjrh ojtenohsnstrh st.bernard, jhonathan";
     txtb.setText(str);
+    */
 }
 
 bool application::Application::init()
@@ -40,7 +44,8 @@ void application::Application::run()
             }
             // temporary end
         }
-        panelasm.handleEvents(inptmng); // temporary
+        widget_asm.handleEvents(inptmng); // temporary
+        widget_asm.handleWindowResize(WINDOW_WIDTH/2, 0, 0.5, 1);
         inptmng.update(); // temporary
 
 
@@ -55,9 +60,9 @@ void application::Application::render() // temporary implementation
 {
     m_renderer.clear({0, 0, 0, 255});
 
-    panelasm.render(m_renderer);
+    widget_asm.render(m_renderer);
 
-    txtb.render(400, 200, m_renderer);
+   //  txtb.render(400, 200, m_renderer);
 
     m_renderer.present();
 }

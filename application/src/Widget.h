@@ -12,10 +12,11 @@ namespace application
     class Widget
     {
     public:
-        Widget(int posX = 0, int posY = 0, int w = 100, int h = 100);
+        Widget(int posX = 0, int posY = 0, int w = 100, int h = 100, SDL_Color color = {255, 255, 255, 255});
         virtual ~Widget() = default;
     
         virtual void handleEvents(const core::InputManager& inputMngr);
+        virtual void handleWindowResize(int posX, int posY, float windowScaleX, float windowScaleY);
         virtual void render(core::Renderer& renderer);
 
     protected:

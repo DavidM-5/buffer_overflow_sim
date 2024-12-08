@@ -1,8 +1,8 @@
 #include "Widget.h"
 
-application::Widget::Widget(int posX, int posY, int w, int h) : 
-                            m_position({posX, posY, w, h}), m_dragArea({posX, posY, w, 15}),
-                            m_mainColor({255, 255, 255, 255}), m_dragColor({0, 255, 255, 255}),
+application::Widget::Widget(int posX, int posY, int w, int h, SDL_Color color) : 
+                            m_position({posX, posY, w, h}), m_dragArea({0, 0, 0, 0}),
+                            m_mainColor(color), m_dragColor({0, 255, 255, 255}),
                             m_isDragging(false), m_dragOffset({0, 0})
 {
 }
@@ -38,6 +38,14 @@ void application::Widget::handleEvents(const core::InputManager &inputMngr)
         m_dragArea.x = m_position.x;
         m_dragArea.y = m_position.y;
     }
+}
+
+void application::Widget::handleWindowResize(int posX, int posY, float windowScaleX, float windowScaleY)
+{
+    m_position.x = posX;
+    m_position.y = posY;
+    if (windowScaleX > 0) m_position.w = WINDOW_WIDTH * windowScaleX;
+    if (windowScaleY > 0) m_position.h = WINODW_HEIGHT * windowScaleY;
 }
 
 void application::Widget::render(core::Renderer &renderer)
