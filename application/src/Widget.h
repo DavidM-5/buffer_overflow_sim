@@ -15,19 +15,13 @@ namespace application
         Widget(int posX = 0, int posY = 0, int w = 100, int h = 100, SDL_Color color = {255, 255, 255, 255});
         virtual ~Widget() = default;
     
-        virtual void handleEvents(const core::InputManager& inputMngr);
-        virtual void handleWindowResize(int posX, int posY, float windowScaleX, float windowScaleY);
+        virtual void handleEvents(const core::InputManager& inputMngr) = 0;
         virtual void render(core::Renderer& renderer);
 
     protected:
-        SDL_Rect m_position;
-        SDL_Rect m_dragArea;
+        SDL_Rect m_transform;
 
         SDL_Color m_mainColor;
-        SDL_Color m_dragColor;
-
-        bool m_isDragging;
-        vector2i m_dragOffset;       
 
     };
     

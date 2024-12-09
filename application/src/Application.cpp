@@ -39,9 +39,13 @@ void application::Application::run()
             }
             // temporary end
         }
-        m_codeWidget.handleEvents(inptmng); // temporary
-        //m_codeWidget.handleWindowResize(WINDOW_WIDTH/2, 0, 0.5, 1); // temporary?
+
         inptmng.update(); // temporary
+
+        m_codeWidget.handleEvents(inptmng); // temporary
+        m_stackWidget.handleEvents(inptmng); // temporary
+        m_consoleWidget.handleEvents(inptmng); // temporary
+        //m_codeWidget.handleWindowResize(WINDOW_WIDTH/2, 0, 0.5, 1); // temporary?
 
 
         Application::update();

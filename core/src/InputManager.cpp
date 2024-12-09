@@ -1,6 +1,7 @@
 #include "InputManager.h"
 
-core::InputManager::InputManager() : m_mousePosition({WINDOW_WIDTH / 2, WINODW_HEIGHT / 2})
+core::InputManager::InputManager() : m_mousePosition({WINDOW_WIDTH / 2, WINODW_HEIGHT / 2}),
+                                     m_prevMousePosition({WINDOW_WIDTH / 2, WINODW_HEIGHT / 2})
 {
     // initialize key states to false
     for (int i = 0; i < SDL_NUM_SCANCODES; ++i) {
@@ -15,6 +16,8 @@ core::InputManager::InputManager() : m_mousePosition({WINDOW_WIDTH / 2, WINODW_H
 
 void core::InputManager::update()
 {
+    m_prevMousePosition = m_mousePosition;
+
     // update keyboard keys statess
     const uint8_t* currentKeyStates = SDL_GetKeyboardState(nullptr);
     for (int i = 0; i < SDL_NUM_SCANCODES; ++i) {
@@ -73,4 +76,12 @@ std::string core::InputManager::getPressedKey(SDL_Event& event)
     }
 
     return "";  // Return an empty string if no key is pressed
+}
+
+vector2i core::InputManager::getMousePosDelta() const
+{
+    int x = m_mousePosition.x - m_prevMousePosition.x;
+    int y = m_mousePosition.y - m_prevMousePosition.y;
+
+    return vector2i{x, y};
 }

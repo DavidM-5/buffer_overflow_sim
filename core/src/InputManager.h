@@ -22,12 +22,15 @@ namespace core
 
         vector2i getMousePosition() const { return m_mousePosition; }
         std::string getPressedKey(SDL_Event& event);
+
+        vector2i getMousePosDelta() const;
     
     private:
         bool m_keyStates[SDL_NUM_SCANCODES];
         bool m_mouseButtons[MOUSE_BUTTON_TOTAL];
         
         vector2i m_mousePosition;
+        vector2i m_prevMousePosition;
 
     };
 

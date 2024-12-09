@@ -34,9 +34,19 @@ TextBlock.h
 Panel.h
 /home/david/buffer_overflow_sim/application/src/Panel.h
 
+/home/david/buffer_overflow_sim/application/src/Panel.cpp
+Panel.h
 /home/david/buffer_overflow_sim/application/src/Panel.h
+
+/home/david/buffer_overflow_sim/application/src/Panel.h
+algorithm
+-
+iostream
+-
 ../../core/src/config.h
 /home/david/buffer_overflow_sim/core/src/config.h
+../../core/src/Renderer.h
+/home/david/buffer_overflow_sim/core/src/Renderer.h
 Widget.h
 /home/david/buffer_overflow_sim/application/src/Widget.h
 
@@ -69,6 +79,12 @@ SDL2/SDL.h
 /home/david/buffer_overflow_sim/core/src/InputManager.h
 ../../core/src/Renderer.h
 /home/david/buffer_overflow_sim/core/src/Renderer.h
+
+/home/david/buffer_overflow_sim/application/src/main.cpp
+iostream
+-
+Application.h
+/home/david/buffer_overflow_sim/application/src/Application.h
 
 /home/david/buffer_overflow_sim/core/src/InputManager.h
 SDL2/SDL.h
