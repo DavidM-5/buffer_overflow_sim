@@ -13,11 +13,12 @@ namespace application
     {
     public:
         Panel(int posX = 0, int posY = 0, int w = 100, int h = 100, SDL_Color color = {255, 255, 255, 255});
-        ~Panel() = default;
+        ~Panel();
 
         void handleEvents(const core::InputManager& inputMngr);
 
         bool isPointInBorder(const vector2i& point);
+        bool isPointInPanel(const vector2i& point);
         void setActive(bool active) { m_isActive = active; }
         static Panel* getActivePanel() { return s_activePanel; }
     

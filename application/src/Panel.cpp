@@ -10,6 +10,13 @@ application::Panel::Panel(int posX, int posY, int w, int h, SDL_Color color) :
 {
 }
 
+application::Panel::~Panel()
+{
+    if (m_isActive) {
+        s_activePanel = nullptr;
+    }
+}
+
 void application::Panel::handleEvents(const core::InputManager &inputMngr)
 {
     vector2i mousePos = inputMngr.getMousePosition();
@@ -37,10 +44,7 @@ void application::Panel::handleEvents(const core::InputManager &inputMngr)
 
 bool application::Panel::isPointInBorder(const vector2i &point)
 {
-    bool inXRange = point.x >= m_transform.x && point.x <= m_transform.x + m_transform.w;
-    bool inYRange = point.y >= m_transform.y && point.y <= m_transform.y + m_transform.h;
-    
-    if (!inXRange || !inYRange) return false;
+   if (!isPointInPanel(point)) return false;
     
     // Check if point is in any border area
     m_isResizingLeft = point.x <= m_transform.x + m_BORDER_THICKNESS;
@@ -49,6 +53,12 @@ bool application::Panel::isPointInBorder(const vector2i &point)
     m_isResizingBottom = point.y >= m_transform.y + m_transform.h - m_BORDER_THICKNESS;
     
     return m_isResizingLeft || m_isResizingRight || m_isResizingTop || m_isResizingBottom;
+}
+
+bool application::Panel::isPointInPanel(const vector2i &point)
+{
+    return point.x >= m_transform.x && point.x <= m_transform.x + m_transform.w &&
+           point.y >= m_transform.y && point.y <= m_transform.y + m_transform.h;
 }
 
 void application::Panel::resize(const core::InputManager &inputMngr)

@@ -1,9 +1,11 @@
 #pragma once
 
+#include <vector>
 #include <memory>
 #include <string>
 #include <iostream>
 
+#include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h> // temporary
 
 #include "../../core/src/config.h"
@@ -33,16 +35,18 @@ namespace application
         core::InputManager inptmng; // temporary
         TTF_Font* font; // temporary
 
-        application::Panel m_codeWidget; // temporary?
-        application::Panel m_stackWidget; // temporary?
-        application::Panel m_consoleWidget; // temporary?
+
+        std::vector<std::unique_ptr<application::Panel>> m_panels;
+
         
         application::TextBlock txtb; // temporary
 
 
-        void update() {}; // not implemented
+    private:
+        void update(); // not implemented
         void render(); // temp implementation
 
+        void initPanels();
     };
 
 } // namespace application

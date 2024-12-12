@@ -1,10 +1,6 @@
 #include "Application.h"
 
-application::Application::Application() : m_window("Buffer Overflow Simulator", WINDOW_WIDTH, WINODW_HEIGHT),
-                                          m_codeWidget(2*WINDOW_WIDTH/3-100, 0, WINDOW_WIDTH/3+100, WINODW_HEIGHT, {0x60, 0x5f, 0x5f, 0xff}),
-                                          m_stackWidget(0, 0, 2*WINDOW_WIDTH/3-100, 2*WINODW_HEIGHT/3, {0x60, 0x5f, 0xff, 0xff}),
-                                          m_consoleWidget(0, 2*WINODW_HEIGHT/3, 2*WINDOW_WIDTH/3-100, WINODW_HEIGHT/3, {0x60, 0xff, 0x5f, 0xff}),
-                                          txtb(400)
+application::Application::Application() : m_window("Buffer Overflow Simulator", WINDOW_WIDTH, WINODW_HEIGHT), txtb(400)
 {
     // temporary
     std::string str = "Hello, world!\nDoes this work? awdawdawdjaoiwjfijawf awfjawfjpaiwnf awnfawjofijaoiegnj rgjarehjoaidrjohi asjrh ojtenohsnstrh st.bernard, jhonathan";
@@ -17,6 +13,8 @@ bool application::Application::init()
     if (!m_window.init()) return false;
 
     if (!m_window.initRenderer(&m_renderer)) return false;
+
+    initPanels();
 
     return true;
 }
@@ -42,9 +40,7 @@ void application::Application::run()
 
         inptmng.update(); // temporary
 
-        m_codeWidget.handleEvents(inptmng); // temporary
-        m_stackWidget.handleEvents(inptmng); // temporary
-        m_consoleWidget.handleEvents(inptmng); // temporary
+
         //m_codeWidget.handleWindowResize(WINDOW_WIDTH/2, 0, 0.5, 1); // temporary?
 
 
@@ -55,15 +51,54 @@ void application::Application::run()
     
 }
 
+void application::Application::update()
+{
+    for (const auto& panel : m_panels) {
+        panel->handleEvents(inptmng);
+    } 
+}
+
 void application::Application::render() // temporary implementation
 {
     m_renderer.clear({0, 0, 0, 255});
 
-    m_codeWidget.render(m_renderer);
-    m_stackWidget.render(m_renderer);
-    m_consoleWidget.render(m_renderer);
+    // the selected panel will be moved to the end, if its not already
+    if (application::Panel::getActivePanel() != m_panels[m_panels.size()-1].get()) {
+        for (size_t i = 0; i < m_panels.size(); ++i) {
+            if (m_panels[i].get() == application::Panel::getActivePanel()) {
+                std::rotate(m_panels.begin() + i, m_panels.begin() + i + 1, m_panels.end());
+                break;
+            }
+        }
+    }
+
+    // render panels
+    for (const auto& panel : m_panels) {
+        panel->render(m_renderer);
+    }
+
 
    //  txtb.render(400, 200, m_renderer);
 
     m_renderer.present();
+}
+
+void application::Application::initPanels()
+{
+    // code panel
+    m_panels.emplace_back(
+        std::make_unique<application::Panel>(2*WINDOW_WIDTH/3-100, 0, WINDOW_WIDTH/3+100, WINODW_HEIGHT, SDL_Color{0x60, 0x5f, 0x5f, 0xff})
+    );
+    
+    // stack panel
+    m_panels.emplace_back(
+        std::make_unique<application::Panel>(0, 0, 2*WINDOW_WIDTH/3-100, 2*WINODW_HEIGHT/3, SDL_Color{0x60, 0x5f, 0xff, 0xff})
+    );
+
+    // console panel
+    m_panels.emplace_back(
+        std::make_unique<application::Panel>(0, 2*WINODW_HEIGHT/3, 2*WINDOW_WIDTH/3-100, WINODW_HEIGHT/3, SDL_Color{0x60, 0xff, 0x5f, 0xff})
+    );
+
+    
 }

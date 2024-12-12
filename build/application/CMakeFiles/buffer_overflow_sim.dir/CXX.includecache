@@ -6,34 +6,6 @@
 
 #IncludeRegexTransform: 
 
-/home/david/buffer_overflow_sim/application/src/Application.cpp
-Application.h
-/home/david/buffer_overflow_sim/application/src/Application.h
-
-/home/david/buffer_overflow_sim/application/src/Application.h
-memory
--
-string
--
-iostream
--
-SDL2/SDL_ttf.h
--
-../../core/src/config.h
-/home/david/buffer_overflow_sim/core/src/config.h
-../../core/src/Window.h
-/home/david/buffer_overflow_sim/core/src/Window.h
-../../core/src/Renderer.h
-/home/david/buffer_overflow_sim/core/src/Renderer.h
-../../core/src/Texture.h
-/home/david/buffer_overflow_sim/core/src/Texture.h
-../../core/src/InputManager.h
-/home/david/buffer_overflow_sim/core/src/InputManager.h
-TextBlock.h
-/home/david/buffer_overflow_sim/application/src/TextBlock.h
-Panel.h
-/home/david/buffer_overflow_sim/application/src/Panel.h
-
 /home/david/buffer_overflow_sim/application/src/Panel.cpp
 Panel.h
 /home/david/buffer_overflow_sim/application/src/Panel.h
@@ -50,26 +22,6 @@ iostream
 Widget.h
 /home/david/buffer_overflow_sim/application/src/Widget.h
 
-/home/david/buffer_overflow_sim/application/src/TextBlock.h
-SDL2/SDL.h
--
-SDL2/SDL_ttf.h
--
-iostream
--
-string
--
-sstream
--
-vector
--
-unordered_map
--
-../../core/src/Renderer.h
-/home/david/buffer_overflow_sim/core/src/Renderer.h
-../../core/src/Texture.h
-/home/david/buffer_overflow_sim/core/src/Texture.h
-
 /home/david/buffer_overflow_sim/application/src/Widget.h
 SDL2/SDL.h
 /home/david/buffer_overflow_sim/application/src/SDL2/SDL.h
@@ -79,12 +31,6 @@ SDL2/SDL.h
 /home/david/buffer_overflow_sim/core/src/InputManager.h
 ../../core/src/Renderer.h
 /home/david/buffer_overflow_sim/core/src/Renderer.h
-
-/home/david/buffer_overflow_sim/application/src/main.cpp
-iostream
--
-Application.h
-/home/david/buffer_overflow_sim/application/src/Application.h
 
 /home/david/buffer_overflow_sim/core/src/InputManager.h
 SDL2/SDL.h
@@ -109,16 +55,6 @@ SDL2/SDL_ttf.h
 -
 string
 -
-Renderer.h
-/home/david/buffer_overflow_sim/core/src/Renderer.h
-
-/home/david/buffer_overflow_sim/core/src/Window.h
-SDL2/SDL.h
--
-iostream
--
-config.h
-/home/david/buffer_overflow_sim/core/src/config.h
 Renderer.h
 /home/david/buffer_overflow_sim/core/src/Renderer.h
 
