@@ -44,6 +44,9 @@
 			[
 				{
 					"fragment" : "-g  "
+				},
+				{
+					"fragment" : "-std=gnu++17"
 				}
 			],
 			"includes" : 

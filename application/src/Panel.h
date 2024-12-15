@@ -1,5 +1,8 @@
 #pragma once
 
+#include <SDL2/SDL.h>
+#include <array>
+#include <optional>
 #include <algorithm> 
 #include <iostream>
 #include "../../core/src/config.h"
@@ -13,34 +16,30 @@ namespace application
     {
     public:
         Panel(int posX = 0, int posY = 0, int w = 100, int h = 100, SDL_Color color = {255, 255, 255, 255});
-        ~Panel();
+        ~Panel() = default;
 
         void handleEvents(const core::InputManager& inputMngr);
+        void render(core::Renderer& renderer);
 
-        bool isPointInBorder(const vector2i& point);
-        bool isPointInPanel(const vector2i& point);
-        void setActive(bool active) { m_isActive = active; }
+        void setResizeBorders(const SDL_Rect* topBorder, const SDL_Rect* rightBorder, const SDL_Rect* bottomBorder, const SDL_Rect* leftBorder);
+
         static Panel* getActivePanel() { return s_activePanel; }
     
     private:
         // the scale is between 0-1 (percent) of the screen width/height
         float m_scaleX, m_scaleY;
         
-        const int m_BORDER_THICKNESS;
+        // [0]-top, [1]-right, [2]-bottom, [3]-left
+        std::array<std::optional<SDL_Rect>, 4> m_borders;
 
         bool m_isResizing;
-        
-        // Track which borders are being resized
-        bool m_isResizingLeft = false;
-        bool m_isResizingRight = false;
-        bool m_isResizingTop = false;
-        bool m_isResizingBottom = false;
-
-        bool m_isActive; // Track if this panel is the one being interacted with
+        int m_bordersResizeFlags; // 1000-top | 0100-right | 0010-bottom | 0001-left
         static Panel* s_activePanel; // Track which panel is currently active
 
     private:
         void resize(const core::InputManager& inputMngr);
+        void updateBorderPosition(vector2i mouseDelta);
+        bool isPointInRect(const vector2i& point, const SDL_Rect* rect);
 
     };
 

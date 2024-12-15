@@ -1,47 +1,47 @@
 [
 {
   "directory": "/home/david/buffer_overflow_sim/build/core",
-  "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/core/src -I/usr/include/SDL2  -g   -o CMakeFiles/core.dir/src/Window.cpp.o -c /home/david/buffer_overflow_sim/core/src/Window.cpp",
+  "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/core/src -I/usr/include/SDL2  -g   -std=gnu++17 -o CMakeFiles/core.dir/src/Window.cpp.o -c /home/david/buffer_overflow_sim/core/src/Window.cpp",
   "file": "/home/david/buffer_overflow_sim/core/src/Window.cpp"
 },
 {
   "directory": "/home/david/buffer_overflow_sim/build/core",
-  "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/core/src -I/usr/include/SDL2  -g   -o CMakeFiles/core.dir/src/Renderer.cpp.o -c /home/david/buffer_overflow_sim/core/src/Renderer.cpp",
+  "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/core/src -I/usr/include/SDL2  -g   -std=gnu++17 -o CMakeFiles/core.dir/src/Renderer.cpp.o -c /home/david/buffer_overflow_sim/core/src/Renderer.cpp",
   "file": "/home/david/buffer_overflow_sim/core/src/Renderer.cpp"
 },
 {
   "directory": "/home/david/buffer_overflow_sim/build/core",
-  "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/core/src -I/usr/include/SDL2  -g   -o CMakeFiles/core.dir/src/InputManager.cpp.o -c /home/david/buffer_overflow_sim/core/src/InputManager.cpp",
+  "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/core/src -I/usr/include/SDL2  -g   -std=gnu++17 -o CMakeFiles/core.dir/src/InputManager.cpp.o -c /home/david/buffer_overflow_sim/core/src/InputManager.cpp",
   "file": "/home/david/buffer_overflow_sim/core/src/InputManager.cpp"
 },
 {
   "directory": "/home/david/buffer_overflow_sim/build/core",
-  "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/core/src -I/usr/include/SDL2  -g   -o CMakeFiles/core.dir/src/Texture.cpp.o -c /home/david/buffer_overflow_sim/core/src/Texture.cpp",
+  "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/core/src -I/usr/include/SDL2  -g   -std=gnu++17 -o CMakeFiles/core.dir/src/Texture.cpp.o -c /home/david/buffer_overflow_sim/core/src/Texture.cpp",
   "file": "/home/david/buffer_overflow_sim/core/src/Texture.cpp"
 },
 {
   "directory": "/home/david/buffer_overflow_sim/build/application",
-  "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/application/src -I/usr/include/SDL2 -I/home/david/buffer_overflow_sim/core/src  -g   -o CMakeFiles/buffer_overflow_sim.dir/src/main.cpp.o -c /home/david/buffer_overflow_sim/application/src/main.cpp",
+  "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/application/src -I/usr/include/SDL2 -I/home/david/buffer_overflow_sim/core/src  -g   -std=gnu++17 -o CMakeFiles/buffer_overflow_sim.dir/src/main.cpp.o -c /home/david/buffer_overflow_sim/application/src/main.cpp",
   "file": "/home/david/buffer_overflow_sim/application/src/main.cpp"
 },
 {
   "directory": "/home/david/buffer_overflow_sim/build/application",
-  "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/application/src -I/usr/include/SDL2 -I/home/david/buffer_overflow_sim/core/src  -g   -o CMakeFiles/buffer_overflow_sim.dir/src/Application.cpp.o -c /home/david/buffer_overflow_sim/application/src/Application.cpp",
+  "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/application/src -I/usr/include/SDL2 -I/home/david/buffer_overflow_sim/core/src  -g   -std=gnu++17 -o CMakeFiles/buffer_overflow_sim.dir/src/Application.cpp.o -c /home/david/buffer_overflow_sim/application/src/Application.cpp",
   "file": "/home/david/buffer_overflow_sim/application/src/Application.cpp"
 },
 {
   "directory": "/home/david/buffer_overflow_sim/build/application",
-  "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/application/src -I/usr/include/SDL2 -I/home/david/buffer_overflow_sim/core/src  -g   -o CMakeFiles/buffer_overflow_sim.dir/src/Widget.cpp.o -c /home/david/buffer_overflow_sim/application/src/Widget.cpp",
+  "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/application/src -I/usr/include/SDL2 -I/home/david/buffer_overflow_sim/core/src  -g   -std=gnu++17 -o CMakeFiles/buffer_overflow_sim.dir/src/Widget.cpp.o -c /home/david/buffer_overflow_sim/application/src/Widget.cpp",
   "file": "/home/david/buffer_overflow_sim/application/src/Widget.cpp"
 },
 {
   "directory": "/home/david/buffer_overflow_sim/build/application",
-  "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/application/src -I/usr/include/SDL2 -I/home/david/buffer_overflow_sim/core/src  -g   -o CMakeFiles/buffer_overflow_sim.dir/src/Panel.cpp.o -c /home/david/buffer_overflow_sim/application/src/Panel.cpp",
+  "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/application/src -I/usr/include/SDL2 -I/home/david/buffer_overflow_sim/core/src  -g   -std=gnu++17 -o CMakeFiles/buffer_overflow_sim.dir/src/Panel.cpp.o -c /home/david/buffer_overflow_sim/application/src/Panel.cpp",
   "file": "/home/david/buffer_overflow_sim/application/src/Panel.cpp"
 },
 {
   "directory": "/home/david/buffer_overflow_sim/build/application",
-  "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/application/src -I/usr/include/SDL2 -I/home/david/buffer_overflow_sim/core/src  -g   -o CMakeFiles/buffer_overflow_sim.dir/src/TextBlock.cpp.o -c /home/david/buffer_overflow_sim/application/src/TextBlock.cpp",
+  "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/application/src -I/usr/include/SDL2 -I/home/david/buffer_overflow_sim/core/src  -g   -std=gnu++17 -o CMakeFiles/buffer_overflow_sim.dir/src/TextBlock.cpp.o -c /home/david/buffer_overflow_sim/application/src/TextBlock.cpp",
   "file": "/home/david/buffer_overflow_sim/application/src/TextBlock.cpp"
 }
 ]

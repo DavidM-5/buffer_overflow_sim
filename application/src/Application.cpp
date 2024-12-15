@@ -85,20 +85,27 @@ void application::Application::render() // temporary implementation
 
 void application::Application::initPanels()
 {
+    SDL_Rect codeBottomBorder{0, WINODW_HEIGHT - 10, WINDOW_WIDTH, 10};
+    SDL_Rect codeLeftBorder{2*WINDOW_WIDTH/3-105, 0, 10, WINODW_HEIGHT};
+    SDL_Rect consoleTopBorder{0, 2*WINODW_HEIGHT/3-5, 2*WINDOW_WIDTH/3-100, 10};
+
     // code panel
     m_panels.emplace_back(
         std::make_unique<application::Panel>(2*WINDOW_WIDTH/3-100, 0, WINDOW_WIDTH/3+100, WINODW_HEIGHT, SDL_Color{0x60, 0x5f, 0x5f, 0xff})
     );
+    m_panels[0]->setResizeBorders(nullptr, nullptr, &codeBottomBorder, &codeLeftBorder);
     
     // stack panel
     m_panels.emplace_back(
         std::make_unique<application::Panel>(0, 0, 2*WINDOW_WIDTH/3-100, 2*WINODW_HEIGHT/3, SDL_Color{0x60, 0x5f, 0xff, 0xff})
     );
+    m_panels[1]->setResizeBorders(nullptr, &codeLeftBorder, &consoleTopBorder, nullptr);
 
     // console panel
     m_panels.emplace_back(
         std::make_unique<application::Panel>(0, 2*WINODW_HEIGHT/3, 2*WINDOW_WIDTH/3-100, WINODW_HEIGHT/3, SDL_Color{0x60, 0xff, 0x5f, 0xff})
     );
+    m_panels[2]->setResizeBorders(&consoleTopBorder, &codeLeftBorder, &codeBottomBorder, nullptr);
 
     
 }
