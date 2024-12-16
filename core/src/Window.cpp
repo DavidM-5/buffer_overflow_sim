@@ -1,7 +1,7 @@
 #include "Window.h"
 
 int WINDOW_WIDTH = 1080;
-int WINODW_HEIGHT = 720;
+int WINDOW_HEIGHT = 720;
 
 
 core::Window::Window(const std::string& title, int width, int height) :
@@ -61,7 +61,7 @@ void core::Window::handleEvents(SDL_Event& event)
     else if (event.type == SDL_WINDOWEVENT) {
         if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
             WINDOW_WIDTH = event.window.data1; // updated width
-            WINODW_HEIGHT = event.window.data2; // updated height
+            WINDOW_HEIGHT = event.window.data2; // updated height
 
         }
     }

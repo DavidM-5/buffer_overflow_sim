@@ -9,3 +9,11 @@ void application::Widget::render(core::Renderer &renderer)
 {
     renderer.drawRect(m_transform, m_mainColor);
 }
+
+void application::Widget::addDeltaTransform(int x, int y, int w, int h)
+{
+    m_transform.x += x;
+    m_transform.y += y;
+    m_transform.w += w;
+    m_transform.h += h;
+}

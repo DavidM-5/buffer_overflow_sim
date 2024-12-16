@@ -3,6 +3,7 @@
 
 application/CMakeFiles/buffer_overflow_sim.dir/src/Application.cpp.o: ../application/src/Application.cpp
 application/CMakeFiles/buffer_overflow_sim.dir/src/Application.cpp.o: ../application/src/Application.h
+application/CMakeFiles/buffer_overflow_sim.dir/src/Application.cpp.o: ../application/src/Border.h
 application/CMakeFiles/buffer_overflow_sim.dir/src/Application.cpp.o: ../application/src/Panel.h
 application/CMakeFiles/buffer_overflow_sim.dir/src/Application.cpp.o: ../application/src/TextBlock.h
 application/CMakeFiles/buffer_overflow_sim.dir/src/Application.cpp.o: ../application/src/Widget.h
@@ -11,6 +12,14 @@ application/CMakeFiles/buffer_overflow_sim.dir/src/Application.cpp.o: ../core/sr
 application/CMakeFiles/buffer_overflow_sim.dir/src/Application.cpp.o: ../core/src/Texture.h
 application/CMakeFiles/buffer_overflow_sim.dir/src/Application.cpp.o: ../core/src/Window.h
 application/CMakeFiles/buffer_overflow_sim.dir/src/Application.cpp.o: ../core/src/config.h
+
+application/CMakeFiles/buffer_overflow_sim.dir/src/Border.cpp.o: ../application/src/Border.cpp
+application/CMakeFiles/buffer_overflow_sim.dir/src/Border.cpp.o: ../application/src/Border.h
+application/CMakeFiles/buffer_overflow_sim.dir/src/Border.cpp.o: ../application/src/Widget.h
+application/CMakeFiles/buffer_overflow_sim.dir/src/Border.cpp.o: ../core/src/InputManager.h
+application/CMakeFiles/buffer_overflow_sim.dir/src/Border.cpp.o: ../core/src/Renderer.h
+application/CMakeFiles/buffer_overflow_sim.dir/src/Border.cpp.o: ../core/src/Texture.h
+application/CMakeFiles/buffer_overflow_sim.dir/src/Border.cpp.o: ../core/src/config.h
 
 application/CMakeFiles/buffer_overflow_sim.dir/src/Panel.cpp.o: ../application/src/Panel.cpp
 application/CMakeFiles/buffer_overflow_sim.dir/src/Panel.cpp.o: ../application/src/Panel.h
@@ -33,6 +42,7 @@ application/CMakeFiles/buffer_overflow_sim.dir/src/Widget.cpp.o: ../core/src/Tex
 application/CMakeFiles/buffer_overflow_sim.dir/src/Widget.cpp.o: ../core/src/config.h
 
 application/CMakeFiles/buffer_overflow_sim.dir/src/main.cpp.o: ../application/src/Application.h
+application/CMakeFiles/buffer_overflow_sim.dir/src/main.cpp.o: ../application/src/Border.h
 application/CMakeFiles/buffer_overflow_sim.dir/src/main.cpp.o: ../application/src/Panel.h
 application/CMakeFiles/buffer_overflow_sim.dir/src/main.cpp.o: ../application/src/TextBlock.h
 application/CMakeFiles/buffer_overflow_sim.dir/src/main.cpp.o: ../application/src/Widget.h

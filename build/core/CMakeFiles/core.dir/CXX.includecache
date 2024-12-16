@@ -6,17 +6,23 @@
 
 #IncludeRegexTransform: 
 
-/home/david/buffer_overflow_sim/core/src/Renderer.cpp
-Renderer.h
-/home/david/buffer_overflow_sim/core/src/Renderer.h
+/home/david/buffer_overflow_sim/core/src/InputManager.cpp
+InputManager.h
+/home/david/buffer_overflow_sim/core/src/InputManager.h
+
+/home/david/buffer_overflow_sim/core/src/InputManager.h
+SDL2/SDL.h
+-
+stdint.h
+-
+string
+-
+config.h
+/home/david/buffer_overflow_sim/core/src/config.h
 
 /home/david/buffer_overflow_sim/core/src/Renderer.h
 SDL2/SDL.h
 -
-Texture.h
-/home/david/buffer_overflow_sim/core/src/Texture.h
-
-/home/david/buffer_overflow_sim/core/src/Texture.cpp
 Texture.h
 /home/david/buffer_overflow_sim/core/src/Texture.h
 

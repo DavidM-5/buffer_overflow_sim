@@ -2,6 +2,7 @@ file(REMOVE_RECURSE
   "../buffer_overflow_sim"
   "../buffer_overflow_sim.pdb"
   "CMakeFiles/buffer_overflow_sim.dir/src/Application.cpp.o"
+  "CMakeFiles/buffer_overflow_sim.dir/src/Border.cpp.o"
   "CMakeFiles/buffer_overflow_sim.dir/src/Panel.cpp.o"
   "CMakeFiles/buffer_overflow_sim.dir/src/TextBlock.cpp.o"
   "CMakeFiles/buffer_overflow_sim.dir/src/Widget.cpp.o"

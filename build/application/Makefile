@@ -152,6 +152,33 @@ src/Application.cpp.s:
 	cd /home/david/buffer_overflow_sim/build && $(MAKE) -f application/CMakeFiles/buffer_overflow_sim.dir/build.make application/CMakeFiles/buffer_overflow_sim.dir/src/Application.cpp.s
 .PHONY : src/Application.cpp.s
 
+src/Border.o: src/Border.cpp.o
+
+.PHONY : src/Border.o
+
+# target to build an object file
+src/Border.cpp.o:
+	cd /home/david/buffer_overflow_sim/build && $(MAKE) -f application/CMakeFiles/buffer_overflow_sim.dir/build.make application/CMakeFiles/buffer_overflow_sim.dir/src/Border.cpp.o
+.PHONY : src/Border.cpp.o
+
+src/Border.i: src/Border.cpp.i
+
+.PHONY : src/Border.i
+
+# target to preprocess a source file
+src/Border.cpp.i:
+	cd /home/david/buffer_overflow_sim/build && $(MAKE) -f application/CMakeFiles/buffer_overflow_sim.dir/build.make application/CMakeFiles/buffer_overflow_sim.dir/src/Border.cpp.i
+.PHONY : src/Border.cpp.i
+
+src/Border.s: src/Border.cpp.s
+
+.PHONY : src/Border.s
+
+# target to generate assembly for a file
+src/Border.cpp.s:
+	cd /home/david/buffer_overflow_sim/build && $(MAKE) -f application/CMakeFiles/buffer_overflow_sim.dir/build.make application/CMakeFiles/buffer_overflow_sim.dir/src/Border.cpp.s
+.PHONY : src/Border.cpp.s
+
 src/Panel.o: src/Panel.cpp.o
 
 .PHONY : src/Panel.o
@@ -272,6 +299,9 @@ help:
 	@echo "... src/Application.o"
 	@echo "... src/Application.i"
 	@echo "... src/Application.s"
+	@echo "... src/Border.o"
+	@echo "... src/Border.i"
+	@echo "... src/Border.s"
 	@echo "... src/Panel.o"
 	@echo "... src/Panel.i"
 	@echo "... src/Panel.s"

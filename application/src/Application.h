@@ -15,6 +15,7 @@
 #include "../../core/src/InputManager.h"
 #include "TextBlock.h"
 #include "Panel.h"
+#include "Border.h"
 
 namespace application
 {
@@ -37,6 +38,9 @@ namespace application
 
 
         std::vector<std::unique_ptr<application::Panel>> m_panels;
+
+        application::Border m_bordVert;
+        application::Border m_bordHor;
 
         
         application::TextBlock txtb; // temporary

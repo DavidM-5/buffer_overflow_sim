@@ -18,6 +18,8 @@ namespace application
         virtual void handleEvents(const core::InputManager& inputMngr) = 0;
         virtual void render(core::Renderer& renderer);
 
+        virtual void addDeltaTransform(int x = 0, int y = 0, int w = 0, int h = 0);
+        
     protected:
         SDL_Rect m_transform;
 

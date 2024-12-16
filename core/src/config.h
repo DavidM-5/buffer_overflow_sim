@@ -1,7 +1,7 @@
 #pragma once
 
 extern int WINDOW_WIDTH;
-extern int WINODW_HEIGHT;
+extern int WINDOW_HEIGHT;
 
 
 typedef enum {

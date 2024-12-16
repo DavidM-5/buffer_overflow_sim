@@ -43,5 +43,10 @@
   "directory": "/home/david/buffer_overflow_sim/build/application",
   "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/application/src -I/usr/include/SDL2 -I/home/david/buffer_overflow_sim/core/src  -g   -std=gnu++17 -o CMakeFiles/buffer_overflow_sim.dir/src/TextBlock.cpp.o -c /home/david/buffer_overflow_sim/application/src/TextBlock.cpp",
   "file": "/home/david/buffer_overflow_sim/application/src/TextBlock.cpp"
+},
+{
+  "directory": "/home/david/buffer_overflow_sim/build/application",
+  "command": "/usr/bin/g++   -I/home/david/buffer_overflow_sim/application/src -I/usr/include/SDL2 -I/home/david/buffer_overflow_sim/core/src  -g   -std=gnu++17 -o CMakeFiles/buffer_overflow_sim.dir/src/Border.cpp.o -c /home/david/buffer_overflow_sim/application/src/Border.cpp",
+  "file": "/home/david/buffer_overflow_sim/application/src/Border.cpp"
 }
 ]

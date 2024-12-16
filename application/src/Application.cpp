@@ -1,6 +1,8 @@
 #include "Application.h"
 
-application::Application::Application() : m_window("Buffer Overflow Simulator", WINDOW_WIDTH, WINODW_HEIGHT), txtb(400)
+application::Application::Application() : m_window("Buffer Overflow Simulator", WINDOW_WIDTH, WINDOW_HEIGHT), txtb(400),
+                                          m_bordVert(true, 2*WINDOW_WIDTH/3-105, 0, 10, WINDOW_HEIGHT),
+                                          m_bordHor(false, 0, 2*WINDOW_HEIGHT/3-5, 2*WINDOW_WIDTH/3-100, 10)
 {
     // temporary
     std::string str = "Hello, world!\nDoes this work? awdawdawdjaoiwjfijawf awfjawfjpaiwnf awnfawjofijaoiegnj rgjarehjoaidrjohi asjrh ojtenohsnstrh st.bernard, jhonathan";
@@ -55,28 +57,23 @@ void application::Application::update()
 {
     for (const auto& panel : m_panels) {
         panel->handleEvents(inptmng);
-    } 
+    }
+
+    m_bordVert.handleEvents(inptmng);
+    m_bordHor.handleEvents(inptmng);
 }
 
 void application::Application::render() // temporary implementation
 {
     m_renderer.clear({0, 0, 0, 255});
 
-    // the selected panel will be moved to the end, if its not already
-    if (application::Panel::getActivePanel() != m_panels[m_panels.size()-1].get()) {
-        for (size_t i = 0; i < m_panels.size(); ++i) {
-            if (m_panels[i].get() == application::Panel::getActivePanel()) {
-                std::rotate(m_panels.begin() + i, m_panels.begin() + i + 1, m_panels.end());
-                break;
-            }
-        }
-    }
-
     // render panels
     for (const auto& panel : m_panels) {
         panel->render(m_renderer);
     }
 
+    m_bordVert.render(m_renderer);
+    m_bordHor.render(m_renderer);
 
    //  txtb.render(400, 200, m_renderer);
 
@@ -85,27 +82,26 @@ void application::Application::render() // temporary implementation
 
 void application::Application::initPanels()
 {
-    SDL_Rect codeBottomBorder{0, WINODW_HEIGHT - 10, WINDOW_WIDTH, 10};
-    SDL_Rect codeLeftBorder{2*WINDOW_WIDTH/3-105, 0, 10, WINODW_HEIGHT};
-    SDL_Rect consoleTopBorder{0, 2*WINODW_HEIGHT/3-5, 2*WINDOW_WIDTH/3-100, 10};
-
     // code panel
     m_panels.emplace_back(
-        std::make_unique<application::Panel>(2*WINDOW_WIDTH/3-100, 0, WINDOW_WIDTH/3+100, WINODW_HEIGHT, SDL_Color{0x60, 0x5f, 0x5f, 0xff})
+        std::make_unique<application::Panel>(2*WINDOW_WIDTH/3-100, 0, WINDOW_WIDTH/3+100, WINDOW_HEIGHT, SDL_Color{0x60, 0x5f, 0x5f, 0xff})
     );
-    m_panels[0]->setResizeBorders(nullptr, nullptr, &codeBottomBorder, &codeLeftBorder);
     
     // stack panel
     m_panels.emplace_back(
-        std::make_unique<application::Panel>(0, 0, 2*WINDOW_WIDTH/3-100, 2*WINODW_HEIGHT/3, SDL_Color{0x60, 0x5f, 0xff, 0xff})
+        std::make_unique<application::Panel>(0, 0, 2*WINDOW_WIDTH/3-100, 2*WINDOW_HEIGHT/3, SDL_Color{0x60, 0x5f, 0xff, 0xff})
     );
-    m_panels[1]->setResizeBorders(nullptr, &codeLeftBorder, &consoleTopBorder, nullptr);
 
     // console panel
     m_panels.emplace_back(
-        std::make_unique<application::Panel>(0, 2*WINODW_HEIGHT/3, 2*WINDOW_WIDTH/3-100, WINODW_HEIGHT/3, SDL_Color{0x60, 0xff, 0x5f, 0xff})
+        std::make_unique<application::Panel>(0, 2*WINDOW_HEIGHT/3, 2*WINDOW_WIDTH/3-100, WINDOW_HEIGHT/3, SDL_Color{0x60, 0xff, 0x5f, 0xff})
     );
-    m_panels[2]->setResizeBorders(&consoleTopBorder, &codeLeftBorder, &codeBottomBorder, nullptr);
 
-    
+    m_bordVert.addLeftTopPanel(&m_bordHor);
+    m_bordVert.addLeftTopPanel(m_panels[1].get());
+    m_bordVert.addLeftTopPanel(m_panels[2].get());
+    m_bordVert.addRightBottomPanel(m_panels[0].get());
+
+    m_bordHor.addLeftTopPanel(m_panels[1].get());
+    m_bordHor.addRightBottomPanel(m_panels[2].get());
 }
