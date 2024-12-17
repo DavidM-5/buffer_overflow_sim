@@ -24,7 +24,7 @@ namespace application
         // void addLine(std::string& text);
         void setColorFormat(const std::unordered_map<std::string, SDL_Color>& formatMap);
 
-        void render(int x, int y, core::Renderer& renderer); // change parameters
+        void render(core::Renderer& renderer, int x, int y); // change parameters?
 
     private:
         TTF_Font* m_font;

@@ -77,7 +77,7 @@ void application::TextBlock::setColorFormat(const std::unordered_map<std::string
     m_updated = true;
 }
 
-void application::TextBlock::render(int x, int y, core::Renderer& renderer)
+void application::TextBlock::render(core::Renderer& renderer, int x, int y)
 {
     if (m_updated)
         updateTexture(renderer);

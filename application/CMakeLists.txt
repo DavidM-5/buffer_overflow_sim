@@ -9,6 +9,7 @@ add_executable(buffer_overflow_sim
     src/Panel.cpp
     src/TextBlock.cpp
     src/Border.cpp
+    src/StackVisualizer.cpp
 )
 
 # Set the output directory for the executable
