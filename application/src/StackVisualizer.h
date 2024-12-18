@@ -18,13 +18,13 @@ namespace application
         ~StackVisualizer() = default;
 
         void render(core::Renderer& renderer);
-        void handleEvents(core::InputManager& inputMngr);
+        void handleEvents(core::InputManager& inputMngr) {};
 
         void push(std::string str);
         void pop();
 
     private:
-        std::vector<application::TextBlock> m_slotsText;
+        std::vector<application::TextBlock> m_slotsTextTextures;
         
     };
     
