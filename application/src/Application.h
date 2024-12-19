@@ -13,8 +13,10 @@
 #include "../../core/src/Texture.h"
 #include "../../core/src/InputManager.h"
 #include "TextBlock.h"
+#include "TextLine.h"
 #include "Panel.h"
 #include "Border.h"
+#include "StackVisualizer.h"
 
 namespace application
 {
@@ -41,8 +43,11 @@ namespace application
         application::Border m_bordVert;
         application::Border m_bordHor;
 
+        application::StackVisualizer m_stack; // temporary
         
         application::TextBlock txtb; // temporary
+
+        application::TextLine line; // temporary
 
 
     private:

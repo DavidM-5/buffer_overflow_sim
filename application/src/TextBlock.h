@@ -26,6 +26,9 @@ namespace application
 
         void render(core::Renderer& renderer, int x, int y); // change parameters?
 
+        int getWidth() { return m_lineWidth; }
+        int getHeight() { return m_lineHeight; }
+
     private:
         TTF_Font* m_font;
 

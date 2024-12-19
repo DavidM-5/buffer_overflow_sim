@@ -10,6 +10,7 @@ add_executable(buffer_overflow_sim
     src/TextBlock.cpp
     src/Border.cpp
     src/StackVisualizer.cpp
+    src/TextLine.cpp
 )
 
 # Set the output directory for the executable

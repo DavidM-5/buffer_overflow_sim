@@ -2,7 +2,9 @@
 
 application::Application::Application() : m_window("Buffer Overflow Simulator", WINDOW_WIDTH, WINDOW_HEIGHT), txtb(400),
                                           m_bordVert(true, 2*WINDOW_WIDTH/3-105, 0, 10, WINDOW_HEIGHT),
-                                          m_bordHor(false, 0, 2*WINDOW_HEIGHT/3-5, 2*WINDOW_WIDTH/3-100, 10)
+                                          m_bordHor(false, 0, 2*WINDOW_HEIGHT/3-5, 2*WINDOW_WIDTH/3-100, 10),
+                                          m_stack(50, 50, 150, 200, {0xff, 0xd8, 0x00, 0xff}),
+                                          line(100, 400, 500, 20)
 {
     // temporary
     std::string str = "Hello, world!\nDoes this work? awdawdawdjaoiwjfijawf awfjawfjpaiwnf awnfawjofijaoiegnj rgjarehjoaidrjohi asjrh ojtenohsnstrh st.bernard, jhonathan";
@@ -16,7 +18,12 @@ bool application::Application::init()
 
     if (!m_window.initRenderer(&m_renderer)) return false;
 
+    if (!application::TextLine::loadFont("Arial.ttf", 16)) return false; // temporary
+
     initPanels();
+
+    line.useFont("Arial.ttf", 16);
+    line.appendText("Hello World!");
 
     return true;
 }
@@ -35,7 +42,6 @@ void application::Application::run()
             std::string key = inptmng.getPressedKey(event);
             if (!key.empty()) {
                 std::cout << key << std::flush;
-
             }
             // temporary end
         }
@@ -76,6 +82,8 @@ void application::Application::render() // temporary implementation
     m_bordHor.render(m_renderer);
 
    //  txtb.render(400, 200, m_renderer);
+    // m_stack.render(m_renderer);
+    line.render(m_renderer);
 
     m_renderer.present();
 }
