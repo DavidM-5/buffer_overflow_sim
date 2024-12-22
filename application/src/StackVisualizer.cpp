@@ -1,34 +1,32 @@
 #include "StackVisualizer.h"
 
 application::StackVisualizer::StackVisualizer(int posX, int posY, int w, int h, SDL_Color color) : 
-                                               Widget(posX, posY, w, h, color),
-                                               m_stackSlotDims({w, 50})
+                                              Widget(posX, posY, w, h, color), m_maxHeight(0),
+                                              m_slotHeight(h)
 {
 }
 
 void application::StackVisualizer::render(core::Renderer &renderer)
 {
-    renderer.drawRect(m_transform, m_mainColor);
-
-    int currRenderY = m_transform.y + (m_stackSlotDims.y / 2);
-    
-    for (application::TextBlock& textTexture : m_slotsTextTextures) {
-        textTexture.render(renderer, m_transform.x + m_transform.h/2 - textTexture.getWidth()/2, currRenderY - textTexture.getHeight()/2);
-        currRenderY += m_stackSlotDims.y;
+    for (application::TextLine txt : m_slots) {
+        txt.render(renderer);
     }
 }
 
 void application::StackVisualizer::push(std::string str)
 {
-    m_slotsTextTextures.emplace_back(m_transform.w - 10);
+    application::TextLine txt(m_transform.x, m_transform.y + m_transform.h * m_slots.size(), 
+                              m_transform.w, m_transform.h,
+                              m_mainColor);
+    txt.useFont("Arial.ttf", 16);
+    txt.appendText(str);
 
-    std::string text = std::to_string(m_slotsTextTextures.size());
-
-    m_slotsTextTextures[m_slotsTextTextures.size() - 1].setText(text);
+    m_slots.push_back(txt);
 }
 
 void application::StackVisualizer::pop()
 {
-    if (!m_slotsTextTextures.empty())
-        m_slotsTextTextures.pop_back();
+    if (m_slots.size() > 0) {
+        m_slots.pop_back();
+    }
 }

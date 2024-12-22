@@ -82,6 +82,7 @@ bool application::TextLine::appendText(const std::string text)
         return false;
 
     m_text = combinedText;
+    m_updated = true;
     return true;
 }
 

@@ -47,7 +47,7 @@ namespace application
         
         application::TextBlock txtb; // temporary
 
-        application::TextLine line; // temporary
+        //application::TextLine line; // temporary
 
 
     private:
