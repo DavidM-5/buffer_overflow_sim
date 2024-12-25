@@ -9,61 +9,15 @@ application::TextLine::TextLine(int posX, int posY, int w, int h, SDL_Color colo
 {
 }
 
-// TODO: make the render() function only reload the texture when the text updated
 void application::TextLine::render(core::Renderer &renderer)
 {
-    // If no text or font is set, nothing to render
-    if (m_text.empty() || m_fontName.empty() || m_fontSize <= 0) {
-        return;
+    if (m_updated) {
+        updateTexture(renderer);
+        m_updated = false;
     }
 
-    // Check if we have the font loaded
-    if (s_fonts.find(m_fontName) == s_fonts.end()) {
-        return;
-    }
-
-    if (s_fonts[m_fontName].find(m_fontSize) == s_fonts[m_fontName].end()) {
-        return;
-    }
-
-    TTF_Font* font = s_fonts[m_fontName][m_fontSize];
-    if (!font) {
-        return;
-    }
-
-
-    std::vector<std::string> words;
-
-    std::istringstream stream(m_text);
-    std::string word;
-    
-    // Use getline with space as the delimiter
-    while (std::getline(stream, word, ' ')) {
-        if (!word.empty())
-            words.push_back(word);
-    }
-
-    vector2i currPos = {m_transform.x, m_transform.y};
-
-    for (std::string& w : words) {
-        w += " ";
-        core::Texture texture;
-
-        // If no format map exists for this word, render with default color
-        if (m_formatMap.find(w) == m_formatMap.end()) {
-            if (!texture.loadFromText(w, font, m_mainColor, renderer))
-                return;
-        }
-        else {
-            if (!texture.loadFromText(w, font, m_formatMap[w], renderer))
-                return;
-        }
-
-        SDL_Rect dstRect = { currPos.x, currPos.y, texture.getWidth(), texture.getHeight() };
-        renderer.drawTexture(texture, nullptr, &dstRect);
-
-        currPos.x += texture.getWidth();
-    }
+    SDL_Rect dstRect = { m_transform.x, m_transform.y, m_texture.getWidth(), m_texture.getHeight() };
+    renderer.drawTexture(m_texture, nullptr, &dstRect);
 }
 
 bool application::TextLine::appendText(const std::string text)
@@ -165,4 +119,51 @@ bool application::TextLine::loadFont(const std::string &fontName, int size)
     s_fonts[fontName][size] = font;
 
     return true;
+}
+
+void application::TextLine::updateTexture(core::Renderer &renderer)
+{
+    // Early validation checks
+    if (m_text.empty() || m_fontName.empty() || m_fontSize <= 0 ||
+        s_fonts.find(m_fontName) == s_fonts.end() ||
+        s_fonts[m_fontName].find(m_fontSize) == s_fonts[m_fontName].end()) {
+        return;
+    }
+
+    TTF_Font* font = s_fonts[m_fontName][m_fontSize];
+    if (!font) return;
+
+    // Create surface for the complete text line
+    SDL_Surface* completeSurface = SDL_CreateRGBSurface(0, m_transform.w, m_transform.h, 32, 
+        0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+    if (!completeSurface) return;
+
+    // Parse words
+    std::istringstream stream(m_text);
+    std::string word;
+    int currentX = 0;
+    
+    while (std::getline(stream, word, ' ')) {
+        if (word.empty()) continue;
+        word += " ";
+
+        // Create surface for single word
+        SDL_Surface* wordSurface;
+        SDL_Color color = (m_formatMap.find(word) != m_formatMap.end()) ? 
+                            m_formatMap[word] : m_mainColor;
+                         
+        wordSurface = TTF_RenderText_Blended(font, word.c_str(), color);
+        if (!wordSurface) continue;
+
+        // Blit word surface to complete surface
+        SDL_Rect dstRect = { currentX, 0, wordSurface->w, wordSurface->h };
+        SDL_BlitSurface(wordSurface, nullptr, completeSurface, &dstRect);
+        
+        currentX += wordSurface->w;
+        SDL_FreeSurface(wordSurface);
+    }
+
+    // Convert final surface to texture
+    m_texture.loadFromSurface(completeSurface, renderer);
+    SDL_FreeSurface(completeSurface);
 }

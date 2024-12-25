@@ -8,20 +8,25 @@ application::StackVisualizer::StackVisualizer(int posX, int posY, int w, int h, 
 
 void application::StackVisualizer::render(core::Renderer &renderer)
 {
-    for (application::TextLine txt : m_slots) {
-        txt.render(renderer);
+    for (const auto& txt : m_slots) {
+        txt->render(renderer);
     }
 }
 
 void application::StackVisualizer::push(std::string str)
 {
-    application::TextLine txt(m_transform.x, m_transform.y + m_transform.h * m_slots.size(), 
-                              m_transform.w, m_transform.h,
-                              m_mainColor);
-    txt.useFont("Arial.ttf", 16);
-    txt.appendText(str);
+    auto txt = std::make_unique<application::TextLine>(
+                              m_transform.x, 
+                              m_transform.y + m_transform.h * m_slots.size(), 
+                              m_transform.w, 
+                              m_transform.h,
+                              m_mainColor
+                              );
 
-    m_slots.push_back(txt);
+    txt->useFont("Arial.ttf", 16);
+    txt->appendText(str);
+
+    m_slots.push_back(std::move(txt));
 }
 
 void application::StackVisualizer::pop()

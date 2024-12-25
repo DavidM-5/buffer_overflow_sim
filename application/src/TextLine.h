@@ -50,7 +50,11 @@ namespace application {
         std::string m_fontName;
         int m_fontSize;
 
+        core::Texture m_texture;
         bool m_updated;
+
+    private:
+        void updateTexture(core::Renderer& renderer);
 
     };
 

@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include <vector>
 #include <string>
+#include <memory>
 #include "../../core/src/config.h"
 #include "../../core/src/Renderer.h"
 #include "../../core/src/InputManager.h"
@@ -27,7 +28,7 @@ namespace application
         void pop();
 
     private:
-        std::vector<application::TextLine> m_slots;
+        std::vector<std::unique_ptr<application::TextLine>> m_slots;
         
         int m_maxHeight;
         int m_slotHeight;

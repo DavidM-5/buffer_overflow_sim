@@ -3,8 +3,8 @@
 application::Application::Application() : m_window("Buffer Overflow Simulator", WINDOW_WIDTH, WINDOW_HEIGHT), txtb(400),
                                           m_bordVert(true, 2*WINDOW_WIDTH/3-105, 0, 10, WINDOW_HEIGHT),
                                           m_bordHor(false, 0, 2*WINDOW_HEIGHT/3-5, 2*WINDOW_WIDTH/3-100, 10),
-                                          m_stack(50, 50, 150, 50, {255, 255, 255, 255}) // {0xff, 0xd8, 0x00, 0xff} - stack color
-                                          //line(100, 400, 500, 20)
+                                          m_stack(50, 50, 150, 50, {255, 255, 255, 255}), // {0xff, 0xd8, 0x00, 0xff} - stack color
+                                          line(100, 400, 500, 20)
 {
     // temporary
     std::string str = "Hello, world!\nDoes this work? awdawdawdjaoiwjfijawf awfjawfjpaiwnf awnfawjofijaoiegnj rgjarehjoaidrjohi asjrh ojtenohsnstrh st.bernard, jhonathan";
@@ -22,8 +22,8 @@ bool application::Application::init()
 
     initPanels();
 
-    // line.useFont("Arial.ttf", 16);
-    // line.appendText("Hello World!");
+    line.useFont("Arial.ttf", 16);
+    line.appendText("Hello World!");
 
     m_stack.push("1");
     m_stack.push("2");
@@ -50,6 +50,8 @@ void application::Application::run()
                 m_stack.push("3");
             if (inptmng.getPressedKey(event) == "i")
                 m_stack.pop();
+            if (inptmng.getPressedKey(event) == "u")
+                line.appendText(" A ");
             // temporary end
         }
 
@@ -90,7 +92,7 @@ void application::Application::render() // temporary implementation
 
    //  txtb.render(400, 200, m_renderer);
     m_stack.render(m_renderer);
-    // line.render(m_renderer);
+    line.render(m_renderer);
 
     m_renderer.present();
 }
