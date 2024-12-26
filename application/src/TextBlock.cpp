@@ -1,20 +1,8 @@
 #include "TextBlock.h"
 
-application::TextBlock::TextBlock(int lineWidth) : m_lineWidth(lineWidth), m_defaultColor(SDL_Color{255, 255, 255, 255}), m_updated(true)
+application::TextBlock::TextBlock(int posX, int posY, int w, int h, SDL_Color color) : 
+                                  Widget(posX, posY, w, h, color)
 {
-    TTF_Init();
-
-    m_font = TTF_OpenFont("resources/fonts/Arial.ttf", 16);
-    if (m_font == nullptr) {
-        std::cerr << "Font load error: " << TTF_GetError() << std::endl;
-    }
-
-    TTF_SizeText(m_font, "A", nullptr, &m_lineHeight);
-}
-
-application::TextBlock::~TextBlock()
-{
-    TTF_CloseFont(m_font);
 }
 
 void application::TextBlock::setText(std::string &text)

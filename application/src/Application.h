@@ -45,7 +45,7 @@ namespace application
 
         application::StackVisualizer m_stack; // temporary
         
-        application::TextBlock txtb; // temporary
+        // application::TextBlock txtb; // temporary
 
         application::TextLine line; // temporary
 

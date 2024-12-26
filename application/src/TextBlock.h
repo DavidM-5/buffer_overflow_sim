@@ -1,24 +1,24 @@
 #pragma once
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
 #include <iostream>
 #include <string>
 #include <sstream>
 #include <vector>
-#include <unordered_map>
 
 #include "../../core/src/Renderer.h"
 #include "../../core/src/Texture.h"
+#include "Widget.h"
+#include "TextLine.h"
 
 namespace application
 {
     
-    class TextBlock
+    class TextBlock : public Widget
     {
     public:
-        TextBlock(int lineWidth);
-        ~TextBlock();
+        TextBlock(int posX = 0, int posY = 0, int w = 100, int h = 100, SDL_Color color = {255, 255, 255, 255});
+        ~TextBlock() = default;
 
         void setText(std::string& text);
         // void addLine(std::string& text);
@@ -30,21 +30,16 @@ namespace application
         int getHeight() { return m_lineHeight; }
 
     private:
-        TTF_Font* m_font;
+        const int m_GUTTER_WIDTH;
 
-        SDL_Color m_defaultColor;
-
-        std::vector<std::string> m_lines;
-        std::unordered_map<std::string, SDL_Color> m_colorFormatMap;
-
-        core::Texture m_textTexture;
-
-        int m_lineWidth;
-        int m_lineHeight;
-        bool m_updated;
+        struct Line
+        {
+            uint32_t lineNumber;
+            bool breakpoint = false;
+            application::TextLine textTexture;
+        };
         
-    private:
-        void updateTexture(core::Renderer& renderer);
+        std::vector<Line> m_lines;
 
     };
 

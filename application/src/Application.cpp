@@ -1,6 +1,6 @@
 #include "Application.h"
 
-application::Application::Application() : m_window("Buffer Overflow Simulator", WINDOW_WIDTH, WINDOW_HEIGHT), txtb(400),
+application::Application::Application() : m_window("Buffer Overflow Simulator", WINDOW_WIDTH, WINDOW_HEIGHT), // txtb(400),
                                           m_bordVert(true, 2*WINDOW_WIDTH/3-105, 0, 10, WINDOW_HEIGHT),
                                           m_bordHor(false, 0, 2*WINDOW_HEIGHT/3-5, 2*WINDOW_WIDTH/3-100, 10),
                                           m_stack(50, 50, 150, 50, {255, 255, 255, 255}), // {0xff, 0xd8, 0x00, 0xff} - stack color
@@ -8,7 +8,7 @@ application::Application::Application() : m_window("Buffer Overflow Simulator", 
 {
     // temporary
     std::string str = "Hello, world!\nDoes this work? awdawdawdjaoiwjfijawf awfjawfjpaiwnf awnfawjofijaoiegnj rgjarehjoaidrjohi asjrh ojtenohsnstrh st.bernard, jhonathan";
-    txtb.setText(str);
+    // txtb.setText(str);
     // temporary
 }
 
@@ -50,8 +50,10 @@ void application::Application::run()
                 m_stack.push("3");
             if (inptmng.getPressedKey(event) == "i")
                 m_stack.pop();
-            if (inptmng.getPressedKey(event) == "u")
-                line.appendText(" A ");
+            if (inptmng.getPressedKey(event) == "u") {
+                int a = line.appendText(" A B, C D E");
+                std::cout << "Remaining : " << a <<std::endl;
+            }
             // temporary end
         }
 
