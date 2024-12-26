@@ -20,7 +20,7 @@ void application::TextLine::render(core::Renderer &renderer)
     renderer.drawTexture(m_texture, nullptr, &dstRect);
 }
 
-int application::TextLine::appendText(const std::string text)
+int application::TextLine::appendText(const std::string& text)
 {
     if (m_fontName.empty() || m_fontSize <= 0)
         return -1;
@@ -32,32 +32,57 @@ int application::TextLine::appendText(const std::string text)
 
     std::istringstream wordStream(text);
     std::string word;
+
     int wordsNotAdded = 0;
-    bool isFirstWord = m_text.empty();
+    bool hasAddedWords = false;
+    std::string newText = m_text; // Work with a copy until we're sure all words fit
+    
+    int letterWidth;
+    TTF_SizeText(s_fonts[m_fontName][m_fontSize], "A", &letterWidth, nullptr);
 
+    int currentWidth;
+    TTF_SizeText(s_fonts[m_fontName][m_fontSize], newText.c_str(), &currentWidth, nullptr);
+
+    int spaceIndex = 0;
+    std::vector<int> spaces = countSpaces(text);
+    
+    // First pass: count total words
+    std::string tempText = text;
+    std::istringstream countStream(tempText);
+    int totalWords = spaces.size() - 1;
+
+    // Second pass: try to add words
     while (wordStream >> word) {
-        // Calculate width for this word with proper spacing
-        std::string testText = isFirstWord ? word : m_text + " " + word;
-        int width;
+        std::string testWord = (newText.empty() ? "" : std::string(spaces[spaceIndex], ' ')) + word;
+        int wordWidth;
         
-        if (TTF_SizeText(s_fonts[m_fontName][m_fontSize], testText.c_str(), &width, nullptr) != 0) {
-            return -1;  // Font rendering error
+        if (TTF_SizeText(s_fonts[m_fontName][m_fontSize], testWord.c_str(), &wordWidth, nullptr) != 0) {
+            return -1;
         }
 
-        if (width <= m_transform.w - 20) {
-            // Word fits, update the text
-            m_text = testText;
-            isFirstWord = false;
+        if (currentWidth + wordWidth <= m_transform.w - letterWidth) {
+            newText += testWord;
+            currentWidth += wordWidth;
+            hasAddedWords = true;
         } else {
-            // If this is the first word and it doesn't fit, it will never fit
-            if (isFirstWord) {
-                return 1;  // Return 1 to indicate this word couldn't be added (the word too long)
-            }
-            ++wordsNotAdded;
+            // If we can't add this word, we can't add any more words
+            wordsNotAdded = totalWords - (spaceIndex);
+            break;
         }
+        
+        spaceIndex++;
     }
 
-    m_updated = true;
+    // Only update m_text if we successfully added at least one word
+    if (hasAddedWords) {
+        // Add trailing spaces only if all words fit
+        if (wordsNotAdded == 0 && spaceIndex < spaces.size()) {
+            newText += std::string(spaces[spaceIndex], ' ');
+        }
+        m_text = newText;
+        m_updated = true;
+    }
+    
     return wordsNotAdded;
 }
 
@@ -159,32 +184,91 @@ void application::TextLine::updateTexture(core::Renderer &renderer)
         0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
     if (!completeSurface) return;
 
-    // Parse words
-    std::istringstream stream(m_text);
-    std::string word;
+    // Calculate space width
+    SDL_Surface* spaceSurface = TTF_RenderText_Blended(font, " ", m_mainColor);
+    int spaceWidth = spaceSurface ? spaceSurface->w : 0;
+    SDL_FreeSurface(spaceSurface);
+
+    size_t pos = 0;
     int currentX = 0;
+    std::string word;
     
-    while (std::getline(stream, word, ' ')) {
-        if (word.empty()) continue;
-        word += " ";
+    while (pos < m_text.length()) {
+        // Handle consecutive spaces
+        if (m_text[pos] == ' ') {
+            while (pos < m_text.length() && m_text[pos] == ' ') {
+                currentX += spaceWidth;
+                pos++;
+            }
+            continue;
+        }
 
-        // Create surface for single word
-        SDL_Surface* wordSurface;
-        SDL_Color color = (m_formatMap.find(word) != m_formatMap.end()) ? 
-                            m_formatMap[word] : m_mainColor;
-                         
-        wordSurface = TTF_RenderText_Blended(font, word.c_str(), color);
-        if (!wordSurface) continue;
+        // Extract word
+        size_t wordEnd = m_text.find(' ', pos);
+        if (wordEnd == std::string::npos) {
+            word = m_text.substr(pos);
+            pos = m_text.length();
+        } else {
+            word = m_text.substr(pos, wordEnd - pos);
+            pos = wordEnd;
+        }
 
-        // Blit word surface to complete surface
-        SDL_Rect dstRect = { currentX, 0, wordSurface->w, wordSurface->h };
-        SDL_BlitSurface(wordSurface, nullptr, completeSurface, &dstRect);
-        
-        currentX += wordSurface->w;
-        SDL_FreeSurface(wordSurface);
+        if (!word.empty()) {
+            // Create surface for single word
+            SDL_Surface* wordSurface;
+            SDL_Color color = (m_formatMap.find(word) != m_formatMap.end()) ? 
+                                m_formatMap[word] : m_mainColor;
+                             
+            wordSurface = TTF_RenderText_Blended(font, word.c_str(), color);
+            if (!wordSurface) continue;
+
+            // Blit word surface to complete surface
+            SDL_Rect dstRect = { currentX, 0, wordSurface->w, wordSurface->h };
+            SDL_BlitSurface(wordSurface, nullptr, completeSurface, &dstRect);
+            
+            currentX += wordSurface->w;
+            SDL_FreeSurface(wordSurface);
+        }
     }
 
     // Convert final surface to texture
     m_texture.loadFromSurface(completeSurface, renderer);
     SDL_FreeSurface(completeSurface);
+}
+
+std::vector<int> application::TextLine::countSpaces(const std::string &str)
+{
+    std::istringstream iss(str);
+    int wordCount = 0;
+    std::string word;
+
+    while (iss >> word) {
+        wordCount++;
+    }
+    
+    std::vector<int> spaces;
+
+    int i = 0;
+    int currentCount = 0;
+    int vecindex = 0;
+
+    if (str[0] != ' ')
+        spaces.push_back(0);
+
+    do {
+        if (str[i] == ' ') {
+            ++currentCount;
+        }
+        else if (currentCount > 0){
+            spaces.push_back(currentCount);
+            currentCount = 0;
+        }
+
+        ++i;
+    } while (i < str.length());
+    
+
+    spaces.push_back(currentCount);
+
+    return spaces;
 }

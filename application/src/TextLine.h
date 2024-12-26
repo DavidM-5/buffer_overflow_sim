@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <array>
 #include "../../core/src/config.h"
 #include "Widget.h"
 
@@ -21,7 +22,7 @@ namespace application {
         void handleEvents(const core::InputManager& inputMngr) override {};
         void render(core::Renderer& renderer);
 
-        int appendText(const std::string text);
+        int appendText(const std::string& text);
         void editText(int start, int end, const std::string& newText);
 
         void addFormatMap(const std::unordered_map<std::string, SDL_Color> &formatMap);
@@ -55,6 +56,8 @@ namespace application {
 
     private:
         void updateTexture(core::Renderer& renderer);
+
+        std::vector<int> countSpaces(const std::string& str);
 
     };
 
