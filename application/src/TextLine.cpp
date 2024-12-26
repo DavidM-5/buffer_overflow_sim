@@ -20,24 +20,45 @@ void application::TextLine::render(core::Renderer &renderer)
     renderer.drawTexture(m_texture, nullptr, &dstRect);
 }
 
-bool application::TextLine::appendText(const std::string text)
+int application::TextLine::appendText(const std::string text)
 {
     if (m_fontName.empty() || m_fontSize <= 0)
-        return false;
+        return -1;
 
-    std::string combinedText = m_text + text;
-    
-    // Get the width and height of the combined text
-    int width;
-    if (TTF_SizeText(s_fonts[m_fontName][m_fontSize], combinedText.c_str(), &width, nullptr) != 0)
-        return false;
+    // Handle empty input text
+    if (text.empty()) {
+        return 0;
+    }
 
-    if (width > m_transform.w)
-        return false;
+    std::istringstream wordStream(text);
+    std::string word;
+    int wordsNotAdded = 0;
+    bool isFirstWord = m_text.empty();
 
-    m_text = combinedText;
+    while (wordStream >> word) {
+        // Calculate width for this word with proper spacing
+        std::string testText = isFirstWord ? word : m_text + " " + word;
+        int width;
+        
+        if (TTF_SizeText(s_fonts[m_fontName][m_fontSize], testText.c_str(), &width, nullptr) != 0) {
+            return -1;  // Font rendering error
+        }
+
+        if (width <= m_transform.w - 20) {
+            // Word fits, update the text
+            m_text = testText;
+            isFirstWord = false;
+        } else {
+            // If this is the first word and it doesn't fit, it will never fit
+            if (isFirstWord) {
+                return 1;  // Return 1 to indicate this word couldn't be added (the word too long)
+            }
+            ++wordsNotAdded;
+        }
+    }
+
     m_updated = true;
-    return true;
+    return wordsNotAdded;
 }
 
 void application::TextLine::editText(int start, int end, const std::string &newText)
