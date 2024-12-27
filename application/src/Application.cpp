@@ -51,8 +51,7 @@ void application::Application::run()
             if (inptmng.getPressedKey(event) == "i")
                 m_stack.pop();
             if (inptmng.getPressedKey(event) == "u") {
-                int a = line.appendText(" A B, C D E");
-                std::cout << "Remaining : " << a <<std::endl;
+                line.appendText(" A B,     C D E");
             }
             // temporary end
         }

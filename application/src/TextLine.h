@@ -28,12 +28,7 @@ namespace application {
         void addFormatMap(const std::unordered_map<std::string, SDL_Color> &formatMap);
         bool useFont(const std::string& fontName, int size);
 
-        int getWidht() { return m_transform.w; }
-        void setWidth(int w) { m_transform.w = w; }
         void adjustWidhtToFont();
-
-        int getHeight() { return m_transform.h; }
-        void setHeight(int h) { m_transform.h = h; }
         void adjustHeightToFont();
 
         int getLenght() { return m_text.length(); }

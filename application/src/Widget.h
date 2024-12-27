@@ -19,6 +19,15 @@ namespace application
         virtual void render(core::Renderer& renderer);
 
         virtual void addDeltaTransform(int x = 0, int y = 0, int w = 0, int h = 0);
+
+        virtual vector2i getPosition() { return vector2i{m_transform.x, m_transform.y}; }
+        virtual void setPosition(vector2i newPos);
+
+        virtual int getWidth() { return m_transform.w; }
+        virtual void setWidth(int newW) { m_transform.w = newW; }
+        
+        virtual int getHeight() { return m_transform.h; }
+        virtual void setHeight(int newH) { m_transform.h = newH; }
         
     protected:
         SDL_Rect m_transform;

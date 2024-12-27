@@ -17,3 +17,9 @@ void application::Widget::addDeltaTransform(int x, int y, int w, int h)
     m_transform.w += w;
     m_transform.h += h;
 }
+
+void application::Widget::setPosition(vector2i newPos)
+{
+    m_transform.x = newPos.x;
+    m_transform.y = newPos.y;
+}
