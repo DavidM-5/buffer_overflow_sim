@@ -1,11 +1,8 @@
 #pragma once
 
 #include <SDL2/SDL.h>
-#include <iostream>
 #include <string>
-#include <sstream>
 #include <vector>
-
 #include "../../core/src/Renderer.h"
 #include "../../core/src/Texture.h"
 #include "Widget.h"
@@ -24,20 +21,18 @@ namespace application
         // void addLine(std::string& text);
         void setColorFormat(const std::unordered_map<std::string, SDL_Color>& formatMap);
 
-        void render(core::Renderer& renderer, int x, int y); // change parameters?
-
-        int getWidth() { return m_lineWidth; }
-        int getHeight() { return m_lineHeight; }
+        void handleEvents(const core::InputManager& inputMngr) {};
+        void render(core::Renderer& renderer);
 
     private:
-        const int m_GUTTER_WIDTH;
-
         struct Line
         {
-            uint32_t lineNumber;
+            int lineNumber;
             bool breakpoint = false;
-            application::TextLine textTexture;
+            application::TextLine textLine;
         };
+
+        const int m_GUTTER_WIDTH;
         
         std::vector<Line> m_lines;
 

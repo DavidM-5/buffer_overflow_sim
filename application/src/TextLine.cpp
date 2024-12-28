@@ -60,7 +60,13 @@ int application::TextLine::appendText(const std::string& text)
             return -1;
         }
 
-        if (currentWidth + wordWidth <= m_transform.w - letterWidth) {
+        // If m_text is empty, add the first word regardless of width
+        if (m_text.empty() && !hasAddedWords) {
+            newText += word;
+            currentWidth += wordWidth;
+            hasAddedWords = true;
+        }
+        else if (currentWidth + wordWidth <= m_transform.w - letterWidth) {
             newText += testWord;
             currentWidth += wordWidth;
             hasAddedWords = true;

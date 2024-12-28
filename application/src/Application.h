@@ -49,6 +49,8 @@ namespace application
 
         application::TextLine line; // temporary
 
+        application::TextBlock txtBlock; // temporary
+
 
     private:
         void update(); // not implemented

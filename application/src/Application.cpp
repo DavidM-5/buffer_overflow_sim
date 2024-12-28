@@ -4,12 +4,8 @@ application::Application::Application() : m_window("Buffer Overflow Simulator", 
                                           m_bordVert(true, 2*WINDOW_WIDTH/3-105, 0, 10, WINDOW_HEIGHT),
                                           m_bordHor(false, 0, 2*WINDOW_HEIGHT/3-5, 2*WINDOW_WIDTH/3-100, 10),
                                           m_stack(50, 50, 150, 50, {255, 255, 255, 255}), // {0xff, 0xd8, 0x00, 0xff} - stack color
-                                          line(100, 400, 500, 20)
+                                          line(100, 400, 500, 20), txtBlock(300, 100, 500, 400)
 {
-    // temporary
-    std::string str = "Hello, world!\nDoes this work? awdawdawdjaoiwjfijawf awfjawfjpaiwnf awnfawjofijaoiegnj rgjarehjoaidrjohi asjrh ojtenohsnstrh st.bernard, jhonathan";
-    // txtb.setText(str);
-    // temporary
 }
 
 bool application::Application::init()
@@ -24,6 +20,9 @@ bool application::Application::init()
 
     line.useFont("Arial.ttf", 16);
     line.appendText("Hello World!");
+
+    std::string str = "Lorem Ipsum is simply dummy text of the printing and typesetting industry.\nLorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.\nIt has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.\nIt was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.\n";
+    txtBlock.setText(str);
 
     m_stack.push("1");
     m_stack.push("2");
@@ -94,6 +93,7 @@ void application::Application::render() // temporary implementation
    //  txtb.render(400, 200, m_renderer);
     m_stack.render(m_renderer);
     line.render(m_renderer);
+    txtBlock.render(m_renderer);
 
     m_renderer.present();
 }
