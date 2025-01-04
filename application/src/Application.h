@@ -43,13 +43,14 @@ namespace application
         application::Border m_bordVert;
         application::Border m_bordHor;
 
+        int count = 0;// temporary
         application::StackVisualizer m_stack; // temporary
         
         // application::TextBlock txtb; // temporary
 
         application::TextLine line; // temporary
 
-        application::TextBlock txtBlock; // temporary
+        // application::TextBlock txtBlock; // temporary
 
 
     private:

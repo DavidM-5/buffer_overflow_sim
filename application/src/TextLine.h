@@ -20,7 +20,7 @@ namespace application {
         ~TextLine() = default;
 
         void handleEvents(const core::InputManager& inputMngr) override {};
-        void render(core::Renderer& renderer);
+        void render(core::Renderer& renderer, const SDL_Rect* srcRect = nullptr, const SDL_Rect* dstRect = nullptr);
 
         int appendText(const std::string& text);
         void editText(int start, int end, const std::string& newText);

@@ -9,15 +9,35 @@ application::TextLine::TextLine(int posX, int posY, int w, int h, SDL_Color colo
 {
 }
 
-void application::TextLine::render(core::Renderer &renderer)
+void application::TextLine::render(core::Renderer &renderer, const SDL_Rect* srcRect, const SDL_Rect* dstRect)
 {
     if (m_updated) {
         updateTexture(renderer);
         m_updated = false;
     }
 
-    SDL_Rect dstRect = { m_transform.x, m_transform.y, m_texture.getWidth(), m_texture.getHeight() };
-    renderer.drawTexture(m_texture, nullptr, &dstRect);
+    // If no destination rect provided, use the transform
+    SDL_Rect defaultDstRect = { 
+        m_transform.x, 
+        m_transform.y, 
+        m_texture.getWidth(), 
+        m_texture.getHeight() 
+    };
+
+    // If no source rect provided, use the full texture
+    SDL_Rect defaultSrcRect = { 
+        0, 
+        0, 
+        m_texture.getWidth(), 
+        m_texture.getHeight() 
+    };
+
+    // Use provided rects if available, otherwise use defaults
+    renderer.drawTexture(
+        m_texture,
+        srcRect ? srcRect : &defaultSrcRect,
+        dstRect ? dstRect : &defaultDstRect
+    );
 }
 
 int application::TextLine::appendText(const std::string& text)

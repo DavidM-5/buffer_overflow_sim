@@ -1,29 +1,47 @@
 #include "StackVisualizer.h"
 
-application::StackVisualizer::StackVisualizer(int posX, int posY, int w, int h, SDL_Color color) : 
-                                              Widget(posX, posY, w, h, color), m_maxHeight(0),
-                                              m_slotHeight(h)
+application::StackVisualizer::StackVisualizer(int posX, int posY, int w, int h, SDL_Color color, int slotsAmount) : 
+                                              Widget(posX, posY, w, h, color),
+                                              m_slotsAmount(slotsAmount), m_slotHeight(h / slotsAmount)
 {
 }
 
 void application::StackVisualizer::render(core::Renderer &renderer)
-{
-    for (const auto& txt : m_slots) {
-        txt->render(renderer);
+{   
+    int startIdx = m_slots.size() > m_slotsAmount ? m_slots.size() - m_slotsAmount : 0;
+
+    for (int i = 0; i < m_slotsAmount && (startIdx + i) < m_slots.size(); i++) {
+        SDL_Rect dstRect = {m_transform.x,
+                            m_transform.y + m_slotHeight * i,
+                            m_transform.w,
+                            m_slotHeight};
+
+        m_slots[startIdx + i]->render(renderer, nullptr, &dstRect);
     }
+    
+    for (int i = 0; i < m_slotsAmount; i++) {
+        SDL_Rect dstRect = {m_transform.x,
+                            m_transform.y + m_slotHeight * i,
+                            m_transform.w,
+                            m_slotHeight};
+
+        renderer.drawRectBorder(dstRect, m_mainColor);
+    }
+    
 }
 
 void application::StackVisualizer::push(std::string str)
 {
     auto txt = std::make_unique<application::TextLine>(
                               m_transform.x, 
-                              m_transform.y + m_transform.h * m_slots.size(), 
+                              m_transform.y + m_slots.size() * m_slotHeight, 
                               m_transform.w, 
-                              m_transform.h,
+                              m_slotHeight,
                               m_mainColor
                               );
 
-    txt->useFont("Arial.ttf", 16);
+    application::TextLine::loadFont("Arial.ttf", m_slotHeight);
+    txt->useFont("Arial.ttf", m_slotHeight);
     txt->appendText(str);
 
     m_slots.push_back(std::move(txt));

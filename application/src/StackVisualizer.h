@@ -16,13 +16,11 @@ namespace application
     class StackVisualizer : public Widget
     {
     public:
-        StackVisualizer(int posX = 0, int posY = 0, int w = 150, int h = 50, SDL_Color color = {255, 255, 255, 255});
+        StackVisualizer(int posX = 0, int posY = 0, int w = 150, int h = 50, SDL_Color color = {255, 255, 255, 255}, int slotsAmount = 2);
         ~StackVisualizer() = default;
 
         void render(core::Renderer& renderer);
         void handleEvents(const core::InputManager& inputMngr) {};
-
-        void setMaxHeight(int h) { m_maxHeight = h; }
 
         void push(std::string str);
         void pop();
@@ -30,7 +28,7 @@ namespace application
     private:
         std::vector<std::unique_ptr<application::TextLine>> m_slots;
         
-        int m_maxHeight;
+        int m_slotsAmount;
         int m_slotHeight;
 
     };
