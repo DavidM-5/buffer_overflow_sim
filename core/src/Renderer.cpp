@@ -14,6 +14,10 @@ bool core::Renderer::init(SDL_Window *window)
     m_renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (m_renderer == nullptr)
         return false;
+
+    // Enable blending for transparency
+    if (SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND) != 0)
+        return false;
     
     return true;
 }
