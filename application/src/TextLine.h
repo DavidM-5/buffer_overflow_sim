@@ -31,6 +31,10 @@ namespace application {
         void adjustWidhtToFont();
         void adjustHeightToFont();
 
+        void addDeltaTransform(int x = 0, int y = 0, int w = 0, int h = 0) override;
+        void setWidth(int newW);
+        void setHeight(int newH);
+
         int getLenght() { return m_text.length(); }
 
         static bool loadFont(const std::string& fontName, int size);
@@ -50,7 +54,7 @@ namespace application {
         bool m_updated;
 
     private:
-        void updateTexture(core::Renderer& renderer);
+        void updateTexture(core::Renderer& renderer, int centerHorizontally = 0);
 
         std::vector<int> countSpaces(const std::string& str);
 

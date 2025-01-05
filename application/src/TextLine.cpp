@@ -137,10 +137,7 @@ void application::TextLine::addFormatMap(const std::unordered_map<std::string, S
 
 bool application::TextLine::useFont(const std::string &fontName, int size)
 {
-    if (s_fonts.find(fontName) == s_fonts.end())
-        return false;
-    
-    if (s_fonts[fontName].find(size) == s_fonts[fontName].end())
+    if (!loadFont(fontName, size))
         return false;
 
     m_fontName = fontName;
@@ -171,6 +168,27 @@ void application::TextLine::adjustHeightToFont()
     m_transform.h = height;
 }
 
+void application::TextLine::addDeltaTransform(int x, int y, int w, int h)
+{
+    Widget::addDeltaTransform(x, y, w, h);
+    
+    m_updated = true;
+}
+
+void application::TextLine::setWidth(int newW)
+{
+    Widget::setWidth(newW);
+
+    m_updated = true;
+}
+
+void application::TextLine::setHeight(int newH)
+{
+    Widget::setHeight(newH);
+
+    m_updated = true;
+}
+
 bool application::TextLine::loadFont(const std::string &fontName, int size)
 {
     if (!s_ttfInitialized) {
@@ -193,12 +211,14 @@ bool application::TextLine::loadFont(const std::string &fontName, int size)
     return true;
 }
 
-void application::TextLine::updateTexture(core::Renderer &renderer)
+void application::TextLine::updateTexture(core::Renderer &renderer, int centerHorizontally)
 {
     // Early validation checks
     if (m_text.empty() || m_fontName.empty() || m_fontSize <= 0 ||
         s_fonts.find(m_fontName) == s_fonts.end() ||
         s_fonts[m_fontName].find(m_fontSize) == s_fonts[m_fontName].end()) {
+
+        m_updated = false;
         return;
     }
 
@@ -259,7 +279,10 @@ void application::TextLine::updateTexture(core::Renderer &renderer)
 
     // Convert final surface to texture
     m_texture.loadFromSurface(completeSurface, renderer);
+    
     SDL_FreeSurface(completeSurface);
+
+    m_updated = false;
 }
 
 std::vector<int> application::TextLine::countSpaces(const std::string &str)

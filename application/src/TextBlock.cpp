@@ -1,60 +1,68 @@
 #include "TextBlock.h"
 
 application::TextBlock::TextBlock(int posX, int posY, int w, int h, SDL_Color color) : 
-                                  Widget(posX, posY, w, h, color), m_GUTTER_WIDTH(30)
+                                  Widget(posX, posY, w, h, color), m_GUTTER_WIDTH(30),
+                                  m_topLineForRender(1)
 {
 }
 
 void application::TextBlock::setText(std::string &text)
 {
-    // split the text by lines
-    std::vector<std::string> lines;
-    std::istringstream stream(text);
-    std::string line;
+    m_lines.clear();
     
-    while (std::getline(stream, line)) {
-        lines.push_back(line);
-    }
+    std::vector<std::string> lines = splitIntoLines(text);
 
-    for (int i = 0; i < lines.size(); i++) {
-        m_lines.emplace_back(Line{ i+1,
-                                   false,
-                                   application::TextLine(m_transform.x + m_GUTTER_WIDTH, 
-                                                         m_transform.y + i*20,
-                                                         m_transform.w - m_GUTTER_WIDTH, 
-                                                         20)
-                                  });
+    if (lines.empty())
+        return;
 
-        m_lines[i].textLine.useFont("Arial.ttf", 16);
-        int remainingWords = m_lines[i].textLine.appendText(lines[i]);
+    int currentLine = 0;
+    while (currentLine < lines.size()) {
+        Line ln = {
+            .lineNumber = currentLine+1, 
+            .breakpoint = false,
+            .textLine = application::TextLine(m_transform.x + m_GUTTER_WIDTH, 
+                                              m_transform.y + currentLine*20,
+                                              m_transform.w - m_GUTTER_WIDTH, 
+                                              20)
+        };
 
+        ln.textLine.useFont("Arial.ttf", 16);
+        int remainingWords = ln.textLine.appendText(lines[currentLine]);
+        
         if (remainingWords > 0) {
-            int spaceCount = 0;
-            bool continuoseSpace = false;
-            
-            int j;
-            for (j = lines[i].length()-1; j >= 0; j--) {
-                if (spaceCount == remainingWords)
-                    break;
+            bool spaceEncountered = false;
 
-                if (lines[i][j] == ' ') {
-                    if (continuoseSpace) {
+            int i = lines[currentLine].length() - 1;
+            
+            while (lines[currentLine][i] == ' ')
+                i--;
+            
+            for (i; i >= 0; i--) {
+                if (lines[currentLine][i] == ' ') {
+                    if (spaceEncountered)
                         continue;
-                    }
-                    else if (!continuoseSpace) {
-                        ++spaceCount;
-                        continuoseSpace = true;
-                    }  
+                    
+                    spaceEncountered = true;
+                    remainingWords--;
                 }
                 else {
-                    continuoseSpace = false;
+                    spaceEncountered = false;
                 }
+
+                if (remainingWords == 0)
+                    break;
             }
 
-            std::string remainingText = lines[i].substr(j+1);
-            lines.insert(lines.begin() + i + 1, remainingText);
+            std::string remaining = lines[currentLine].substr(i, lines[currentLine].size()-i);
+            lines.insert(lines.begin() + currentLine + 1, remaining);
         }
+
+        m_lines.push_back(ln);
+        currentLine++;
     }
+
+    m_text = text;
+    
 }
 
 void application::TextBlock::setColorFormat(const std::unordered_map<std::string, SDL_Color> &formatMap)
@@ -64,11 +72,41 @@ void application::TextBlock::setColorFormat(const std::unordered_map<std::string
     }
 }
 
+// TODO: only render the lines that are activly shown
 void application::TextBlock::render(core::Renderer &renderer)
 {
-    renderer.drawRect(m_transform, SDL_Color{255, 123, 42, 192});
+    renderer.drawRect(m_transform, SDL_Color{255, 64, 124, 124});
     
     for (Line& line : m_lines) {
-        line.textLine.render(renderer);
+        if (line.textLine.getPosition().y < m_transform.y + m_transform.h &&
+            line.textLine.getPosition().y >= m_transform.y)
+            line.textLine.render(renderer);
     }
+}
+
+void application::TextBlock::addDeltaTransform(int dx, int dy, int dw, int dh)
+{
+    Widget::addDeltaTransform(dx, dy, dw, dh);
+
+    setText(m_text);
+}
+
+std::vector<std::string> application::TextBlock::splitIntoLines(std::string &text)
+{
+    std::vector<std::string> lines;
+    int startIdx = 0;
+    
+    for (int i = 0; i < text.length(); i++) {
+        if (text[i] == '\n') {
+            lines.push_back(text.substr(startIdx, i - startIdx));
+            startIdx = i+1;
+        }
+    }
+
+    // Push the last line if there is any remaining text
+    if (startIdx != text.length()) {
+        lines.push_back(text.substr(startIdx, text.length()));
+    }
+
+    return lines;
 }

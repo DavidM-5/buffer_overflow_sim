@@ -38,19 +38,15 @@ namespace application
         TTF_Font* font; // temporary
 
 
-        std::vector<std::unique_ptr<application::Panel>> m_panels;
+        std::vector<std::unique_ptr<application::Widget>> m_widgets;
 
         application::Border m_bordVert;
         application::Border m_bordHor;
 
         int count = 0;// temporary
         application::StackVisualizer m_stack; // temporary
-        
-        // application::TextBlock txtb; // temporary
 
         application::TextLine line; // temporary
-
-        // application::TextBlock txtBlock; // temporary
 
 
     private:

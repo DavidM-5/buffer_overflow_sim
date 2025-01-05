@@ -4,6 +4,7 @@ application::StackVisualizer::StackVisualizer(int posX, int posY, int w, int h, 
                                               Widget(posX, posY, w, h, color),
                                               m_slotsAmount(slotsAmount), m_slotHeight(h / slotsAmount)
 {
+    application::TextLine::loadFont("Arial.ttf", m_slotHeight);
 }
 
 void application::StackVisualizer::render(core::Renderer &renderer)
@@ -40,7 +41,6 @@ void application::StackVisualizer::push(std::string str)
                               m_mainColor
                               );
 
-    application::TextLine::loadFont("Arial.ttf", m_slotHeight);
     txt->useFont("Arial.ttf", m_slotHeight);
     txt->appendText(str);
 
