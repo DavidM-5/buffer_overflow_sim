@@ -27,37 +27,37 @@ void application::Border::handleEvents(const core::InputManager &inputMngr)
         if (m_isVertical) {
             m_transform.x += mouseDelta.x;
 
-            for (Widget* widget : m_panels[0]) {
+            for (Widget* widget : m_widgets[0]) {
                 widget->addDeltaTransform(0, 0, mouseDelta.x, 0);
             }
-            for (Widget* widget : m_panels[1]) {
+            for (Widget* widget : m_widgets[1]) {
                 widget->addDeltaTransform(mouseDelta.x, 0, -mouseDelta.x, 0);
             }
         }
         else {
             m_transform.y += mouseDelta.y;
 
-            for (Widget* widget : m_panels[0]) {
+            for (Widget* widget : m_widgets[0]) {
                 widget->addDeltaTransform(0, 0, 0, mouseDelta.y);
             }
-            for (Widget* widget : m_panels[1]) {
+            for (Widget* widget : m_widgets[1]) {
                 widget->addDeltaTransform(0, mouseDelta.y, 0, -mouseDelta.y);
             }
         }
     }
 }
 
-void application::Border::addLeftTopPanel(Widget *panel)
+void application::Border::addLeftTopWidget(Widget *panel)
 {
     if (panel) {
-        m_panels[0].push_back(panel);
+        m_widgets[0].push_back(panel);
     }
 }
 
-void application::Border::addRightBottomPanel(Widget *panel)
+void application::Border::addRightBottomWidget(Widget *panel)
 {
     if (panel) {
-        m_panels[1].push_back(panel);
+        m_widgets[1].push_back(panel);
     }
 }
 

@@ -17,16 +17,16 @@ namespace application
 
         void handleEvents(const core::InputManager& inputMngr);
         
-        void addLeftTopPanel(Widget* panel);
-        void addRightBottomPanel(Widget* panel);
+        void addLeftTopWidget(Widget* panel);
+        void addRightBottomWidget(Widget* panel);
 
     private:
         bool m_isVertical;
         bool m_isResizing;
 
-        // index 0 for panels on left/top
-        // index 1 for panels on right/bottom
-        std::array<std::vector<Widget*>, 2> m_panels;
+        // index 0 for widgets on left/top
+        // index 1 for widgets on right/bottom
+        std::array<std::vector<Widget*>, 2> m_widgets;
 
     private:
         bool isPointInside(const vector2i& point);

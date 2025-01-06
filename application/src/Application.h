@@ -35,8 +35,6 @@ namespace application
         core::Renderer m_renderer;
 
         core::InputManager inptmng; // temporary
-        TTF_Font* font; // temporary
-
 
         std::vector<std::unique_ptr<application::Widget>> m_widgets;
 
@@ -46,11 +44,8 @@ namespace application
         int count = 0;// temporary
         application::StackVisualizer m_stack; // temporary
 
-        application::TextLine line; // temporary
-
-
     private:
-        void update(); // not implemented
+        void update(); // temp implementation
         void render(); // temp implementation
 
         void initPanels();

@@ -3,8 +3,7 @@
 application::Application::Application() : m_window("Buffer Overflow Simulator", WINDOW_WIDTH, WINDOW_HEIGHT),
                                           m_bordVert(true, 2*WINDOW_WIDTH/3-105, 0, 10, WINDOW_HEIGHT),
                                           m_bordHor(false, 0, 2*WINDOW_HEIGHT/3-5, 2*WINDOW_WIDTH/3-100, 10),
-                                          m_stack(50, 50, 150, 250, {255, 255, 255, 255}, 10), // {0xff, 0xd8, 0x00, 0xff} - stack color
-                                          line(100, 400, 500, 20)
+                                          m_stack(50, 50, 150, 250, {255, 255, 255, 255}, 10) // {0xff, 0xd8, 0x00, 0xff} - stack color
 {
 }
 
@@ -17,9 +16,6 @@ bool application::Application::init()
     if (!application::TextLine::loadFont("Arial.ttf", 16)) return false; // temporary
 
     initPanels();
-
-    line.useFont("Arial.ttf", 16);
-    line.appendText("Hello World!");
 
     m_stack.push(std::to_string(count++));
     m_stack.push(std::to_string(count++));
@@ -46,30 +42,18 @@ void application::Application::run()
                 m_stack.push(std::to_string(count++));
             if (inptmng.getPressedKey(event) == "i")
                 m_stack.pop();
-            if (inptmng.getPressedKey(event) == "u") {
-                line.appendText(" A B,     C D E");
-            }
-            if (inptmng.getPressedKey(event) == "j") {
-                line.editText(0, 2, "");
-            }
             // temporary end
         }
 
-        inptmng.update(); // temporary
-
-
-        //m_codeWidget.handleWindowResize(WINDOW_WIDTH/2, 0, 0.5, 1); // temporary?
-
-
         Application::update();
         Application::render();
-        
     }
-    
 }
 
-void application::Application::update()
+void application::Application::update() // temporary implementation
 {
+    inptmng.update(); // temporary
+
     for (const auto& panel : m_widgets) {
         panel->handleEvents(inptmng);
     }
@@ -91,7 +75,6 @@ void application::Application::render() // temporary implementation
     m_bordHor.render(m_renderer);
 
     m_stack.render(m_renderer);
-    line.render(m_renderer);
 
     m_renderer.present();
 }
@@ -110,19 +93,19 @@ void application::Application::initPanels()
     
     // stack panel
     m_widgets.emplace_back(
-        std::make_unique<application::Panel>(0, 0, 2*WINDOW_WIDTH/3-100, 2*WINDOW_HEIGHT/3, SDL_Color{0x60, 0x5f, 0xff, 0xff})
+        std::make_unique<application::TextBlock>(0, 0, 2*WINDOW_WIDTH/3-100, 2*WINDOW_HEIGHT/3, SDL_Color{0x60, 0x5f, 0xff, 0xff})
     );
 
     // console panel
     m_widgets.emplace_back(
-        std::make_unique<application::Panel>(0, 2*WINDOW_HEIGHT/3, 2*WINDOW_WIDTH/3-100, WINDOW_HEIGHT/3, SDL_Color{0x60, 0xff, 0x5f, 0xff})
+        std::make_unique<application::TextBlock>(0, 2*WINDOW_HEIGHT/3, 2*WINDOW_WIDTH/3-100, WINDOW_HEIGHT/3, SDL_Color{0x60, 0xff, 0x5f, 0xff})
     );
 
-    m_bordVert.addLeftTopPanel(&m_bordHor);
-    m_bordVert.addLeftTopPanel(m_widgets[1].get());
-    m_bordVert.addLeftTopPanel(m_widgets[2].get());
-    m_bordVert.addRightBottomPanel(m_widgets[0].get());
+    m_bordVert.addLeftTopWidget(&m_bordHor);
+    m_bordVert.addLeftTopWidget(m_widgets[1].get());
+    m_bordVert.addLeftTopWidget(m_widgets[2].get());
+    m_bordVert.addRightBottomWidget(m_widgets[0].get());
 
-    m_bordHor.addLeftTopPanel(m_widgets[1].get());
-    m_bordHor.addRightBottomPanel(m_widgets[2].get());
+    m_bordHor.addLeftTopWidget(m_widgets[1].get());
+    m_bordHor.addRightBottomWidget(m_widgets[2].get());
 }
