@@ -81,6 +81,7 @@ void application::Application::render() // temporary implementation
 
 void application::Application::initPanels()
 {
+    /*
     // code panel
     m_widgets.emplace_back(
         std::make_unique<application::TextBlock>(2*WINDOW_WIDTH/3-100, 0, WINDOW_WIDTH/3+100, WINDOW_HEIGHT, SDL_Color{0x60, 0x5f, 0x5f, 0xff})
@@ -90,7 +91,34 @@ void application::Application::initPanels()
     
     application::TextBlock* t = static_cast<application::TextBlock*>(m_widgets[0].get());
     t->setText(str);
+    */
+
+    // Create the panel
+    auto codePanel = std::make_unique<application::Panel>(
+        2*WINDOW_WIDTH/3-100, 0, 
+        WINDOW_WIDTH/3+100, WINDOW_HEIGHT,
+        SDL_Color{0x60, 0x5f, 0x5f, 0xff}
+    );
+
+    // Create and add the text block
+    auto textBlock = std::make_unique<application::TextBlock>(
+        0, 0,  // Relative to panel
+        WINDOW_WIDTH/3+100, WINDOW_HEIGHT,
+        SDL_Color{0, 0, 0, 0}
+    );
     
+    std::string str = "Lorem Ipsum\n is simply \ndummy text \nof the \nprinting\n and typ\nesett\ning indu\nstry.\nLorem Ipsum\n has\n been the \nindustry's\n standard dummy\n text\n ever \nsin\nce the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.\nIt has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.\nIt was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.\n";
+    
+    textBlock->setText(str);
+    
+    
+    codePanel->addWidget("codeText", std::move(textBlock));
+    codePanel->addRightBottomBorder(m_bordVert);
+
+    // Add panel to widgets
+    m_widgets.emplace_back(std::move(codePanel));
+
+
     // stack panel
     m_widgets.emplace_back(
         std::make_unique<application::TextBlock>(0, 0, 2*WINDOW_WIDTH/3-100, 2*WINDOW_HEIGHT/3, SDL_Color{0x60, 0x5f, 0xff, 0xff})
@@ -104,7 +132,7 @@ void application::Application::initPanels()
     m_bordVert.addLeftTopWidget(&m_bordHor);
     m_bordVert.addLeftTopWidget(m_widgets[1].get());
     m_bordVert.addLeftTopWidget(m_widgets[2].get());
-    m_bordVert.addRightBottomWidget(m_widgets[0].get());
+    // m_bordVert.addRightBottomWidget(m_widgets[0].get());
 
     m_bordHor.addLeftTopWidget(m_widgets[1].get());
     m_bordHor.addRightBottomWidget(m_widgets[2].get());

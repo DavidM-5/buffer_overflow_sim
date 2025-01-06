@@ -75,7 +75,7 @@ void application::TextBlock::setColorFormat(const std::unordered_map<std::string
 // TODO: only render the lines that are activly shown
 void application::TextBlock::render(core::Renderer &renderer)
 {
-    renderer.drawRect(m_transform, SDL_Color{255, 64, 124, 124});
+    renderer.drawRect(m_transform, m_mainColor);
     
     for (Line& line : m_lines) {
         if (line.textLine.getPosition().y < m_transform.y + m_transform.h &&
@@ -89,6 +89,25 @@ void application::TextBlock::addDeltaTransform(int dx, int dy, int dw, int dh)
     Widget::addDeltaTransform(dx, dy, dw, dh);
 
     setText(m_text);
+}
+
+void application::TextBlock::setPosition(vector2i newPos)
+{
+    m_transform.x = newPos.x;
+    m_transform.y = newPos.y;
+
+    for (Line& line : m_lines) {
+        line.textLine.setPosition( { m_transform.x + m_GUTTER_WIDTH, m_transform.y + (line.textLine.getHeight() * (line.lineNumber - 1)) } );
+    }
+}
+
+void application::TextBlock::setWidth(int newW)
+{
+    m_transform.w = newW;
+
+    for (Line& line : m_lines) {
+        line.textLine.setWidth(newW);
+    }
 }
 
 std::vector<std::string> application::TextBlock::splitIntoLines(std::string &text)

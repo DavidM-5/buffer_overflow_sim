@@ -1,10 +1,14 @@
 #pragma once
 
+#include <iostream>
 #include <SDL2/SDL.h>
-
+#include <string>
+#include <memory>
+#include <unordered_map>
 #include "../../core/src/config.h"
 #include "../../core/src/Renderer.h"
 #include "Widget.h"
+#include "Border.h"
 
 namespace application
 {
@@ -17,10 +21,17 @@ namespace application
 
         void handleEvents(const core::InputManager& inputMngr);
         void render(core::Renderer& renderer);
+
+        bool addWidget(std::string name, std::unique_ptr<Widget> widget);
+        void addLeftTopBorder(application::Border& border);
+        void addRightBottomBorder(application::Border& border);
+
+        void setPosition(vector2i newPos);
+        void setWidth(int newW);
+        void setHeight(int newH);
     
     private:
-        // the scale is between 0-1 (percent) of the screen width/height
-        float m_scaleX, m_scaleY;
+        std::unordered_map<std::string, std::unique_ptr<application::Widget>> m_widgets;
 
     };
 

@@ -26,6 +26,9 @@ namespace application
 
         void addDeltaTransform(int dx = 0, int dy = 0, int dw = 0, int dh = 0) override;
 
+        void setPosition(vector2i newPos);
+        void setWidth(int newW);
+
     private:
         struct Line
         {

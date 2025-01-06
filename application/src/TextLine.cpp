@@ -175,6 +175,13 @@ void application::TextLine::addDeltaTransform(int x, int y, int w, int h)
     m_updated = true;
 }
 
+void application::TextLine::setPosition(vector2i newPos)
+{
+    Widget::setPosition(newPos);
+
+    m_updated = true;
+}
+
 void application::TextLine::setWidth(int newW)
 {
     Widget::setWidth(newW);

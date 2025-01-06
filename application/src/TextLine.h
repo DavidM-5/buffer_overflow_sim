@@ -32,10 +32,13 @@ namespace application {
         void adjustHeightToFont();
 
         void addDeltaTransform(int x = 0, int y = 0, int w = 0, int h = 0) override;
+        void setPosition(vector2i newPos);
         void setWidth(int newW);
         void setHeight(int newH);
 
         int getLenght() { return m_text.length(); }
+
+        bool isvalid() {return m_texture.isValid();}
 
         static bool loadFont(const std::string& fontName, int size);
 
