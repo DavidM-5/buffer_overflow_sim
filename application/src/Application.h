@@ -42,7 +42,6 @@ namespace application
         application::Border m_bordHor;
 
         int count = 0;// temporary
-        application::StackVisualizer m_stack; // temporary
 
     private:
         void update(); // temp implementation

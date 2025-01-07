@@ -31,7 +31,7 @@ void application::TextLine::render(core::Renderer &renderer, const SDL_Rect* src
         m_texture.getWidth(), 
         m_texture.getHeight() 
     };
-
+    
     // Use provided rects if available, otherwise use defaults
     renderer.drawTexture(
         m_texture,
@@ -171,28 +171,31 @@ void application::TextLine::adjustHeightToFont()
 void application::TextLine::addDeltaTransform(int x, int y, int w, int h)
 {
     Widget::addDeltaTransform(x, y, w, h);
-    
+
     m_updated = true;
 }
 
 void application::TextLine::setPosition(vector2i newPos)
 {
     Widget::setPosition(newPos);
-
+    
     m_updated = true;
 }
 
 void application::TextLine::setWidth(int newW)
 {
     Widget::setWidth(newW);
-
+    
     m_updated = true;
 }
 
 void application::TextLine::setHeight(int newH)
 {
     Widget::setHeight(newH);
-
+    /*
+    m_fontSize = newH;
+    useFont(m_fontName, m_fontSize);
+    */
     m_updated = true;
 }
 

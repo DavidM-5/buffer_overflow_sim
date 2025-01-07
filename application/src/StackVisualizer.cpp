@@ -4,7 +4,7 @@ application::StackVisualizer::StackVisualizer(int posX, int posY, int w, int h, 
                                               Widget(posX, posY, w, h, color),
                                               m_slotsAmount(slotsAmount), m_slotHeight(h / slotsAmount)
 {
-    application::TextLine::loadFont("Arial.ttf", m_slotHeight);
+    application::TextLine::loadFont("Arial.ttf", m_slotHeight - 2);
 }
 
 void application::StackVisualizer::render(core::Renderer &renderer)
@@ -28,7 +28,6 @@ void application::StackVisualizer::render(core::Renderer &renderer)
 
         renderer.drawRectBorder(dstRect, m_mainColor);
     }
-    
 }
 
 void application::StackVisualizer::push(std::string str)
@@ -51,5 +50,30 @@ void application::StackVisualizer::pop()
 {
     if (m_slots.size() > 0) {
         m_slots.pop_back();
+    }
+}
+
+void application::StackVisualizer::addDeltaTransform(int x, int y, int w, int h)
+{
+    m_transform.x += x;
+    m_transform.y += y;
+    m_transform.w += w;
+    m_transform.h += h;
+
+    m_slotHeight = m_transform.h / m_slotsAmount;
+
+    for (auto& slot : m_slots) {
+        slot->addDeltaTransform(x, y, 0, 0);
+        slot->setWidth(m_transform.w);
+        
+
+        if (slot->getHeight() > m_slotHeight - 2) {
+            slot->setHeight(m_slotHeight - 2);
+            slot->useFont("Arial.ttf", slot->getFontSize() - 1);
+        }
+        else if (slot->getHeight() < m_slotHeight - 2) {
+            slot->setHeight(m_slotHeight - 2);
+            slot->useFont("Arial.ttf", slot->getFontSize() + 1);
+        }
     }
 }

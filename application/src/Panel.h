@@ -26,6 +26,8 @@ namespace application
         void addLeftTopBorder(application::Border& border);
         void addRightBottomBorder(application::Border& border);
 
+        application::Widget* getWidget(std::string name);
+
         void setPosition(vector2i newPos);
         void setWidth(int newW);
         void setHeight(int newH);

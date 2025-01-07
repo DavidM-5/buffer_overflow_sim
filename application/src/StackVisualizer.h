@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <algorithm>
 #include "../../core/src/config.h"
 #include "../../core/src/Renderer.h"
 #include "../../core/src/InputManager.h"
@@ -24,6 +25,8 @@ namespace application
 
         void push(std::string str);
         void pop();
+
+        void addDeltaTransform(int x = 0, int y = 0, int w = 0, int h = 0) override;
 
     private:
         std::vector<std::unique_ptr<application::TextLine>> m_slots;

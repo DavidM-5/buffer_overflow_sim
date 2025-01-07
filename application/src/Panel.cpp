@@ -52,6 +52,14 @@ void application::Panel::addRightBottomBorder(application::Border &border)
     }
 }
 
+application::Widget *application::Panel::getWidget(std::string name)
+{
+    if (m_widgets.find(name) == m_widgets.end())
+        return nullptr;
+
+    return m_widgets[name].get();
+}
+
 void application::Panel::setPosition(vector2i newPos)
 {
     int dx = newPos.x - m_transform.x;
