@@ -17,8 +17,6 @@ namespace core
 
         bool init();
         bool initRenderer(core::Renderer* renderer);
-        // void clear();
-        // void present();
         void handleEvents(SDL_Event& event);
 
         bool isRunning() const { return m_running; }

@@ -3,7 +3,6 @@
 application::Application::Application() : m_window("Buffer Overflow Simulator", WINDOW_WIDTH, WINDOW_HEIGHT),
                                           m_bordVert(true, 2*WINDOW_WIDTH/3-105, 0, 10, WINDOW_HEIGHT),
                                           m_bordHor(false, 0, 2*WINDOW_HEIGHT/3-5, 2*WINDOW_WIDTH/3-100, 10)
-                                          // m_stack(50, 50, 150, 250, {255, 255, 255, 255}, 10) // {0xff, 0xd8, 0x00, 0xff} - stack color
 {
 }
 
@@ -12,8 +11,6 @@ bool application::Application::init()
     if (!m_window.init()) return false;
 
     if (!m_window.initRenderer(&m_renderer)) return false;
-
-    if (!application::TextLine::loadFont("Arial.ttf", 16)) return false; // temporary
 
     initPanels();
 
@@ -31,42 +28,42 @@ void application::Application::run()
             m_window.handleEvents(event);
             
             // temporary
-            std::string key = inptmng.getPressedKey(event);
-            if (!key.empty()) {
-                std::cout << key << std::flush;
+            if (m_inputMngr.getPressedKey() == "k") {
+                application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(m_panels[1]->getWidget("stackVisualize"));
+                stackV->push(std::to_string(count++));
             }
-            /*
-            if (inptmng.getPressedKey(event) == "k")
-                m_stack.push(std::to_string(count++));
-            if (inptmng.getPressedKey(event) == "i")
-                m_stack.pop();
-            */
+            if (m_inputMngr.getPressedKey() == "i") {
+                application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(m_panels[1]->getWidget("stackVisualize"));
+                stackV->pop();
+            } 
+            
             // temporary end
+
+            Application::update(event);
         }
 
-        Application::update();
         Application::render();
     }
 }
 
-void application::Application::update() // temporary implementation
+void application::Application::update(SDL_Event& event)
 {
-    inptmng.update(); // temporary
+    m_inputMngr.update(event);
 
-    for (const auto& panel : m_widgets) {
-        panel->handleEvents(inptmng);
+    for (const auto& panel : m_panels) {
+        panel->handleEvents(m_inputMngr);
     }
 
-    m_bordVert.handleEvents(inptmng);
-    m_bordHor.handleEvents(inptmng);
+    m_bordVert.handleEvents(m_inputMngr);
+    m_bordHor.handleEvents(m_inputMngr);
 }
 
-void application::Application::render() // temporary implementation
+void application::Application::render()
 {
     m_renderer.clear({0, 0, 0, 255});
 
     // render panels
-    for (const auto& panel : m_widgets) {
+    for (const auto& panel : m_panels) {
         panel->render(m_renderer);
     }
 
@@ -93,26 +90,20 @@ void application::Application::initPanels()
         SDL_Color{0, 0, 0, 0}
     );
     
+    // temporary \/\/\/
     std::string str = "Lorem Ipsum\n is simply \ndummy text \nof the \nprinting\n and typ\nesett\ning indu\nstry.\nLorem Ipsum\n has\n been the \nindustry's\n standard dummy\n text\n ever \nsin\nce the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.\nIt has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.\nIt was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.\n";
-    
     textBlock->setText(str);
-    
+    // temporary /\/\/\
     
     codePanel->addWidget("codeText", std::move(textBlock));
     codePanel->addRightBottomBorder(m_bordVert);
 
     // Add panel to widgets
-    m_widgets.emplace_back(std::move(codePanel));
+    m_panels.emplace_back(std::move(codePanel));
 
 
 
     // stack panel
-    /*
-    m_widgets.emplace_back(
-        std::make_unique<application::TextBlock>(0, 0, 2*WINDOW_WIDTH/3-100, 2*WINDOW_HEIGHT/3, SDL_Color{0x60, 0x5f, 0xff, 0xff})
-    );  m_stack.push(std::to_string(count++));
-    m_stack.push(std::to_string(count++));
-    */
     // Create the panel
     auto stackPanel = std::make_unique<application::Panel>(
         0, 0,
@@ -128,28 +119,47 @@ void application::Application::initPanels()
         10
     );
 
-    stackVisualize->push(std::to_string(count++));
-    stackVisualize->push(std::to_string(count++));
+    stackVisualize->push(std::to_string(count++)); // temporary
+    stackVisualize->push(std::to_string(count++)); // temporary
 
     stackPanel->addWidget("stackVisualize", std::move(stackVisualize));
     stackPanel->addLeftTopBorder(m_bordVert);
     stackPanel->addLeftTopBorder(m_bordHor);
     
     // Add panel to widgets
-    m_widgets.emplace_back(std::move(stackPanel));
+    m_panels.emplace_back(std::move(stackPanel));
 
     
 
     // console panel
-    m_widgets.emplace_back(
-        std::make_unique<application::TextBlock>(0, 2*WINDOW_HEIGHT/3, 2*WINDOW_WIDTH/3-100, WINDOW_HEIGHT/3, SDL_Color{0x60, 0xff, 0x5f, 0xff})
+    // Create the panel
+    auto consolePanel = std::make_unique<application::Panel>(
+        0, 2*WINDOW_HEIGHT/3,
+        2*WINDOW_WIDTH/3-100, WINDOW_HEIGHT/3,
+        SDL_Color{0xff, 0x60, 0x5f, 0xff}
     );
+    
+    // Create and add the stack
+    auto console = std::make_unique<application::Console>(
+        0, 0,  // Relative to panel
+        consolePanel->getWidth(), consolePanel->getHeight()
+    );
+
+
+    consolePanel->addWidget("console", std::move(console));
+    consolePanel->addLeftTopBorder(m_bordVert);
+    consolePanel->addRightBottomBorder(m_bordHor);
+    
+
+    // Add panel to widgets
+    m_panels.emplace_back(std::move(consolePanel));
+
 
     m_bordVert.addLeftTopWidget(&m_bordHor);
     // m_bordVert.addLeftTopWidget(m_widgets[1].get());
-    m_bordVert.addLeftTopWidget(m_widgets[2].get());
+    // m_bordVert.addLeftTopWidget(m_panels[2].get());
     // m_bordVert.addRightBottomWidget(m_widgets[0].get());
 
     // m_bordHor.addLeftTopWidget(m_widgets[1].get());
-    m_bordHor.addRightBottomWidget(m_widgets[2].get());
+    // m_bordHor.addRightBottomWidget(m_panels[2].get());
 }

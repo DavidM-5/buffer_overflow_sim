@@ -23,23 +23,25 @@ namespace application {
         void handleEvents(const core::InputManager& inputMngr) override {};
         void render(core::Renderer& renderer, const SDL_Rect* srcRect = nullptr, const SDL_Rect* dstRect = nullptr);
 
-        int appendText(const std::string& text);
+        int appendText(const std::string& text, bool ignoreNotFitted = false);
         void editText(int start, int end, const std::string& newText);
 
         void addFormatMap(const std::unordered_map<std::string, SDL_Color> &formatMap);
         bool useFont(const std::string& fontName, int size);
 
-        void adjustWidhtToFont();
-        void adjustHeightToFont();
+        void clear();
+
+        void fitWidthToText();
+        void fitHeightToText();
 
         int getFontSize() {return m_fontSize; }
 
         void addDeltaTransform(int x = 0, int y = 0, int w = 0, int h = 0);
-        void setPosition(vector2i newPos);
         void setWidth(int newW);
         void setHeight(int newH);
 
         int getLenght() { return m_text.length(); }
+        std::string getText() { return m_text; }
 
         static bool loadFont(const std::string& fontName, int size);
 

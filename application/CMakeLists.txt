@@ -12,6 +12,7 @@ add_executable(buffer_overflow_sim
     src/StackVisualizer.cpp
     src/TextLine.cpp
     src/GDBInterface.cpp
+    src/Console.cpp
 )
 
 # Set the output directory for the executable

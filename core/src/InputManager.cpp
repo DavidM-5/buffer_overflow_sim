@@ -14,68 +14,60 @@ core::InputManager::InputManager() : m_mousePosition({WINDOW_WIDTH / 2, WINDOW_H
     }
 }
 
-void core::InputManager::update()
+void core::InputManager::update(SDL_Event& event)
 {
     m_prevMousePosition = m_mousePosition;
+    m_currentKeyPress = "";
 
-    // update keyboard keys statess
+    if (event.type == SDL_KEYDOWN) {
+        SDL_Keycode keycode = event.key.keysym.sym;
+        SDL_Keymod modState = SDL_GetModState();
+        
+        // Handle numbers and symbols with shift
+        if (keycode >= SDLK_0 && keycode <= SDLK_9 && (modState & KMOD_SHIFT)) {
+            const char shiftNums[] = ")!@#$%^&*(";
+            m_currentKeyPress = shiftNums[keycode - SDLK_0];
+        } 
+        else {
+            // Get the character considering keyboard layout
+            std::string keyName = SDL_GetKeyName(keycode);
+
+            if (keycode == SDLK_SPACE) {
+                m_currentKeyPress = " ";
+            }
+            else if (keycode == SDLK_RETURN || keycode == SDLK_RETURN2) {
+                m_currentKeyPress = "\n";
+            }
+            else if (keycode == SDLK_TAB) {
+                m_currentKeyPress = "\t";
+            }
+            else {
+                m_currentKeyPress = keyName;
+                
+                // Handle case sensitivity
+                if (!(modState & KMOD_SHIFT)) {
+                    std::transform(m_currentKeyPress.begin(), m_currentKeyPress.end(), 
+                                m_currentKeyPress.begin(), ::tolower);
+                }
+            }
+        }
+    }
+
+    // Rest of the update function remains the same
     const uint8_t* currentKeyStates = SDL_GetKeyboardState(nullptr);
     for (int i = 0; i < SDL_NUM_SCANCODES; ++i) {
         m_keyStates[i] = currentKeyStates[i] != 0;
     }
 
-    // update mouse position and buttons states
     uint32_t currentMouseState = SDL_GetMouseState(&m_mousePosition.x, &m_mousePosition.y);
     m_mouseButtons[MOUSE_BUTTON_LEFT] = (currentMouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0;
     m_mouseButtons[MOUSE_BUTTON_WHEEL] = (currentMouseState & SDL_BUTTON(SDL_BUTTON_MIDDLE)) != 0;
     m_mouseButtons[MOUSE_BUTTON_RIGHT] = (currentMouseState & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0;
 }
 
-std::string core::InputManager::getPressedKey(SDL_Event& event)
+std::string core::InputManager::getPressedKey() const
 {
-    if (event.type == SDL_KEYDOWN) {
-        SDL_Keycode key = event.key.keysym.sym;
-        uint16_t mod = event.key.keysym.mod;
-
-        bool isShift = (mod & KMOD_SHIFT);
-
-        // Handle alphanumeric keys
-        if (key >= SDLK_a && key <= SDLK_z) {
-            char pressedKey = (isShift) ? toupper(key) : key;
-            return std::string(1, pressedKey);
-        }
-
-        // Handle numbers (0-9)
-        if (key >= SDLK_0 && key <= SDLK_9) {
-            char pressedKey = (isShift) ? (key - SDLK_0 + '!') : key;  // Handle shift+number for special characters
-            return std::string(1, pressedKey);
-        }
-
-        switch (key)
-        {
-        case SDLK_SPACE:
-            return " ";
-
-        case SDLK_RETURN:
-        case SDLK_KP_ENTER:
-            return "\n";
-
-        case SDLK_TAB:
-            return "\t";
-
-        case SDLK_BACKSPACE:
-            return "<BACKSPACE>";
-
-        case SDLK_ESCAPE:
-            return "<ESCAPE>";
-
-        default:
-            return "";
-        }
-        
-    }
-
-    return "";  // Return an empty string if no key is pressed
+    return m_currentKeyPress;
 }
 
 vector2i core::InputManager::getMousePosDelta() const

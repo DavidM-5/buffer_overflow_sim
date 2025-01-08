@@ -17,6 +17,7 @@
 #include "Panel.h"
 #include "Border.h"
 #include "StackVisualizer.h"
+#include "Console.h"
 
 namespace application
 {
@@ -33,10 +34,9 @@ namespace application
     private:
         core::Window m_window;
         core::Renderer m_renderer;
+        core::InputManager m_inputMngr;
 
-        core::InputManager inptmng; // temporary
-
-        std::vector<std::unique_ptr<application::Widget>> m_widgets;
+        std::vector<std::unique_ptr<application::Panel>> m_panels;
 
         application::Border m_bordVert;
         application::Border m_bordHor;
@@ -44,7 +44,7 @@ namespace application
         int count = 0;// temporary
 
     private:
-        void update(); // temp implementation
+        void update(SDL_Event& event); // temp implementation
         void render(); // temp implementation
 
         void initPanels();

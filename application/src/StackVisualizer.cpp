@@ -14,7 +14,7 @@ void application::StackVisualizer::render(core::Renderer &renderer)
     for (int i = 0; i < m_slotsAmount && (startIdx + i) < m_slots.size(); i++) {
         SDL_Rect dstRect = {m_transform.x,
                             m_transform.y + m_slotHeight * i,
-                            m_transform.w,
+                            m_slots[startIdx + i]->getWidth(),
                             m_slotHeight};
 
         m_slots[startIdx + i]->render(renderer, nullptr, &dstRect);

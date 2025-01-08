@@ -11,6 +11,10 @@ application::TextLine::TextLine(int posX, int posY, int w, int h, SDL_Color colo
 
 void application::TextLine::render(core::Renderer &renderer, const SDL_Rect* srcRect, const SDL_Rect* dstRect)
 {
+    if (m_text.empty()) {
+        return;
+    }
+
     if (m_updated) {
         updateTexture(renderer);
         m_updated = false;
@@ -40,13 +44,20 @@ void application::TextLine::render(core::Renderer &renderer, const SDL_Rect* src
     );
 }
 
-int application::TextLine::appendText(const std::string& text)
+int application::TextLine::appendText(const std::string& text, bool ignoreNotFitted)
 {
     if (m_fontName.empty() || m_fontSize <= 0)
         return -1;
 
     // Handle empty input text
     if (text.empty()) {
+        return 0;
+    }
+
+    if (ignoreNotFitted) {
+        m_text += text;
+        m_updated = true;
+
         return 0;
     }
 
@@ -146,7 +157,14 @@ bool application::TextLine::useFont(const std::string &fontName, int size)
     return true;
 }
 
-void application::TextLine::adjustWidhtToFont()
+void application::TextLine::clear()
+{
+    m_text.clear();
+
+    m_updated = true;
+}
+
+void application::TextLine::fitWidthToText()
 {
     if (m_fontName.empty() || m_fontSize <= 0)
         return;
@@ -155,9 +173,10 @@ void application::TextLine::adjustWidhtToFont()
     TTF_SizeText(s_fonts[m_fontName][m_fontSize], m_text.c_str(), &width, nullptr);
 
     m_transform.w = width;
+    m_updated = true;
 }
 
-void application::TextLine::adjustHeightToFont()
+void application::TextLine::fitHeightToText()
 {
     if (m_fontName.empty() || m_fontSize <= 0)
         return;
@@ -166,19 +185,13 @@ void application::TextLine::adjustHeightToFont()
     TTF_SizeText(s_fonts[m_fontName][m_fontSize], m_text.c_str(), &height, nullptr);
 
     m_transform.h = height;
+    m_updated = true;
 }
 
 void application::TextLine::addDeltaTransform(int x, int y, int w, int h)
 {
     Widget::addDeltaTransform(x, y, w, h);
 
-    m_updated = true;
-}
-
-void application::TextLine::setPosition(vector2i newPos)
-{
-    Widget::setPosition(newPos);
-    
     m_updated = true;
 }
 
@@ -192,10 +205,7 @@ void application::TextLine::setWidth(int newW)
 void application::TextLine::setHeight(int newH)
 {
     Widget::setHeight(newH);
-    /*
-    m_fontSize = newH;
-    useFont(m_fontName, m_fontSize);
-    */
+
     m_updated = true;
 }
 
