@@ -21,13 +21,30 @@ void application::Application::run()
 {
     SDL_Event event;
 
+    int fps; // Desired FPS
+
+    // Get the screen refresh rate
+    SDL_DisplayMode displayMode;
+    if (SDL_GetCurrentDisplayMode(0, &displayMode) == 0) {
+        fps = displayMode.refresh_rate;
+    }
+    else {
+        fps = 60;
+    }
+
+    const int frameDelay = 1000 / fps; // Frame duration in ms
+    Uint32 frameStart;
+    Uint32 frameTime;
+
     while (m_window.isRunning())
     {
+        frameStart = SDL_GetTicks();
+
         while (SDL_PollEvent(&event))
         {
             m_window.handleEvents(event);
             
-            // temporary
+            // temporary \/\/\/
             if (m_inputMngr.getPressedKey() == "k") {
                 application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(m_panels[1]->getWidget("stackVisualize"));
                 stackV->push(std::to_string(count++));
@@ -37,12 +54,19 @@ void application::Application::run()
                 stackV->pop();
             } 
             
-            // temporary end
+            // temporary end /\/\/\.
 
             Application::update(event);
         }
 
         Application::render();
+
+
+        // Frame timing and capping
+        frameTime = SDL_GetTicks() - frameStart;
+        if (frameTime < frameDelay) {
+            SDL_Delay(frameDelay - frameTime);
+        }
     }
 }
 
