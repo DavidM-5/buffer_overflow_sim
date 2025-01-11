@@ -14,6 +14,8 @@ bool application::Application::init()
 
     initPanels();
 
+    loadCodeText("main.c");
+
     return true;
 }
 
@@ -115,8 +117,8 @@ void application::Application::initPanels()
     );
     
     // temporary \/\/\/
-    std::string str = "Lorem Ipsum\n is simply \ndummy text \nof the \nprinting\n and typ\nesett\ning indu\nstry.\nLorem Ipsum\n has\n been the \nindustry's\n standard dummy\n text\n ever \nsin\nce the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.\nIt has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.\nIt was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.\n";
-    textBlock->setText(str);
+    // std::string str = "Lorem Ipsum\n is simply \ndummy text \nof the \nprinting\n and typ\nesett\ning indu\nstry.\nLorem Ipsum\n has\n been the \nindustry's\n standard dummy\n text\n ever \nsin\nce the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.\nIt has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.\nIt was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.\n";
+    // textBlock->setText(str);
     // temporary /\/\/\
     
     codePanel->addWidget("codeText", std::move(textBlock));
@@ -186,4 +188,28 @@ void application::Application::initPanels()
 
     // m_bordHor.addLeftTopWidget(m_widgets[1].get());
     // m_bordHor.addRightBottomWidget(m_panels[2].get());
+}
+
+bool application::Application::loadCodeText(const std::string &filename)
+{
+    std::string fullPath = "targets/src/" + filename;
+    std::ifstream file(fullPath); // Open the file
+
+    if (!file.is_open()) {
+        return false;
+    }
+
+    // Use a stringstream to read the file's contents into a string
+    std::ostringstream ss;
+    ss << file.rdbuf(); // Read the whole file into the stringstream
+    std::string fileContents = ss.str(); // Convert the stringstream into a string
+
+    // Close the file
+    file.close();
+
+    // set the text to the code textblock
+    application::TextBlock* codeBlock = static_cast<application::TextBlock*>(m_panels[0]->getWidget("codeText"));
+    codeBlock->setText(fileContents);
+
+    return true;
 }

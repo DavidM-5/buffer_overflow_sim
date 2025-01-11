@@ -30,6 +30,8 @@ namespace application
 
         application::TextLine m_inputText;
 
+        bool m_selected;
+
     };
 
 } // namespace application

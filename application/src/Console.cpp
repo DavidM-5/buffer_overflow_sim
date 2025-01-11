@@ -3,7 +3,8 @@
 application::Console::Console(int posX, int posY, int w, int h, SDL_Color color) : 
                               Widget(posX, posY, w, h, color),
                               m_label(posX + 5, posY + 5),
-                              m_inputText(posX + 5, posY + 5)
+                              m_inputText(posX + 5, posY + 5),
+                              m_selected(false)
 {
     m_label.useFont("Arial.ttf", 16);
     m_inputText.useFont("Arial.ttf", 16);
@@ -17,6 +18,22 @@ application::Console::Console(int posX, int posY, int w, int h, SDL_Color color)
 
 void application::Console::handleEvents(const core::InputManager &inputMngr)
 {
+    if (inputMngr.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        if (!(inputMngr.getMousePosition().x > m_transform.x && 
+            inputMngr.getMousePosition().x < m_transform.x + m_transform.w &&
+            inputMngr.getMousePosition().y > m_transform.y && 
+            inputMngr.getMousePosition().y < m_transform.y + m_transform.h)) {
+            
+            m_selected = false;
+        }
+        else {
+            m_selected = true;
+        }
+    }
+
+    if (!m_selected)
+        return;
+
     std::string letter = inputMngr.getPressedKey();
 
     if (letter == "\n") {

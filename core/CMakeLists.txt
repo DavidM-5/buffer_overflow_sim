@@ -2,8 +2,12 @@
 cmake_minimum_required(VERSION 3.10)
 
 
-file(COPY ${CMAKE_SOURCE_DIR}/resources/fonts/Arial.ttf
+file(COPY ${CMAKE_SOURCE_DIR}/resources/fonts/
      DESTINATION ${CMAKE_BINARY_DIR}/resources/fonts)
+
+
+file(COPY ${CMAKE_SOURCE_DIR}/targets/
+DESTINATION ${CMAKE_BINARY_DIR}/targets)
 
 
 # Create a library from the core source files

@@ -4,7 +4,8 @@
 #include <memory>
 #include <string>
 #include <iostream>
-
+#include <fstream>
+#include <sstream>
 #include <SDL2/SDL.h>
 
 #include "../../core/src/config.h"
@@ -48,6 +49,7 @@ namespace application
         void render(); // temp implementation
 
         void initPanels();
+        bool loadCodeText(const std::string& filename);
     };
 
 } // namespace application
