@@ -1,7 +1,9 @@
 #include "InputManager.h"
 
 core::InputManager::InputManager() : m_mousePosition({WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2}),
-                                     m_prevMousePosition({WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2})
+                                     m_prevMousePosition({WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2}),
+                                     m_currentKeyPress(""),
+                                     m_mouseWheelScroll(0)
 {
     // initialize key states to false
     for (int i = 0; i < SDL_NUM_SCANCODES; ++i) {
@@ -16,6 +18,7 @@ core::InputManager::InputManager() : m_mousePosition({WINDOW_WIDTH / 2, WINDOW_H
 
 void core::InputManager::update(SDL_Event& event)
 {
+    m_mouseWheelScroll = 0;
     m_prevMousePosition = m_mousePosition;
     m_currentKeyPress = "";
 
@@ -51,6 +54,11 @@ void core::InputManager::update(SDL_Event& event)
                 }
             }
         }
+    }
+
+    // Detect mouse wheel scrolling
+    if (event.type == SDL_MOUSEWHEEL) {
+        m_mouseWheelScroll = event.wheel.y;
     }
 
     // Rest of the update function remains the same

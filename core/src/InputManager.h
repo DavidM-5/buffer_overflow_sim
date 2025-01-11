@@ -21,6 +21,7 @@ namespace core
         bool isMouseButtonPressed(uint8_t button) const { return m_mouseButtons[button]; }
 
         vector2i getMousePosition() const { return m_mousePosition; }
+        int getMouseWheelScroll() const { return m_mouseWheelScroll; };
         std::string getPressedKey() const;
 
         vector2i getMousePosDelta() const;
@@ -28,6 +29,8 @@ namespace core
     private:
         bool m_keyStates[SDL_NUM_SCANCODES];
         bool m_mouseButtons[MOUSE_BUTTON_TOTAL];
+
+        int m_mouseWheelScroll;
         
         vector2i m_mousePosition;
         vector2i m_prevMousePosition;

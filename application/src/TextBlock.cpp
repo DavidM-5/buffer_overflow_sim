@@ -2,7 +2,7 @@
 
 application::TextBlock::TextBlock(int posX, int posY, int w, int h, SDL_Color color) : 
                                   Widget(posX, posY, w, h, color), m_GUTTER_WIDTH(30),
-                                  m_topLineForRender(1)
+                                  m_renderStartLine(0)
 {
 }
 
@@ -72,15 +72,37 @@ void application::TextBlock::setColorFormat(const std::unordered_map<std::string
     }
 }
 
+void application::TextBlock::handleEvents(const core::InputManager &inputMngr)
+{
+    vector2i mousePos = inputMngr.getMousePosition();
+
+    if (mousePos.x > m_transform.x && mousePos.x < m_transform.x + m_transform.w &&
+        mousePos.y > m_transform.y && mousePos.y < m_transform.y + m_transform.h &&
+        inputMngr.getMouseWheelScroll() != 0) {
+
+        m_renderStartLine -= inputMngr.getMouseWheelScroll();
+
+        if (m_renderStartLine < 0)
+            m_renderStartLine = 0;
+        else if (m_renderStartLine >= m_lines.size())
+            m_renderStartLine = m_lines.size() - 1;
+    }
+}
+
 // TODO: only render the lines that are activly shown
 void application::TextBlock::render(core::Renderer &renderer)
 {
     renderer.drawRect(m_transform, m_mainColor);
     
-    for (Line& line : m_lines) {
-        if (line.textLine.getPosition().y < m_transform.y + m_transform.h &&
-            line.textLine.getPosition().y >= m_transform.y)
-            line.textLine.render(renderer);
+    int ln = 0;
+    for (int i = m_renderStartLine; m_transform.y + m_lines[0].textLine.getHeight() * ln <= m_transform.y + m_transform.h; i++, ln++) {
+            SDL_Rect dstRect{
+                m_lines[i].textLine.getPosition().x,
+                m_transform.y + m_lines[0].textLine.getHeight() * ln,
+                m_lines[i].textLine.getWidth(),
+                m_lines[i].textLine.getHeight()
+            };
+            m_lines[i].textLine.render(renderer, nullptr, &dstRect);
     }
 }
 
