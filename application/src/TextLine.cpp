@@ -82,6 +82,12 @@ int application::TextLine::appendText(const std::string& text, bool ignoreNotFit
     std::istringstream countStream(tempText);
     int totalWords = spaces.size() - 1;
 
+    int i = 0;
+    while (i < text.length() - 1 && text[i] == ' ') {
+        newText += " ";
+        i++;
+    }
+    
     // Second pass: try to add words
     while (wordStream >> word) {
         std::string testWord = (newText.empty() ? "" : std::string(spaces[spaceIndex], ' ')) + word;
