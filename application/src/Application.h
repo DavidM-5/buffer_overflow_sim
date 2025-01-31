@@ -3,7 +3,9 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <iostream>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <SDL2/SDL.h>
@@ -41,6 +43,10 @@ namespace application
 
         application::Border m_bordVert;
         application::Border m_bordHor;
+
+
+        std::unordered_map<std::string, SDL_Color> formatMap; // temp
+
 
         int count = 0;// temporary
 

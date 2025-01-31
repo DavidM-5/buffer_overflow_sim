@@ -5,7 +5,8 @@ bool application::TextLine::s_ttfInitialized = false;
 
 application::TextLine::TextLine(int posX, int posY, int w, int h, SDL_Color color): 
                                 Widget(posX, posY, w, h, color),
-                                m_text(""), m_updated(false), m_fontSize(0)
+                                m_text(""), m_updated(false), m_fontSize(0),
+                                m_ignoreNotFitted(false)
 {
 }
 
@@ -54,6 +55,8 @@ int application::TextLine::appendText(const std::string& text, bool ignoreNotFit
         return 0;
     }
 
+    m_ignoreNotFitted = ignoreNotFitted;
+    
     if (ignoreNotFitted) {
         m_text += text;
         m_updated = true;
@@ -150,6 +153,8 @@ void application::TextLine::editText(int start, int end, const std::string &newT
 void application::TextLine::addFormatMap(const std::unordered_map<std::string, SDL_Color> &formatMap)
 {
     m_formatMap = formatMap;
+
+    m_updated = true;
 }
 
 bool application::TextLine::useFont(const std::string &fontName, int size)

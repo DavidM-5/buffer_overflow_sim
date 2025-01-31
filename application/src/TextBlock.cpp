@@ -2,11 +2,11 @@
 
 application::TextBlock::TextBlock(int posX, int posY, int w, int h, SDL_Color color) : 
                                   Widget(posX, posY, w, h, color), m_GUTTER_WIDTH(30),
-                                  m_renderStartLine(0)
+                                  m_renderStartLine(0), m_ignoreNotFittedLine(false)
 {
 }
 
-void application::TextBlock::setText(std::string &text)
+void application::TextBlock::setText(std::string &text, bool ignoreNotFittedLine)
 {
     m_lines.clear();
     
@@ -14,6 +14,33 @@ void application::TextBlock::setText(std::string &text)
 
     if (lines.empty())
         return;
+
+    m_ignoreNotFittedLine = ignoreNotFittedLine;
+
+    if (ignoreNotFittedLine) {
+        for (int i = 0; i < lines.size(); i++) {
+            Line ln = {
+            .lineNumber = i+1, 
+            .breakpoint = false,
+            .textLine = application::TextLine(m_transform.x + m_GUTTER_WIDTH, 
+                                              m_transform.y + i*20,
+                                              m_transform.w - m_GUTTER_WIDTH, 
+                                              20)
+            };
+
+            ln.textLine.useFont("JetBrainsMono-Medium.ttf", 14);
+            ln.textLine.appendText(lines[i], true);
+
+            m_lines.push_back(ln);
+        }
+
+        m_text = text;
+
+        for (Line& line : m_lines) {
+            line.textLine.addFormatMap(m_formatMap);
+        }
+        return;
+    }
 
     int currentLine = 0;
     while (currentLine < lines.size()) {
@@ -26,7 +53,7 @@ void application::TextBlock::setText(std::string &text)
                                               20)
         };
 
-        ln.textLine.useFont("Arial.ttf", 16);
+        ln.textLine.useFont("JetBrainsMono-Medium.ttf", 14);
         int remainingWords = ln.textLine.appendText(lines[currentLine]);
         
         if (remainingWords > 0) {
@@ -60,13 +87,17 @@ void application::TextBlock::setText(std::string &text)
         m_lines.push_back(ln);
         currentLine++;
     }
-
-    m_text = text;
     
+    m_text = text;
+    for (Line& line : m_lines) {
+        line.textLine.addFormatMap(m_formatMap);
+    }
 }
 
 void application::TextBlock::setColorFormat(const std::unordered_map<std::string, SDL_Color> &formatMap)
 {
+    m_formatMap = formatMap;
+
     for (Line& line : m_lines) {
         line.textLine.addFormatMap(formatMap);
     }
@@ -80,7 +111,7 @@ void application::TextBlock::handleEvents(const core::InputManager &inputMngr)
         mousePos.y > m_transform.y && mousePos.y < m_transform.y + m_transform.h &&
         inputMngr.getMouseWheelScroll() != 0) {
 
-        m_renderStartLine -= inputMngr.getMouseWheelScroll();
+        m_renderStartLine -= inputMngr.getMouseWheelScroll() * 3;
 
         if (m_renderStartLine < 0)
             m_renderStartLine = 0;
@@ -110,7 +141,7 @@ void application::TextBlock::addDeltaTransform(int dx, int dy, int dw, int dh)
 {
     Widget::addDeltaTransform(dx, dy, dw, dh);
 
-    setText(m_text);
+    setText(m_text, m_ignoreNotFittedLine);
 }
 
 void application::TextBlock::setPosition(vector2i newPos)
@@ -139,7 +170,7 @@ std::vector<std::string> application::TextBlock::splitIntoLines(std::string &tex
     
     for (int i = 0; i < text.length(); i++) {
         if (text[i] == '\n') {
-            lines.push_back(text.substr(startIdx, i - startIdx));
+            lines.push_back(text.substr(startIdx, i - startIdx - 1));
             startIdx = i+1;
         }
     }

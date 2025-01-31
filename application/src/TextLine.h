@@ -59,6 +59,8 @@ namespace application {
         core::Texture m_texture;
         bool m_updated;
 
+        bool m_ignoreNotFitted;
+
     private:
         void updateTexture(core::Renderer& renderer, int centerHorizontally = 0);
 

@@ -17,7 +17,7 @@ namespace application
         TextBlock(int posX = 0, int posY = 0, int w = 100, int h = 100, SDL_Color color = {255, 255, 255, 255});
         ~TextBlock() = default;
 
-        void setText(std::string& text);
+        void setText(std::string& text, bool ignoreNotFittedLine = false);
         // void addLine(std::string& text);
         void setColorFormat(const std::unordered_map<std::string, SDL_Color>& formatMap);
 
@@ -41,9 +41,13 @@ namespace application
         
         std::vector<Line> m_lines;
 
+        std::unordered_map<std::string, SDL_Color> m_formatMap;
+
         std::string m_text;
 
         int m_renderStartLine;
+
+        bool m_ignoreNotFittedLine;
 
     private:
         std::vector<std::string> splitIntoLines(std::string& text);

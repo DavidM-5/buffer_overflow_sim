@@ -4,6 +4,8 @@ application::Application::Application() : m_window("Buffer Overflow Simulator", 
                                           m_bordVert(true, 2*WINDOW_WIDTH/3-105, 0, 10, WINDOW_HEIGHT),
                                           m_bordHor(false, 0, 2*WINDOW_HEIGHT/3-5, 2*WINDOW_WIDTH/3-100, 10)
 {
+    formatMap["#include"] = {255, 123, 23, 255};
+    formatMap["while"] = {123, 245, 123, 255};
 }
 
 bool application::Application::init()
@@ -14,7 +16,7 @@ bool application::Application::init()
 
     initPanels();
 
-    loadCodeText("main.c");
+    loadCodeText("targets/src/main.c");
 
     return true;
 }
@@ -190,10 +192,13 @@ void application::Application::initPanels()
     // m_bordHor.addRightBottomWidget(m_panels[2].get());
 }
 
-bool application::Application::loadCodeText(const std::string &filename)
+bool application::Application::loadCodeText(const std::string &path)
 {
-    std::string fullPath = "targets/src/" + filename;
-    std::ifstream file(fullPath); // Open the file
+    std::filesystem::path fsPath(path);
+    if (!std::filesystem::exists(fsPath))
+        return false;
+
+    std::ifstream file(path); // Open the file
 
     if (!file.is_open()) {
         return false;
@@ -209,7 +214,11 @@ bool application::Application::loadCodeText(const std::string &filename)
 
     // set the text to the code textblock
     application::TextBlock* codeBlock = static_cast<application::TextBlock*>(m_panels[0]->getWidget("codeText"));
-    codeBlock->setText(fileContents);
+
+    
+
+    codeBlock->setText(fileContents, true);
+    codeBlock->setColorFormat(formatMap);
 
     return true;
 }
