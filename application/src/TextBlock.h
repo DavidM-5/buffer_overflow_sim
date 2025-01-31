@@ -22,7 +22,7 @@ namespace application
         void setColorFormat(const std::unordered_map<std::string, SDL_Color>& formatMap);
 
         void handleEvents(const core::InputManager& inputMngr);
-        void render(core::Renderer& renderer);
+        void render(core::Renderer& renderer, const SDL_Rect* srcRect, const SDL_Rect* dstRect);
 
         void addDeltaTransform(int dx = 0, int dy = 0, int dw = 0, int dh = 0) override;
 

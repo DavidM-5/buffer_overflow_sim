@@ -7,7 +7,7 @@ application::StackVisualizer::StackVisualizer(int posX, int posY, int w, int h, 
     application::TextLine::loadFont("Arial.ttf", m_slotHeight - 2);
 }
 
-void application::StackVisualizer::render(core::Renderer &renderer)
+void application::StackVisualizer::render(core::Renderer &renderer, const SDL_Rect* srcRect, const SDL_Rect* dstRect)
 {   
     int startIdx = m_slots.size() > m_slotsAmount ? m_slots.size() - m_slotsAmount : 0;
 

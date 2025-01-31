@@ -14,7 +14,7 @@ namespace application
         ~Console() = default;
 
         void handleEvents(const core::InputManager& inputMngr);
-        void render(core::Renderer& renderer);
+        void render(core::Renderer& renderer, const SDL_Rect* srcRect = nullptr, const SDL_Rect* dstRect = nullptr);
 
         void addToLabel(const std::string& text);
         void setLabel(const std::string& text);

@@ -5,7 +5,7 @@ application::Widget::Widget(int posX, int posY, int w, int h, SDL_Color color) :
 {
 }
 
-void application::Widget::render(core::Renderer &renderer)
+void application::Widget::render(core::Renderer &renderer, const SDL_Rect* srcRect, const SDL_Rect* dstRect)
 {
     renderer.drawRect(m_transform, m_mainColor);
 }

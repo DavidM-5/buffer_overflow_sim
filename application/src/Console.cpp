@@ -50,7 +50,7 @@ void application::Console::handleEvents(const core::InputManager &inputMngr)
     }
 }
 
-void application::Console::render(core::Renderer &renderer)
+void application::Console::render(core::Renderer &renderer, const SDL_Rect* srcRect, const SDL_Rect* dstRect)
 {
     Widget::render(renderer);
 

@@ -12,7 +12,7 @@ void application::Panel::handleEvents(const core::InputManager &inputMngr)
     }
 }
 
-void application::Panel::render(core::Renderer &renderer)
+void application::Panel::render(core::Renderer &renderer, const SDL_Rect* srcRect, const SDL_Rect* dstRect)
 {
     renderer.drawRect(m_transform, m_mainColor);
 

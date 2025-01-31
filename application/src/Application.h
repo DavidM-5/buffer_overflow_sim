@@ -40,6 +40,10 @@ namespace application
         core::InputManager m_inputMngr;
 
         std::vector<std::unique_ptr<application::Panel>> m_panels;
+        application::Panel m_mainPanel;
+
+        int m_borderWidth;
+        int m_innerBorderWidth;
 
         application::Border m_bordVert;
         application::Border m_bordHor;

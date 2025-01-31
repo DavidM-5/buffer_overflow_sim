@@ -21,7 +21,7 @@ namespace application
         StackVisualizer(int posX = 0, int posY = 0, int w = 150, int h = 50, SDL_Color color = {255, 255, 255, 255}, int slotsAmount = 2);
         ~StackVisualizer() = default;
 
-        void render(core::Renderer& renderer);
+        void render(core::Renderer& renderer, const SDL_Rect* srcRect = nullptr, const SDL_Rect* dstRect = nullptr);
         void handleEvents(const core::InputManager& inputMngr) {};
 
         void push(std::string str);

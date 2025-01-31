@@ -26,7 +26,7 @@ void application::TextLine::render(core::Renderer &renderer, const SDL_Rect* src
         m_transform.x, 
         m_transform.y, 
         m_texture.getWidth(), 
-        m_texture.getHeight() 
+        m_texture.getHeight()
     };
 
     // If no source rect provided, use the full texture

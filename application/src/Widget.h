@@ -16,7 +16,7 @@ namespace application
         virtual ~Widget() = default;
     
         virtual void handleEvents(const core::InputManager& inputMngr) {};
-        virtual void render(core::Renderer& renderer);
+        virtual void render(core::Renderer& renderer, const SDL_Rect* srcRect = nullptr, const SDL_Rect* dstRect = nullptr);
 
         virtual void addDeltaTransform(int x = 0, int y = 0, int w = 0, int h = 0);
 

@@ -121,7 +121,7 @@ void application::TextBlock::handleEvents(const core::InputManager &inputMngr)
 }
 
 // TODO: only render the lines that are activly shown
-void application::TextBlock::render(core::Renderer &renderer)
+void application::TextBlock::render(core::Renderer &renderer, const SDL_Rect* srcRect, const SDL_Rect* dstRect)
 {
     renderer.drawRect(m_transform, m_mainColor);
     
