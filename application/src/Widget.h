@@ -28,6 +28,8 @@ namespace application
         
         virtual int getHeight() { return m_transform.h; }
         virtual void setHeight(int newH) { m_transform.h = newH; }
+
+        virtual Widget* getWidget(std::string name) { return nullptr; }
         
     protected:
         SDL_Rect m_transform;

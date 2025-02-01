@@ -18,7 +18,7 @@ namespace application
     class StackVisualizer : public Widget
     {
     public:
-        StackVisualizer(int posX = 0, int posY = 0, int w = 150, int h = 50, SDL_Color color = {255, 255, 255, 255}, int slotsAmount = 2);
+        StackVisualizer(int posX = 0, int posY = 0, int w = 150, int h = 50, SDL_Color color = {255, 255, 255, 255}, int slotsAmount = 2, int fontSize = 16);
         ~StackVisualizer() = default;
 
         void render(core::Renderer& renderer, const SDL_Rect* srcRect = nullptr, const SDL_Rect* dstRect = nullptr);
@@ -35,6 +35,7 @@ namespace application
         int m_slotsAmount;
         int m_slotHeight;
 
+        int m_fontSize;
     };
     
 } // namespace application

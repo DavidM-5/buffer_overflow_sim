@@ -120,20 +120,25 @@ void application::TextBlock::handleEvents(const core::InputManager &inputMngr)
     }
 }
 
-// TODO: only render the lines that are activly shown
 void application::TextBlock::render(core::Renderer &renderer, const SDL_Rect* srcRect, const SDL_Rect* dstRect)
 {
-    renderer.drawRect(m_transform, m_mainColor);
-    
     int ln = 0;
-    for (int i = m_renderStartLine; m_transform.y + m_lines[0].textLine.getHeight() * ln <= m_transform.y + m_transform.h; i++, ln++) {
-            SDL_Rect dstRect{
-                m_lines[i].textLine.getPosition().x,
-                m_transform.y + m_lines[0].textLine.getHeight() * ln,
-                m_lines[i].textLine.getWidth(),
-                m_lines[i].textLine.getHeight()
-            };
-            m_lines[i].textLine.render(renderer, nullptr, &dstRect);
+    for (int i = m_renderStartLine; m_transform.y + m_lines[0].textLine.getHeight() * ln < m_transform.y + m_transform.h - m_lines[0].textLine.getHeight(); i++, ln++) {
+        if (m_lines[i].breakpoint) {
+            renderer.drawRect(SDL_Rect{m_transform.x,
+                                m_transform.y + m_lines[0].textLine.getHeight() * ln,
+                                m_lines[i].textLine.getHeight(),
+                                m_lines[i].textLine.getHeight()},
+                        SDL_Color{124, 12, 255, 255});
+        }
+
+        SDL_Rect dstRect{
+            m_lines[i].textLine.getPosition().x,
+            m_transform.y + m_lines[0].textLine.getHeight() * ln,
+            m_lines[i].textLine.getWidth(),
+            m_lines[i].textLine.getHeight()
+        };
+        m_lines[i].textLine.render(renderer, nullptr, &dstRect);
     }
 }
 

@@ -1,10 +1,11 @@
 #include "StackVisualizer.h"
 
-application::StackVisualizer::StackVisualizer(int posX, int posY, int w, int h, SDL_Color color, int slotsAmount) : 
+application::StackVisualizer::StackVisualizer(int posX, int posY, int w, int h, SDL_Color color, int slotsAmount, int fontSize) : 
                                               Widget(posX, posY, w, h, color),
-                                              m_slotsAmount(slotsAmount), m_slotHeight(h / slotsAmount)
+                                              m_slotsAmount(slotsAmount), m_slotHeight(h / slotsAmount),
+                                              m_fontSize(fontSize)
 {
-    application::TextLine::loadFont("Arial.ttf", m_slotHeight - 2);
+    application::TextLine::loadFont("Arial.ttf", fontSize);
 }
 
 void application::StackVisualizer::render(core::Renderer &renderer, const SDL_Rect* srcRect, const SDL_Rect* dstRect)
@@ -40,7 +41,7 @@ void application::StackVisualizer::push(std::string str)
                               m_mainColor
                               );
 
-    txt->useFont("Arial.ttf", m_slotHeight);
+    txt->useFont("Arial.ttf", m_fontSize);
     txt->appendText(str);
 
     m_slots.push_back(std::move(txt));

@@ -18,10 +18,18 @@ bool application::Application::init()
 
     initPanels();
 
-    // loadCodeText("targets/src/main.c");
+    loadTargetSourceCode("targets/src/main.c");
 
     return true;
 }
+
+// temp
+std::string hexToString(uint64_t hexValue) {
+    std::stringstream ss;
+    ss << std::hex << hexValue;  // Convert to hex
+    return ss.str();
+}
+// temp /\/\
 
 void application::Application::run()
 {
@@ -52,11 +60,16 @@ void application::Application::run()
             
             // temporary \/\/\/
             if (m_inputMngr.getPressedKey() == "k") {
-                application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(m_panels[1]->getWidget("stackVisualize"));
-                stackV->push(std::to_string(count++));
+                application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
+                application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");
+                application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(w);
+                // ABCDEFAB  CDEFABCD
+                stackV->push(hexToString(count++));
             }
             if (m_inputMngr.getPressedKey() == "i") {
-                application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(m_panels[1]->getWidget("stackVisualize"));
+                application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
+                application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");
+                application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(w);
                 stackV->pop();
             } 
             
@@ -80,24 +93,15 @@ void application::Application::update(SDL_Event& event)
 {
     m_inputMngr.update(event);
 
-    for (const auto& panel : m_panels) {
-        panel->handleEvents(m_inputMngr);
-    }
+    m_mainPanel.handleEvents(m_inputMngr);
 
-    m_bordVert.handleEvents(m_inputMngr);
-    m_bordHor.handleEvents(m_inputMngr);
+    // m_bordVert.handleEvents(m_inputMngr);
+    // m_bordHor.handleEvents(m_inputMngr);
 }
 
 void application::Application::render()
 {
     m_renderer.clear({0, 0, 0, 255});
-
-    /*
-    // render panels
-    for (const auto& panel : m_panels) {
-        panel->render(m_renderer);
-    }
-    */
 
     m_mainPanel.render(m_renderer);
     
@@ -111,110 +115,9 @@ void application::Application::render()
 
 void application::Application::initPanels()
 {
-    auto leftPanel = std::make_unique<application::Panel>(
-        m_mainPanel.getPosition().x + m_borderWidth, m_mainPanel.getPosition().y + m_borderWidth,
-        WINDOW_WIDTH / 3 - m_borderWidth * 2, WINDOW_HEIGHT - m_borderWidth * 2,
-        SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
-    );
-
-    auto label = std::make_unique<application::TextLine>(
-        0 + m_innerBorderWidth, 0 + m_innerBorderWidth,
-        leftPanel->getWidth() - m_innerBorderWidth * 2, 22,
-        SDL_Color{0xFF, 0xFF, 0xFF, 0xFF}
-    );
-
-    label->useFont("JetBrainsMono-Bold.ttf", 20);
-    label->appendText("Tasks", true);
-
-    leftPanel->addWidget("Label", std::move(label));
-
-
-    auto centerTopPanel = std::make_unique<application::Panel>(
-        leftPanel->getPosition().x + leftPanel->getWidth() + m_borderWidth, leftPanel->getPosition().y,
-        WINDOW_WIDTH / 3 - m_borderWidth * 2, 1.8 * WINDOW_HEIGHT / 3 - m_borderWidth * 2,
-        SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
-    );
-
-    label = std::make_unique<application::TextLine>(
-        0 + m_innerBorderWidth, 0 + m_innerBorderWidth,
-        leftPanel->getWidth() - m_innerBorderWidth * 2, 22,
-        SDL_Color{0xFF, 0xFF, 0xFF, 0xFF}
-    );
-    
-    label->useFont("JetBrainsMono-Bold.ttf", 20);
-    label->appendText("Source Code", true);
-
-    centerTopPanel->addWidget("Label", std::move(label));
-
-
-    auto centerMiddlePanel = std::make_unique<application::Panel>(
-        centerTopPanel->getPosition().x, centerTopPanel->getPosition().y + centerTopPanel->getHeight() + m_borderWidth,
-        centerTopPanel->getWidth(), 50,
-        SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
-    );
-
-
-    auto centerBottomPanel = std::make_unique<application::Panel>(
-        centerMiddlePanel->getPosition().x, centerMiddlePanel->getPosition().y + centerMiddlePanel->getHeight() + m_borderWidth,
-        centerMiddlePanel->getWidth(), WINDOW_HEIGHT - centerTopPanel->getHeight() - centerMiddlePanel->getHeight() - m_borderWidth * 4,
-        SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
-    );
-
-    label = std::make_unique<application::TextLine>(
-        0 + m_innerBorderWidth, 0 + m_innerBorderWidth,
-        leftPanel->getWidth() - m_innerBorderWidth * 2, 22,
-        SDL_Color{0xFF, 0xFF, 0xFF, 0xFF}
-    );
-    
-    label->useFont("JetBrainsMono-Bold.ttf", 20);
-    label->appendText("Console", true);
-
-    centerBottomPanel->addWidget("Label", std::move(label));
-
-
-    auto rightTopPanel = std::make_unique<application::Panel>(
-        centerTopPanel->getPosition().x + centerTopPanel->getWidth() + m_borderWidth, leftPanel->getPosition().y,
-        WINDOW_WIDTH - leftPanel->getWidth() - centerTopPanel->getWidth() - m_borderWidth * 4, WINDOW_HEIGHT / 3 - m_borderWidth * 2,
-        SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
-    );
-
-    label = std::make_unique<application::TextLine>(
-        0 + m_innerBorderWidth, 0 + m_innerBorderWidth,
-        leftPanel->getWidth() - m_innerBorderWidth * 2, 22,
-        SDL_Color{0xFF, 0xFF, 0xFF, 0xFF}
-    );
-    
-    label->useFont("JetBrainsMono-Bold.ttf", 20);
-    label->appendText("Memory Addresses", true);
-
-    rightTopPanel->addWidget("Label", std::move(label));
-
-
-    auto rightBottomPanel = std::make_unique<application::Panel>(
-        rightTopPanel->getPosition().x, rightTopPanel->getPosition().y + rightTopPanel->getHeight() + m_borderWidth,
-        rightTopPanel->getWidth(), 2 * WINDOW_HEIGHT / 3 - m_borderWidth,
-        SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
-    );
-
-    label = std::make_unique<application::TextLine>(
-        0 + m_innerBorderWidth, 0 + m_innerBorderWidth,
-        leftPanel->getWidth() - m_innerBorderWidth * 2, 22,
-        SDL_Color{0xFF, 0xFF, 0xFF, 0xFF}
-    );
-    
-    label->useFont("JetBrainsMono-Bold.ttf", 20);
-    label->appendText("Stack View", true);
-
-    rightBottomPanel->addWidget("Label", std::move(label));
-
-
-    m_mainPanel.addWidget("1", std::move(leftPanel));
-    m_mainPanel.addWidget("3", std::move(centerTopPanel));
-    m_mainPanel.addWidget("4", std::move(centerMiddlePanel));
-    m_mainPanel.addWidget("5", std::move(centerBottomPanel));
-    m_mainPanel.addWidget("2", std::move(rightTopPanel));
-    m_mainPanel.addWidget("6", std::move(rightBottomPanel));
-
+    initLeftPanels();
+    initCenterPanels();
+    initRightPanels();
 
     /*
     // code panel
@@ -307,15 +210,159 @@ void application::Application::initPanels()
     */
 }
 
-bool application::Application::loadCodeText(const std::string &path)
-{
-    return true;
 
-    std::filesystem::path fsPath(path);
+void application::Application::initLeftPanels()
+{
+    const int totalWidth = WINDOW_WIDTH;
+    const int totalHeight = WINDOW_HEIGHT;
+
+    auto leftPanel = std::make_unique<application::Panel>(
+        m_mainPanel.getPosition().x + m_borderWidth, m_mainPanel.getPosition().y + m_borderWidth,
+        totalWidth / 3 - m_borderWidth * 2, totalHeight - m_borderWidth * 2,
+        SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
+    );
+
+    auto label = std::make_unique<application::TextLine>(
+        0 + m_innerBorderWidth, 0 + m_innerBorderWidth,
+        leftPanel->getWidth() - m_innerBorderWidth * 2, 22,
+        SDL_Color{0xFF, 0xFF, 0xFF, 0xCF}
+    );
+
+    label->useFont("JetBrainsMono-Bold.ttf", 18);
+    label->appendText("Tasks", true);
+
+    leftPanel->addWidget("Label", std::move(label));
+
+    // ===========================
+    // ===========================
+    m_mainPanel.addWidget("Panel-left", std::move(leftPanel));
+}
+
+void application::Application::initCenterPanels()
+{
+    const int totalWidth = WINDOW_WIDTH;
+    const int totalHeight = WINDOW_HEIGHT;
+
+    auto centerTopPanel = std::make_unique<application::Panel>(
+        m_mainPanel.getPosition().x + totalWidth / 3, m_mainPanel.getPosition().y + m_borderWidth,
+        totalWidth / 3 + 80, 1.8 * totalHeight / 3 - m_borderWidth * 2,
+        SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
+    );
+
+    auto label = std::make_unique<application::TextLine>(
+        0 + m_innerBorderWidth, 0 + m_innerBorderWidth,
+        centerTopPanel->getWidth() - m_innerBorderWidth * 2, 22,
+        SDL_Color{0xFF, 0xFF, 0xFF, 0xCF}
+    );
+    
+    label->useFont("JetBrainsMono-Bold.ttf", 18);
+    label->appendText("Source Code", true);
+    
+    auto sourceCode = std::make_unique<application::TextBlock>(
+        0 + m_innerBorderWidth, label->getPosition().y + label->getHeight() + 15,
+        label->getWidth(), centerTopPanel->getHeight() - label->getPosition().y - label->getHeight() - 25 - m_innerBorderWidth,
+        SDL_Color{0xFF, 0xFF, 0xFF, 0xFF}
+    );
+
+    centerTopPanel->addWidget("Label", std::move(label));
+    centerTopPanel->addWidget("TextBlock-Source_code", std::move(sourceCode));
+
+    // ===========================
+    // ===========================
+    auto centerMiddlePanel = std::make_unique<application::Panel>(
+        centerTopPanel->getPosition().x, centerTopPanel->getPosition().y + centerTopPanel->getHeight() + m_borderWidth,
+        centerTopPanel->getWidth(), 50,
+        SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
+    );
+    
+    // ===========================
+    // ===========================
+    auto centerBottomPanel = std::make_unique<application::Panel>(
+        centerMiddlePanel->getPosition().x, centerMiddlePanel->getPosition().y + centerMiddlePanel->getHeight() + m_borderWidth,
+        centerMiddlePanel->getWidth(), totalHeight - centerTopPanel->getHeight() - centerMiddlePanel->getHeight() - m_borderWidth * 4,
+        SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
+    );
+
+    label = std::make_unique<application::TextLine>(
+        0 + m_innerBorderWidth, 0 + m_innerBorderWidth,
+        centerBottomPanel->getWidth() - m_innerBorderWidth * 2, 22,
+        SDL_Color{0xFF, 0xFF, 0xFF, 0xCF}
+    );
+    
+    label->useFont("JetBrainsMono-Bold.ttf", 18);
+    label->appendText("Console", true);
+
+    centerBottomPanel->addWidget("Label", std::move(label));
+
+    // ===========================
+    // ===========================
+    m_mainPanel.addWidget("Panel-center_top", std::move(centerTopPanel));
+    m_mainPanel.addWidget("Panel-center_middle", std::move(centerMiddlePanel));
+    m_mainPanel.addWidget("Panel-center_bottom", std::move(centerBottomPanel));
+}
+
+void application::Application::initRightPanels()
+{
+    const int totalWidth = WINDOW_WIDTH;
+    const int totalHeight = WINDOW_HEIGHT;
+
+    auto rightTopPanel = std::make_unique<application::Panel>(
+        m_mainPanel.getPosition().x + 2 * totalWidth / 3 + 90, m_mainPanel.getPosition().y + m_borderWidth,
+        totalWidth / 3 - 100, totalHeight / 3 - m_borderWidth * 2,
+        SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
+    );
+
+    auto label = std::make_unique<application::TextLine>(
+        0 + m_innerBorderWidth, 0 + m_innerBorderWidth,
+        rightTopPanel->getWidth() - m_innerBorderWidth * 2, 22,
+        SDL_Color{0xFF, 0xFF, 0xFF, 0xCF}
+    );
+    
+    label->useFont("JetBrainsMono-Bold.ttf", 18);
+    label->appendText("Memory Addresses", true);
+
+    rightTopPanel->addWidget("Label", std::move(label));
+
+    // ===========================
+    // ===========================
+    auto rightBottomPanel = std::make_unique<application::Panel>(
+        rightTopPanel->getPosition().x, rightTopPanel->getPosition().y + rightTopPanel->getHeight() + m_borderWidth,
+        rightTopPanel->getWidth(), 2 * totalHeight / 3 - m_borderWidth,
+        SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
+    );
+
+    label = std::make_unique<application::TextLine>(
+        0 + m_innerBorderWidth, 0 + m_innerBorderWidth,
+        rightBottomPanel->getWidth() - m_innerBorderWidth * 2, 22,
+        SDL_Color{0xFF, 0xFF, 0xFF, 0xCF}
+    );
+    
+    auto stackView = std::make_unique<application::StackVisualizer>(
+        rightBottomPanel->getWidth() / 2 - 200 / 2, label->getPosition().y + 45,
+        200, rightBottomPanel->getHeight() - label->getPosition().y - label->getHeight() - 25 - m_innerBorderWidth,
+        SDL_Color{0xFF, 0xFF, 0xFF, 0xDF},
+        14, 18
+    );
+
+    label->useFont("JetBrainsMono-Bold.ttf", 18);
+    label->appendText("Stack View", true);
+
+    rightBottomPanel->addWidget("Label", std::move(label));
+    rightBottomPanel->addWidget("StackVisualizer-stack_view", std::move(stackView));
+
+    // ===========================
+    // ===========================
+    m_mainPanel.addWidget("Panel-right_top", std::move(rightTopPanel));
+    m_mainPanel.addWidget("Panel-right_bottom", std::move(rightBottomPanel));
+}
+
+bool application::Application::loadTargetSourceCode(const std::string &filepath)
+{
+    std::filesystem::path fsPath(filepath);
     if (!std::filesystem::exists(fsPath))
         return false;
 
-    std::ifstream file(path); // Open the file
+    std::ifstream file(filepath); // Open the file
 
     if (!file.is_open()) {
         return false;
@@ -329,13 +376,19 @@ bool application::Application::loadCodeText(const std::string &path)
     // Close the file
     file.close();
 
-    // set the text to the code textblock
-    application::TextBlock* codeBlock = static_cast<application::TextBlock*>(m_panels[0]->getWidget("codeText"));
+    // Set the text to the source code widget
+    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-center_top");
+    if (parentWidget == nullptr)
+        return false;
 
-    
+    application::Widget* w = parentWidget->getWidget("TextBlock-Source_code");
+    if (w == nullptr)
+        return false;
 
-    codeBlock->setText(fileContents, true);
-    codeBlock->setColorFormat(formatMap);
+    application::TextBlock* textBlock = static_cast<application::TextBlock*>(w);
+
+    textBlock->setText(fileContents, true);
+    textBlock->setColorFormat(formatMap);
 
     return true;
 }

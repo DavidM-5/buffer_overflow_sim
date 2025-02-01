@@ -52,7 +52,7 @@ namespace application
         std::unordered_map<std::string, SDL_Color> formatMap; // temp
 
 
-        int count = 0;// temporary
+        uint64_t count = 0xAC342BFC178205A0;// temporary
 
     private:
         void update(SDL_Event& event); // temp implementation
@@ -60,6 +60,12 @@ namespace application
 
         void initPanels();
         bool loadCodeText(const std::string& filename);
+
+        void initLeftPanels();
+        void initCenterPanels();
+        void initRightPanels();
+
+        bool loadTargetSourceCode(const std::string& filepath);
     };
 
 } // namespace application
