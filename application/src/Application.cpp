@@ -1,13 +1,38 @@
 #include "Application.h"
 
+/*
+m_borderHorizontalCenterPanelTop(false,
+                                m_mainPanel.getPosition().x + m_mainPanel.getWidth() / 3 - 50,
+                                1.8 * m_mainPanel.getHeight() / 3 - m_borderWidth,
+                                m_mainPanel.getWidth() / 3 - m_borderWidth + 50,
+                                m_borderWidth,
+                                SDL_Color{255, 120, 255, 120}),
+m_borderHorizontalCenterPanelBottom(false,
+                                    m_mainPanel.getPosition().x + m_mainPanel.getWidth() / 3 - 50,
+                                    1.8 * m_mainPanel.getHeight() / 3 + 50,
+                                    m_mainPanel.getWidth() / 3 - m_borderWidth + 50,
+                                    m_borderWidth,
+                                    SDL_Color{255, 120, 255, 120}),
+*/
 application::Application::Application() : m_window("Buffer Overflow Simulator", WINDOW_WIDTH, WINDOW_HEIGHT),
                                           m_bordVert(true, 2*WINDOW_WIDTH/3-105, 0, 10, WINDOW_HEIGHT),
                                           m_bordHor(false, 0, 2*WINDOW_HEIGHT/3-5, 2*WINDOW_WIDTH/3-100, 10),
+                                          m_borderVerticalLeft(true, 
+                                                               m_mainPanel.getPosition().x + m_mainPanel.getWidth() / 3 - m_borderWidth - 50,
+                                                               m_mainPanel.getPosition().y + m_borderWidth,
+                                                               m_borderWidth,
+                                                               m_mainPanel.getHeight() - m_borderWidth * 2,
+                                                               SDL_Color{0xFF, 0xFF, 0xFF, 0x00}),
+                                          m_borderVerticalRight(true,
+                                                                m_mainPanel.getPosition().x + 2 * m_mainPanel.getWidth() / 3 - m_borderWidth,
+                                                                m_mainPanel.getPosition().y + m_borderWidth,
+                                                                m_borderWidth,
+                                                                m_mainPanel.getHeight() - m_borderWidth * 2,
+                                                                SDL_Color{0xFF, 0xFF, 0xFF, 0x00}),
                                           m_mainPanel(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, {0x2D, 0x2D, 0x2D, 0xFF}),
                                           m_borderWidth(10), m_innerBorderWidth(10)
 {
-    formatMap["#include"] = {255, 123, 23, 255};
-    formatMap["while"] = {123, 245, 123, 255};
+    initFormatMap();
 }
 
 bool application::Application::init()
@@ -18,8 +43,8 @@ bool application::Application::init()
 
     initPanels();
 
-    loadTargetSourceCode("targets/src/main.c");
-
+    loadTargetSourceCode("targets/src/vulnerable_system/main.c");
+    
     return true;
 }
 
@@ -95,8 +120,8 @@ void application::Application::update(SDL_Event& event)
 
     m_mainPanel.handleEvents(m_inputMngr);
 
-    // m_bordVert.handleEvents(m_inputMngr);
-    // m_bordHor.handleEvents(m_inputMngr);
+    m_borderVerticalLeft.handleEvents(m_inputMngr);
+    m_borderVerticalRight.handleEvents(m_inputMngr);
 }
 
 void application::Application::render()
@@ -105,12 +130,68 @@ void application::Application::render()
 
     m_mainPanel.render(m_renderer);
     
-    /*
-    m_bordVert.render(m_renderer);
-    m_bordHor.render(m_renderer);
-    */
+    m_borderVerticalLeft.render(m_renderer);
+    m_borderVerticalRight.render(m_renderer);
 
     m_renderer.present();
+}
+
+void application::Application::initFormatMap()
+{
+    formatMap["#include"] = {255, 123, 23, 255};  // Light Orange
+    formatMap["#ifdef"] = {255, 123, 23, 255};  // Light Orange
+    formatMap["#else"] = {255, 123, 23, 255};  // Light Orange
+    formatMap["#endif"] = {255, 123, 23, 255};  // Light Orange
+    formatMap["while"] = {123, 245, 123, 255};   // Light Green
+    formatMap["void"] = {0, 192, 255, 255};      // Sky Blue
+    formatMap["{"] = {163, 127, 54, 255};     // Olive Green
+    formatMap["}"] = {163, 127, 54, 255};     // Olive Green
+    formatMap[":"] = {163, 127, 54, 255};     // Olive Green
+    formatMap["int"] = {255, 215, 0, 255};       // Gold
+    formatMap["return"] = {70, 130, 180, 255};   // Steel Blue
+    formatMap["if"] = {50, 205, 50, 255};        // Lime Green
+    formatMap["else"] = {50, 205, 50, 255};      // Lime Green
+    formatMap["for"] = {50, 205, 50, 255};       // Lime Green
+    formatMap["break"] = {220, 20, 60, 255};     // Crimson
+    formatMap["continue"] = {220, 20, 60, 255};  // Crimson
+    formatMap["//"] = { 128, 128, 128, 255 }; // Grey
+    formatMap["sizeof"] = {255, 215, 0, 255};    // Gold
+    formatMap["switch"] = {50, 205, 50, 255};    // Lime Green
+    formatMap["case"] = {0, 123, 255, 255};      // Dodger Blue
+    formatMap["default:"] = {0, 192, 255, 255};      // Sky Blue
+    formatMap["system"] = {50, 205, 50, 255};      // Lime Green
+    formatMap["get"] = {0, 102, 204, 255};       // Dodger Blue
+    formatMap["gtes"] = {0, 102, 204, 255};      // Dodger Blue
+    formatMap["printf"] = {255, 69, 0, 255};     // Red-Orange
+    formatMap["scanf"] = {255, 69, 0, 255};      // Red-Orange
+    formatMap["malloc"] = {255, 69, 0, 255};     // Red-Orange
+    formatMap["free"] = {255, 69, 0, 255};       // Red-Orange
+    formatMap["char"] = {255, 215, 0, 255};      // Gold
+    formatMap["\""] = {85, 207, 85, 255};      // Green
+    formatMap["\'"] = {85, 207, 85, 255};      // Green
+    formatMap["]"] = {255, 215, 0, 255};         // Gold
+    formatMap["["] = {255, 215, 0, 255};         // Gold
+    formatMap["("] = {255, 215, 0, 255};         // Gold
+    formatMap[")"] = {255, 215, 0, 255};         // Gold
+    formatMap["float"] = {255, 215, 0, 255};     // Gold
+    formatMap["double"] = {255, 215, 0, 255};    // Gold
+    formatMap["long"] = {255, 215, 0, 255};      // Gold
+    formatMap["const"] = {173, 216, 230, 255};     // Light Blue
+    formatMap["static"] = {0, 128, 128, 255};    // Teal
+    formatMap["extern"] = {0, 128, 128, 255};    // Teal
+    formatMap["volatile"] = {0, 128, 128, 255};  // Teal
+    formatMap["sizeof"] = {255, 215, 0, 255};    // Gold
+    formatMap["typedef"] = {0, 128, 128, 255};   // Teal
+    formatMap["struct"] = {67, 143, 236, 255};     // Blue
+    formatMap["bool"] = {146, 68, 247, 255};       // Purple
+    formatMap["="] = {219, 6, 136, 255};       // Rose
+    formatMap["!="] = {219, 6, 136, 255};       // Rose
+    formatMap["+"] = {219, 6, 136, 255};        // Rose
+    formatMap["-"] = {219, 6, 136, 255};        // Rose
+    formatMap["&&"] = {219, 6, 136, 255};        // Rose
+    formatMap["||"] = {219, 6, 136, 255};        // Rose
+    formatMap["operator"] = {219, 6, 136, 255};        // Rose  +, -, =, !, |, &
+    formatMap["function"] = {80, 130, 240, 255}; // Orange
 }
 
 void application::Application::initPanels()
@@ -213,14 +294,16 @@ void application::Application::initPanels()
 
 void application::Application::initLeftPanels()
 {
-    const int totalWidth = WINDOW_WIDTH;
-    const int totalHeight = WINDOW_HEIGHT;
+    const int totalWidth = m_mainPanel.getWidth();
+    const int totalHeight = m_mainPanel.getHeight();
 
     auto leftPanel = std::make_unique<application::Panel>(
         m_mainPanel.getPosition().x + m_borderWidth, m_mainPanel.getPosition().y + m_borderWidth,
-        totalWidth / 3 - m_borderWidth * 2, totalHeight - m_borderWidth * 2,
+        totalWidth / 3 - m_borderWidth * 2 - 50, totalHeight - m_borderWidth * 2,
         SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
     );
+
+    leftPanel->addLeftTopBorder(m_borderVerticalLeft);
 
     auto label = std::make_unique<application::TextLine>(
         0 + m_innerBorderWidth, 0 + m_innerBorderWidth,
@@ -240,14 +323,17 @@ void application::Application::initLeftPanels()
 
 void application::Application::initCenterPanels()
 {
-    const int totalWidth = WINDOW_WIDTH;
-    const int totalHeight = WINDOW_HEIGHT;
+    const int totalWidth = m_mainPanel.getWidth();
+    const int totalHeight = m_mainPanel.getHeight();
 
     auto centerTopPanel = std::make_unique<application::Panel>(
-        m_mainPanel.getPosition().x + totalWidth / 3, m_mainPanel.getPosition().y + m_borderWidth,
-        totalWidth / 3 + 80, 1.8 * totalHeight / 3 - m_borderWidth * 2,
+        m_mainPanel.getPosition().x + totalWidth / 3 - 50, m_mainPanel.getPosition().y + m_borderWidth,
+        totalWidth / 3 - m_borderWidth + 50, 1.8 * totalHeight / 3 - m_borderWidth * 2,
         SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
     );
+
+    centerTopPanel->addRightBottomBorder(m_borderVerticalLeft);
+    centerTopPanel->addLeftTopBorder(m_borderVerticalRight);
 
     auto label = std::make_unique<application::TextLine>(
         0 + m_innerBorderWidth, 0 + m_innerBorderWidth,
@@ -274,6 +360,9 @@ void application::Application::initCenterPanels()
         centerTopPanel->getWidth(), 50,
         SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
     );
+
+    centerMiddlePanel->addRightBottomBorder(m_borderVerticalLeft);
+    centerMiddlePanel->addLeftTopBorder(m_borderVerticalRight);
     
     // ===========================
     // ===========================
@@ -282,6 +371,9 @@ void application::Application::initCenterPanels()
         centerMiddlePanel->getWidth(), totalHeight - centerTopPanel->getHeight() - centerMiddlePanel->getHeight() - m_borderWidth * 4,
         SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
     );
+
+    centerBottomPanel->addRightBottomBorder(m_borderVerticalLeft);
+    centerBottomPanel->addLeftTopBorder(m_borderVerticalRight);
 
     label = std::make_unique<application::TextLine>(
         0 + m_innerBorderWidth, 0 + m_innerBorderWidth,
@@ -303,14 +395,16 @@ void application::Application::initCenterPanels()
 
 void application::Application::initRightPanels()
 {
-    const int totalWidth = WINDOW_WIDTH;
-    const int totalHeight = WINDOW_HEIGHT;
+    const int totalWidth = m_mainPanel.getWidth();
+    const int totalHeight = m_mainPanel.getHeight();
 
     auto rightTopPanel = std::make_unique<application::Panel>(
-        m_mainPanel.getPosition().x + 2 * totalWidth / 3 + 90, m_mainPanel.getPosition().y + m_borderWidth,
-        totalWidth / 3 - 100, totalHeight / 3 - m_borderWidth * 2,
+        m_mainPanel.getPosition().x + 2 * totalWidth / 3, m_mainPanel.getPosition().y + m_borderWidth,
+        totalWidth / 3 - m_borderWidth, totalHeight / 3 - m_borderWidth * 2,
         SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
     );
+
+    rightTopPanel->addRightBottomBorder(m_borderVerticalRight);
 
     auto label = std::make_unique<application::TextLine>(
         0 + m_innerBorderWidth, 0 + m_innerBorderWidth,
@@ -330,6 +424,8 @@ void application::Application::initRightPanels()
         rightTopPanel->getWidth(), 2 * totalHeight / 3 - m_borderWidth,
         SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
     );
+
+    rightBottomPanel->addRightBottomBorder(m_borderVerticalRight);
 
     label = std::make_unique<application::TextLine>(
         0 + m_innerBorderWidth, 0 + m_innerBorderWidth,

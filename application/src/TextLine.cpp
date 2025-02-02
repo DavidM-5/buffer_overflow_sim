@@ -268,11 +268,70 @@ void application::TextLine::updateTexture(core::Renderer &renderer, int centerHo
 
     size_t pos = 0;
     int currentX = 0;
-    std::string word;
-    
+    bool inQuotes = false;
+    bool inSingleQuotes = false; // Track single quotes
+    bool inComment = false;
+    bool possibleFunction = true;  // Track if we might be at the start of a function name
+
     while (pos < m_text.length()) {
-        // Handle consecutive spaces
+        // Handle comments
+        if (!inQuotes && !inSingleQuotes && m_text[pos] == '/' && pos + 1 < m_text.length() && m_text[pos + 1] == '/') {
+            // Render the "//" in comment color from m_formatMap
+            std::string commentMarker = "//";
+            SDL_Color commentColor = m_formatMap.find(commentMarker) != m_formatMap.end() ? 
+                                     m_formatMap[commentMarker] : m_mainColor;
+            SDL_Surface* commentMarkerSurface = TTF_RenderText_Blended(font, commentMarker.c_str(), commentColor);
+            if (commentMarkerSurface) {
+                SDL_Rect dstRect = { currentX, 0, commentMarkerSurface->w, commentMarkerSurface->h };
+                SDL_BlitSurface(commentMarkerSurface, nullptr, completeSurface, &dstRect);
+                currentX += commentMarkerSurface->w;
+                SDL_FreeSurface(commentMarkerSurface);
+            }
+            inComment = true;
+            possibleFunction = false;
+            pos += 2;
+            continue;
+        }
+
+        // Handle double quotes
+        if (!inComment && !inSingleQuotes && m_text[pos] == '"') {
+            std::string quoteChar = "\"";
+            SDL_Color quoteColor = m_formatMap.find(quoteChar) != m_formatMap.end() ? 
+                                   m_formatMap[quoteChar] : m_mainColor;
+            SDL_Surface* quoteSurface = TTF_RenderText_Blended(font, quoteChar.c_str(), quoteColor);
+            if (quoteSurface) {
+                SDL_Rect dstRect = { currentX, 0, quoteSurface->w, quoteSurface->h };
+                SDL_BlitSurface(quoteSurface, nullptr, completeSurface, &dstRect);
+                currentX += quoteSurface->w;
+                SDL_FreeSurface(quoteSurface);
+            }
+            inQuotes = !inQuotes;
+            possibleFunction = false;
+            pos++;
+            continue;
+        }
+
+        // Handle single quotes
+        if (!inComment && !inQuotes && m_text[pos] == '\'') {
+            std::string singleQuoteChar = "'";
+            SDL_Color singleQuoteColor = m_formatMap.find(singleQuoteChar) != m_formatMap.end() ? 
+                                         m_formatMap[singleQuoteChar] : m_mainColor;
+            SDL_Surface* singleQuoteSurface = TTF_RenderText_Blended(font, singleQuoteChar.c_str(), singleQuoteColor);
+            if (singleQuoteSurface) {
+                SDL_Rect dstRect = { currentX, 0, singleQuoteSurface->w, singleQuoteSurface->h };
+                SDL_BlitSurface(singleQuoteSurface, nullptr, completeSurface, &dstRect);
+                currentX += singleQuoteSurface->w;
+                SDL_FreeSurface(singleQuoteSurface);
+            }
+            inSingleQuotes = !inSingleQuotes;
+            possibleFunction = false;
+            pos++;
+            continue;
+        }
+
+        // Handle spaces
         if (m_text[pos] == ' ') {
+            possibleFunction = true;  // Reset function detection after space
             while (pos < m_text.length() && m_text[pos] == ' ') {
                 currentX += spaceWidth;
                 pos++;
@@ -280,31 +339,80 @@ void application::TextLine::updateTexture(core::Renderer &renderer, int centerHo
             continue;
         }
 
-        // Extract word
-        size_t wordEnd = m_text.find(' ', pos);
-        if (wordEnd == std::string::npos) {
-            word = m_text.substr(pos);
-            pos = m_text.length();
-        } else {
-            word = m_text.substr(pos, wordEnd - pos);
-            pos = wordEnd;
+        // Look ahead for function pattern (text followed by opening parenthesis)
+        size_t nextSpace = m_text.find_first_of(" (", pos);
+        bool isFunction = false;
+        
+        if (nextSpace != std::string::npos && 
+            m_text[nextSpace] == '(' && 
+            possibleFunction && 
+            !inQuotes && 
+            !inSingleQuotes && 
+            !inComment) {
+            isFunction = true;
         }
 
-        if (!word.empty()) {
-            // Create surface for single word
-            SDL_Surface* wordSurface;
-            SDL_Color color = (m_formatMap.find(word) != m_formatMap.end()) ? 
-                                m_formatMap[word] : m_mainColor;
-                             
-            wordSurface = TTF_RenderText_Blended(font, word.c_str(), color);
-            if (!wordSurface) continue;
+        // Extract word or segment
+        size_t segmentEnd = m_text.find_first_of(" \"'//()[]{}", pos); // Include curly braces in delimiters
+        if (segmentEnd == std::string::npos) {
+            segmentEnd = m_text.length();
+        }
 
-            // Blit word surface to complete surface
-            SDL_Rect dstRect = { currentX, 0, wordSurface->w, wordSurface->h };
-            SDL_BlitSurface(wordSurface, nullptr, completeSurface, &dstRect);
+        std::string segment = m_text.substr(pos, segmentEnd - pos);
+        
+        if (!segment.empty()) {
+            SDL_Surface* segmentSurface;
+            SDL_Color color = m_mainColor;
+
+            if (inQuotes) {
+                std::string quoteKey = "\"";
+                color = m_formatMap.find(quoteKey) != m_formatMap.end() ? 
+                        m_formatMap[quoteKey] : m_mainColor;
+            } else if (inSingleQuotes) {
+                std::string singleQuoteKey = "'";
+                color = m_formatMap.find(singleQuoteKey) != m_formatMap.end() ? 
+                        m_formatMap[singleQuoteKey] : m_mainColor;
+            } else if (inComment) {
+                std::string commentKey = "//";
+                color = m_formatMap.find(commentKey) != m_formatMap.end() ? 
+                        m_formatMap[commentKey] : m_mainColor;
+            } else if (isFunction) {
+                // Use function color from m_formatMap, or a default color if not defined
+                std::string functionKey = "function";
+                color = m_formatMap.find(functionKey) != m_formatMap.end() ? 
+                        m_formatMap[functionKey] : SDL_Color{255, 165, 0, 255};  // Default orange
+            } else if (m_formatMap.find(segment) != m_formatMap.end()) {
+                color = m_formatMap[segment];
+            }
+
+            segmentSurface = TTF_RenderText_Blended(font, segment.c_str(), color);
+            if (!segmentSurface) continue;
+
+            SDL_Rect dstRect = { currentX, 0, segmentSurface->w, segmentSurface->h };
+            SDL_BlitSurface(segmentSurface, nullptr, completeSurface, &dstRect);
             
-            currentX += wordSurface->w;
-            SDL_FreeSurface(wordSurface);
+            currentX += segmentSurface->w;
+            SDL_FreeSurface(segmentSurface);
+        }
+
+        pos = segmentEnd;
+        
+        // Handle brackets and curly braces after the segment
+        if (pos < m_text.length() && !inComment && !inQuotes && !inSingleQuotes && 
+            (m_text[pos] == '(' || m_text[pos] == ')' || m_text[pos] == '[' || m_text[pos] == ']' ||
+             m_text[pos] == '{' || m_text[pos] == '}')) {
+            std::string bracketChar(1, m_text[pos]);
+            SDL_Color bracketColor = m_formatMap.find(bracketChar) != m_formatMap.end() ? 
+                                     m_formatMap[bracketChar] : m_mainColor;
+            SDL_Surface* bracketSurface = TTF_RenderText_Blended(font, bracketChar.c_str(), bracketColor);
+            if (bracketSurface) {
+                SDL_Rect dstRect = { currentX, 0, bracketSurface->w, bracketSurface->h };
+                SDL_BlitSurface(bracketSurface, nullptr, completeSurface, &dstRect);
+                currentX += bracketSurface->w;
+                SDL_FreeSurface(bracketSurface);
+            }
+            // Do not reset possibleFunction here to allow function detection inside parentheses
+            pos++;
         }
     }
 

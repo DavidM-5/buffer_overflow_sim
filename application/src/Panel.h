@@ -29,6 +29,7 @@ namespace application
         application::Widget* getWidget(std::string name);
 
         void setPosition(vector2i newPos);
+        void addDeltaTransform(int x = 0, int y = 0, int w = 0, int h = 0);
         void setWidth(int newW);
         void setHeight(int newH);
     

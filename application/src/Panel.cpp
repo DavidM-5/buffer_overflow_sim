@@ -73,6 +73,15 @@ void application::Panel::setPosition(vector2i newPos)
     }
 }
 
+void application::Panel::addDeltaTransform(int x, int y, int w, int h)
+{
+    Widget::addDeltaTransform(x, y, w, h);
+
+    for (auto& [name, widget] : m_widgets) {
+        widget->addDeltaTransform(x, y, w, h);
+    }
+}
+
 void application::Panel::setWidth(int newW)
 {
     int dw = newW - m_transform.w;

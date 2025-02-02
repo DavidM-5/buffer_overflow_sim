@@ -47,7 +47,15 @@ namespace application
 
         application::Border m_bordVert;
         application::Border m_bordHor;
-
+        
+        application::Border m_borderVerticalLeft;
+        application::Border m_borderVerticalRight;
+        
+        /*
+        application::Border m_borderHorizontalCenterPanelTop;
+        application::Border m_borderHorizontalCenterPanelBottom;
+        application::Border m_borderHorizontalRightPanel;
+        */
 
         std::unordered_map<std::string, SDL_Color> formatMap; // temp
 
@@ -58,6 +66,8 @@ namespace application
         void update(SDL_Event& event); // temp implementation
         void render(); // temp implementation
 
+        void initFormatMap();
+        
         void initPanels();
         bool loadCodeText(const std::string& filename);
 
