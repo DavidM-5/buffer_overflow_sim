@@ -1,1 +1,0 @@
-gcc main.c Database.c aes_utils.c sqlite3.c -o build\main -lcrypto -lpthread (for linux add -ldl)
