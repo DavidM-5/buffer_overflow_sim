@@ -187,6 +187,8 @@ void application::Application::initFormatMap()
     formatMap["["] = {255, 215, 0, 255};         // Gold
     formatMap["("] = {255, 215, 0, 255};         // Gold
     formatMap[")"] = {255, 215, 0, 255};         // Gold
+    formatMap["<"] = {255, 215, 0, 255};         // Gold
+    formatMap[">"] = {255, 215, 0, 255};         // Gold
     formatMap["float"] = {255, 215, 0, 255};     // Gold
     formatMap["double"] = {255, 215, 0, 255};    // Gold
     formatMap["long"] = {255, 215, 0, 255};      // Gold
