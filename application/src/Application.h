@@ -1,9 +1,12 @@
 #pragma once
 
 #include <vector>
+#include <set>
+#include <regex>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <iostream>
 #include <filesystem>
 #include <fstream>
@@ -59,8 +62,11 @@ namespace application
 
         std::unordered_map<std::string, SDL_Color> formatMap; // temp
 
+        std::unordered_set<int> m_breakpoints;
+
 
         uint64_t count = 0xAC342BFC178205A0;// temporary
+        uint64_t count2 = 0; // temporary
 
     private:
         void update(SDL_Event& event); // temp implementation
@@ -75,7 +81,8 @@ namespace application
         void initCenterPanels();
         void initRightPanels();
 
-        bool loadTargetSourceCode(const std::string& filepath);
+        bool loadTargetSourceCodeFromPath(const std::string& filepath);
+        std::set<std::string> extractFunctionNamesFromPath(const std::string& filePath);
     };
 
 } // namespace application

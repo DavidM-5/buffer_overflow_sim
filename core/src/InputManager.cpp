@@ -19,6 +19,7 @@ core::InputManager::InputManager() : m_mousePosition({WINDOW_WIDTH / 2, WINDOW_H
 void core::InputManager::update(SDL_Event& event)
 {
     m_mouseWheelScroll = 0;
+    m_mouseClicked[0] = m_mouseClicked[1] = m_mouseClicked[2] = false;
     m_prevMousePosition = m_mousePosition;
     m_currentKeyPress = "";
 
@@ -59,6 +60,18 @@ void core::InputManager::update(SDL_Event& event)
     // Detect mouse wheel scrolling
     if (event.type == SDL_MOUSEWHEEL) {
         m_mouseWheelScroll = event.wheel.y;
+    }
+
+    if (event.type == SDL_MOUSEBUTTONDOWN) {
+        if (event.button.button == SDL_BUTTON_LEFT) {
+            m_mouseClicked[MOUSE_BUTTON_LEFT] = true;
+        }
+        if (event.button.button == SDL_BUTTON_RIGHT) {
+            m_mouseClicked[MOUSE_BUTTON_RIGHT] = true;
+        }
+        if (event.button.button == SDL_BUTTON_MIDDLE) {
+            m_mouseClicked[MOUSE_BUTTON_WHEEL] = true;
+        }
     }
 
     // Rest of the update function remains the same

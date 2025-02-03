@@ -19,6 +19,7 @@ namespace core
 
         bool isKeyPressed(SDL_Scancode key) const { return m_keyStates[key]; }
         bool isMouseButtonPressed(uint8_t button) const { return m_mouseButtons[button]; }
+        bool mouseClicked(uint8_t button) const { return m_mouseClicked[button]; }
 
         vector2i getMousePosition() const { return m_mousePosition; }
         int getMouseWheelScroll() const { return m_mouseWheelScroll; };
@@ -29,6 +30,7 @@ namespace core
     private:
         bool m_keyStates[SDL_NUM_SCANCODES];
         bool m_mouseButtons[MOUSE_BUTTON_TOTAL];
+        bool m_mouseClicked[MOUSE_BUTTON_TOTAL];
 
         int m_mouseWheelScroll;
         

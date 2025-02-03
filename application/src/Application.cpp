@@ -43,7 +43,7 @@ bool application::Application::init()
 
     initPanels();
 
-    loadTargetSourceCode("targets/src/vulnerable_system/main.c");
+    loadTargetSourceCodeFromPath("targets/src/vulnerable_system/main.c");
     
     return true;
 }
@@ -105,6 +105,20 @@ void application::Application::run()
 
         Application::render();
 
+        // temporary \/\/\/
+        if (count2++ % 60 == 0 && m_breakpoints.size() > 0) {
+            bool f = false;
+            for (const auto& elem : m_breakpoints) {
+                std::cout << elem << " | ";
+                f = true;
+            }
+            
+            if (f) {
+                std::cout << std::endl;
+                f = false;
+            }
+        }
+        // temporary /\/\/\
 
         // Frame timing and capping
         frameTime = SDL_GetTicks() - frameStart;
@@ -185,6 +199,7 @@ void application::Application::initFormatMap()
     formatMap["struct"] = {67, 143, 236, 255};     // Blue
     formatMap["bool"] = {146, 68, 247, 255};       // Purple
     formatMap["="] = {219, 6, 136, 255};       // Rose
+    formatMap["=="] = {219, 6, 136, 255};       // Rose
     formatMap["!="] = {219, 6, 136, 255};       // Rose
     formatMap["+"] = {219, 6, 136, 255};        // Rose
     formatMap["-"] = {219, 6, 136, 255};        // Rose
@@ -347,7 +362,8 @@ void application::Application::initCenterPanels()
     auto sourceCode = std::make_unique<application::TextBlock>(
         0 + m_innerBorderWidth, label->getPosition().y + label->getHeight() + 15,
         label->getWidth(), centerTopPanel->getHeight() - label->getPosition().y - label->getHeight() - 25 - m_innerBorderWidth,
-        SDL_Color{0xFF, 0xFF, 0xFF, 0xFF}
+        SDL_Color{0xFF, 0xFF, 0xFF, 0xFF},
+        &m_breakpoints
     );
 
     centerTopPanel->addWidget("Label", std::move(label));
@@ -452,7 +468,7 @@ void application::Application::initRightPanels()
     m_mainPanel.addWidget("Panel-right_bottom", std::move(rightBottomPanel));
 }
 
-bool application::Application::loadTargetSourceCode(const std::string &filepath)
+bool application::Application::loadTargetSourceCodeFromPath(const std::string &filepath)
 {
     std::filesystem::path fsPath(filepath);
     if (!std::filesystem::exists(fsPath))
@@ -487,4 +503,32 @@ bool application::Application::loadTargetSourceCode(const std::string &filepath)
     textBlock->setColorFormat(formatMap);
 
     return true;
+}
+
+std::set<std::string> application::Application::extractFunctionNamesFromPath(const std::string &filePath)
+{
+    std::set<std::string> functionNames;
+    std::ifstream file(filePath);
+    std::string fileContent((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    file.close();
+
+    // Regex to match function definitions with complex return types
+    std::regex functionRegex(R"(([\w\s\*]+)\s+(\w+)\s*\([^)]*\)\s*\{)");
+
+    std::smatch matches;
+    std::string::const_iterator searchStart(fileContent.cbegin());
+
+    while (std::regex_search(searchStart, fileContent.cend(), matches, functionRegex)) {
+        std::string potentialFunctionName = matches[2];
+
+        // Check if the matched name is not a control statement (e.g., if, while, for)
+        if (potentialFunctionName != "if" && potentialFunctionName != "while" && potentialFunctionName != "for" &&
+            potentialFunctionName != "else" && potentialFunctionName != "switch") {
+            functionNames.insert(potentialFunctionName);
+        }
+
+        searchStart = matches.suffix().first;
+    }
+
+    return functionNames;
 }

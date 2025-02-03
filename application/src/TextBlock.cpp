@@ -1,14 +1,15 @@
 #include "TextBlock.h"
 
-application::TextBlock::TextBlock(int posX, int posY, int w, int h, SDL_Color color) : 
+application::TextBlock::TextBlock(int posX, int posY, int w, int h, SDL_Color color, std::unordered_set<int>* breakpointVector) : 
                                   Widget(posX, posY, w, h, color), m_GUTTER_WIDTH(30),
-                                  m_renderStartLine(0), m_ignoreNotFittedLine(false)
+                                  m_renderStartLine(0), m_ignoreNotFittedLine(false),
+                                  m_breakpointVector(*breakpointVector)
 {
 }
 
-void application::TextBlock::setText(std::string &text, bool ignoreNotFittedLine)
+void application::TextBlock::setText(std::string &text, bool ignoreNotFittedLine, bool clearBreakpoints)
 {
-    m_lines.clear();
+    std::vector<Line> newLines;
     
     std::vector<std::string> lines = splitIntoLines(text);
 
@@ -21,7 +22,7 @@ void application::TextBlock::setText(std::string &text, bool ignoreNotFittedLine
         for (int i = 0; i < lines.size(); i++) {
             Line ln = {
             .lineNumber = i+1, 
-            .breakpoint = false,
+            .breakpoint = (!clearBreakpoints && i < m_lines.size()) ? m_lines[i].breakpoint : false,
             .textLine = application::TextLine(m_transform.x + m_GUTTER_WIDTH, 
                                               m_transform.y + i*20,
                                               m_transform.w - m_GUTTER_WIDTH, 
@@ -31,14 +32,16 @@ void application::TextBlock::setText(std::string &text, bool ignoreNotFittedLine
             ln.textLine.useFont("JetBrainsMono-Medium.ttf", 14);
             ln.textLine.appendText(lines[i], true);
 
-            m_lines.push_back(ln);
+            newLines.push_back(ln);
         }
 
         m_text = text;
 
-        for (Line& line : m_lines) {
+        for (Line& line : newLines) {
             line.textLine.addFormatMap(m_formatMap);
         }
+
+        m_lines = newLines;
         return;
     }
 
@@ -84,14 +87,16 @@ void application::TextBlock::setText(std::string &text, bool ignoreNotFittedLine
             lines.insert(lines.begin() + currentLine + 1, remaining);
         }
 
-        m_lines.push_back(ln);
+        newLines.push_back(ln);
         currentLine++;
     }
     
     m_text = text;
-    for (Line& line : m_lines) {
+    for (Line& line : newLines) {
         line.textLine.addFormatMap(m_formatMap);
     }
+
+    m_lines = newLines;
 }
 
 void application::TextBlock::setColorFormat(const std::unordered_map<std::string, SDL_Color> &formatMap)
@@ -107,16 +112,32 @@ void application::TextBlock::handleEvents(const core::InputManager &inputMngr)
 {
     vector2i mousePos = inputMngr.getMousePosition();
 
-    if (mousePos.x > m_transform.x && mousePos.x < m_transform.x + m_transform.w &&
-        mousePos.y > m_transform.y && mousePos.y < m_transform.y + m_transform.h &&
-        inputMngr.getMouseWheelScroll() != 0) {
+    if (isMouseInsideTransform(mousePos)) {
+        if (inputMngr.getMouseWheelScroll() != 0) {
+            m_renderStartLine -= inputMngr.getMouseWheelScroll() * 3;
 
-        m_renderStartLine -= inputMngr.getMouseWheelScroll() * 3;
+            if (m_renderStartLine < 0)
+                m_renderStartLine = 0;
+            else if (m_renderStartLine >= m_lines.size())
+                m_renderStartLine = m_lines.size() - 1;
+        }
+        
+        if (m_lines.size() > 0 && inputMngr.mouseClicked(MOUSE_BUTTON_LEFT)) {
+            if (mousePos.x > m_transform.x && mousePos.x < m_transform.x + m_GUTTER_WIDTH) { // Is mouse in gutter
+                int lineHeight = m_lines[0].textLine.getHeight();
 
-        if (m_renderStartLine < 0)
-            m_renderStartLine = 0;
-        else if (m_renderStartLine >= m_lines.size())
-            m_renderStartLine = m_lines.size() - 1;
+                int lineNumber = (mousePos.y - m_transform.y) / lineHeight + 1;
+
+                if (m_renderStartLine + lineNumber <= m_lines.size()) {
+                    m_lines[m_renderStartLine + lineNumber - 1].breakpoint = !m_lines[m_renderStartLine + lineNumber - 1].breakpoint;
+
+                    if (!m_lines[m_renderStartLine + lineNumber - 1].breakpoint)
+                        m_breakpointVector.erase(m_renderStartLine + lineNumber);
+                    else
+                        m_breakpointVector.insert(m_renderStartLine + lineNumber);
+                }
+            }
+        }
     }
 }
 
@@ -124,12 +145,15 @@ void application::TextBlock::render(core::Renderer &renderer, const SDL_Rect* sr
 {
     int ln = 0;
     for (int i = m_renderStartLine; m_transform.y + m_lines[0].textLine.getHeight() * ln < m_transform.y + m_transform.h - m_lines[0].textLine.getHeight(); i++, ln++) {
+        if (i >= m_lines.size())
+            continue;
+
         if (m_lines[i].breakpoint) {
             renderer.drawRect(SDL_Rect{m_transform.x,
                                 m_transform.y + m_lines[0].textLine.getHeight() * ln,
                                 m_lines[i].textLine.getHeight(),
                                 m_lines[i].textLine.getHeight()},
-                        SDL_Color{124, 12, 255, 255});
+                        SDL_Color{255, 0, 0, 255});
         }
 
         SDL_Rect dstRect{
@@ -145,8 +169,8 @@ void application::TextBlock::render(core::Renderer &renderer, const SDL_Rect* sr
 void application::TextBlock::addDeltaTransform(int dx, int dy, int dw, int dh)
 {
     Widget::addDeltaTransform(dx, dy, dw, dh);
-
-    setText(m_text, m_ignoreNotFittedLine);
+    
+    setText(m_text, m_ignoreNotFittedLine, false);
 }
 
 void application::TextBlock::setPosition(vector2i newPos)
@@ -186,4 +210,10 @@ std::vector<std::string> application::TextBlock::splitIntoLines(std::string &tex
     }
 
     return lines;
+}
+
+bool application::TextBlock::isMouseInsideTransform(vector2i mousePos)
+{
+    return (mousePos.x >= m_transform.x && mousePos.x < m_transform.x + m_transform.w &&
+            mousePos.y >= m_transform.y && mousePos.y < m_transform.y + m_transform.h);
 }
