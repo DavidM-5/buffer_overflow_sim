@@ -30,7 +30,7 @@ application::Application::Application() : m_window("Buffer Overflow Simulator", 
                                                                 m_mainPanel.getHeight() - m_borderWidth * 2,
                                                                 SDL_Color{0xFF, 0xFF, 0xFF, 0x00}),
                                           m_mainPanel(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, {0x2D, 0x2D, 0x2D, 0xFF}),
-                                          m_borderWidth(10), m_innerBorderWidth(10)
+                                          m_borderWidth(10), m_innerBorderWidth(10), m_latestBreakpointLine(0)
 {
     initFormatMap();
 }
@@ -43,8 +43,19 @@ bool application::Application::init()
 
     initPanels();
 
-    loadTargetSourceCodeFromPath("targets/src/vulnerable_system/main.c");
-    
+    if (!loadTargetSourceCodeFromPath("targets/src/Task_one/vulnerable_system/main.c")) {
+        std::cerr << "Failed to load source code." << std::endl;
+        return false;
+    }
+
+    // compile the target code
+    /*
+    if (!compileFile("targets/src/Task_one/compile_command_linux.txt")) {
+        std::cerr << "Failed to compile target code." << std::endl;
+        return false;
+    }
+    */
+
     return true;
 }
 
@@ -136,6 +147,15 @@ void application::Application::update(SDL_Event& event)
 
     m_borderVerticalLeft.handleEvents(m_inputMngr);
     m_borderVerticalRight.handleEvents(m_inputMngr);
+
+    if (m_latestBreakpointLine > 0) {
+        if (m_breakpoints.find(m_latestBreakpointLine) != m_breakpoints.end())
+            m_breakpoints.erase(m_latestBreakpointLine);
+        else
+            m_breakpoints.insert(m_latestBreakpointLine);
+
+        m_latestBreakpointLine = 0;
+    }
 }
 
 void application::Application::render()
@@ -365,7 +385,7 @@ void application::Application::initCenterPanels()
         0 + m_innerBorderWidth, label->getPosition().y + label->getHeight() + 15,
         label->getWidth(), centerTopPanel->getHeight() - label->getPosition().y - label->getHeight() - 25 - m_innerBorderWidth,
         SDL_Color{0xFF, 0xFF, 0xFF, 0xFF},
-        &m_breakpoints
+        &m_latestBreakpointLine
     );
 
     centerTopPanel->addWidget("Label", std::move(label));
@@ -470,35 +490,38 @@ void application::Application::initRightPanels()
     m_mainPanel.addWidget("Panel-right_bottom", std::move(rightBottomPanel));
 }
 
-bool application::Application::loadTargetSourceCodeFromPath(const std::string &filepath)
+void application::Application::readFileToString(const std::string &filepath, std::string& dstString)
 {
-    std::filesystem::path fsPath(filepath);
-    if (!std::filesystem::exists(fsPath))
-        return false;
-
     std::ifstream file(filepath); // Open the file
 
     if (!file.is_open()) {
-        return false;
+        dstString = "";
+        return;
     }
-
+    
     // Use a stringstream to read the file's contents into a string
     std::ostringstream ss;
     ss << file.rdbuf(); // Read the whole file into the stringstream
-    std::string fileContents = ss.str(); // Convert the stringstream into a string
+    dstString = ss.str(); // Convert the stringstream into a string
 
     // Close the file
     file.close();
+}
 
+bool application::Application::loadTargetSourceCodeFromPath(const std::string &filepath)
+{
+    std::string fileContents;
+    readFileToString(filepath, fileContents);
+    
     // Set the text to the source code widget
     application::Widget* parentWidget = m_mainPanel.getWidget("Panel-center_top");
     if (parentWidget == nullptr)
         return false;
-
+    
     application::Widget* w = parentWidget->getWidget("TextBlock-Source_code");
     if (w == nullptr)
         return false;
-
+    
     application::TextBlock* textBlock = static_cast<application::TextBlock*>(w);
 
     textBlock->setText(fileContents, true);
@@ -507,7 +530,7 @@ bool application::Application::loadTargetSourceCodeFromPath(const std::string &f
     return true;
 }
 
-std::set<std::string> application::Application::extractFunctionNamesFromPath(const std::string &filePath)
+std::set<std::string> application::Application::extractFunctionNamesFromFile(const std::string &filePath)
 {
     std::set<std::string> functionNames;
     std::ifstream file(filePath);
@@ -533,4 +556,22 @@ std::set<std::string> application::Application::extractFunctionNamesFromPath(con
     }
 
     return functionNames;
+}
+
+bool application::Application::compileFile(const std::string& commandPath)
+{
+    std::string compileCommand;
+
+    readFileToString(commandPath, compileCommand);
+
+    std::cout << "Command\n" << compileCommand << std::endl;
+
+    int result = system(compileCommand.c_str());
+
+    if (result == 0) {
+        return true;
+    }
+
+    std::cerr << "Compilation failed with error code: " << result << std::endl;
+    return false;
 }

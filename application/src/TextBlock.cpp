@@ -1,9 +1,9 @@
 #include "TextBlock.h"
 
-application::TextBlock::TextBlock(int posX, int posY, int w, int h, SDL_Color color, std::unordered_set<int>* breakpointVector) : 
+application::TextBlock::TextBlock(int posX, int posY, int w, int h, SDL_Color color, u_int32_t* latesBreakpointLine) : 
                                   Widget(posX, posY, w, h, color), m_GUTTER_WIDTH(30),
                                   m_renderStartLine(0), m_ignoreNotFittedLine(false),
-                                  m_breakpointVector(*breakpointVector)
+                                  m_latesBreakpointLine(*latesBreakpointLine)
 {
 }
 
@@ -131,10 +131,7 @@ void application::TextBlock::handleEvents(const core::InputManager &inputMngr)
                 if (m_renderStartLine + lineNumber <= m_lines.size()) {
                     m_lines[m_renderStartLine + lineNumber - 1].breakpoint = !m_lines[m_renderStartLine + lineNumber - 1].breakpoint;
 
-                    if (!m_lines[m_renderStartLine + lineNumber - 1].breakpoint)
-                        m_breakpointVector.erase(m_renderStartLine + lineNumber);
-                    else
-                        m_breakpointVector.insert(m_renderStartLine + lineNumber);
+                    m_latesBreakpointLine = m_renderStartLine + lineNumber;
                 }
             }
         }

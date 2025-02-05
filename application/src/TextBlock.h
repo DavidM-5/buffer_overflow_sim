@@ -15,7 +15,7 @@ namespace application
     class TextBlock : public Widget
     {
     public:
-        TextBlock(int posX = 0, int posY = 0, int w = 100, int h = 100, SDL_Color color = {255, 255, 255, 255}, std::unordered_set<int>* breakpointVector = nullptr);
+        TextBlock(int posX = 0, int posY = 0, int w = 100, int h = 100, SDL_Color color = {255, 255, 255, 255}, u_int32_t* latesBreakpointLine = nullptr);
         ~TextBlock() = default;
 
         void setText(std::string& text, bool ignoreNotFittedLine = false, bool clearBreakpoints = true);
@@ -39,7 +39,7 @@ namespace application
         };
         
         const int m_GUTTER_WIDTH;
-        std::unordered_set<int>& m_breakpointVector;
+        u_int32_t& m_latesBreakpointLine;
         
         std::vector<Line> m_lines;
 

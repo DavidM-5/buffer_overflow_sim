@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <cstdlib>
 #include <SDL2/SDL.h>
 
 #include "../../core/src/config.h"
@@ -62,7 +63,8 @@ namespace application
 
         std::unordered_map<std::string, SDL_Color> formatMap; // temp
 
-        std::unordered_set<int> m_breakpoints;
+        u_int32_t m_latestBreakpointLine;
+        std::unordered_set<u_int32_t> m_breakpoints;
 
 
         uint64_t count = 0xAC342BFC178205A0;// temporary
@@ -81,8 +83,12 @@ namespace application
         void initCenterPanels();
         void initRightPanels();
 
+        void readFileToString(const std::string& filepath, std::string& dstString);
+
         bool loadTargetSourceCodeFromPath(const std::string& filepath);
-        std::set<std::string> extractFunctionNamesFromPath(const std::string& filePath);
+        std::set<std::string> extractFunctionNamesFromFile(const std::string& filePath);
+
+        bool compileFile(const std::string& commandPath);
     };
 
 } // namespace application

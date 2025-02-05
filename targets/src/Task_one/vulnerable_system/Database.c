@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <sqlite3.h>
+#include "sqlite3.h"
 #include "aes_utils.h"
 #include "user_types.h"
 

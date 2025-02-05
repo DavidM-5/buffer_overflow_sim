@@ -1,0 +1,1 @@
+gcc -std=c99 targets/src/Task_one/vulnerable_system/main.c targets/src/Task_one/vulnerable_system/Database.c targets/src/Task_one/vulnerable_system/aes_utils.c targets/src/Task_one/vulnerable_system/sqlite3.c -fno-stack-protector -z noexecstack -o targets/compiled/T1 -lcrypto -lpthread -ldl
