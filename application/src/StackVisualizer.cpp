@@ -54,6 +54,11 @@ void application::StackVisualizer::pop()
     }
 }
 
+void application::StackVisualizer::clear()
+{
+    m_slots.clear();
+}
+
 void application::StackVisualizer::addDeltaTransform(int x, int y, int w, int h)
 {
     m_transform.x += x;

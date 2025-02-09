@@ -27,6 +27,8 @@ namespace application
         void push(std::string str);
         void pop();
 
+        void clear();
+
         void addDeltaTransform(int x = 0, int y = 0, int w = 0, int h = 0) override;
 
     private:

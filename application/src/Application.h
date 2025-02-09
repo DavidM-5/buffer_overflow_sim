@@ -25,6 +25,8 @@
 #include "Border.h"
 #include "StackVisualizer.h"
 #include "Console.h"
+#include "GDBController.h"
+
 
 namespace application
 {
@@ -64,15 +66,18 @@ namespace application
         std::unordered_map<std::string, SDL_Color> formatMap; // temp
 
         u_int32_t m_latestBreakpointLine;
-        std::unordered_set<u_int32_t> m_breakpoints;
+        std::unordered_set<u_int32_t> m_userBreakpoints;
+        std::unordered_set<u_int32_t> m_requiredBreakpoints;
 
+
+        std::unique_ptr<GDBController> gdb;
 
         uint64_t count = 0xAC342BFC178205A0;// temporary
         uint64_t count2 = 0; // temporary
 
     private:
-        void update(SDL_Event& event); // temp implementation
-        void render(); // temp implementation
+        void update(SDL_Event& event);
+        void render();
 
         void initFormatMap();
         
@@ -89,6 +94,7 @@ namespace application
         std::set<std::string> extractFunctionNamesFromFile(const std::string& filePath);
 
         bool compileFile(const std::string& commandPath);
+
     };
 
 } // namespace application
