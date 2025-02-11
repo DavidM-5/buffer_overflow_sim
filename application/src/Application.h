@@ -25,6 +25,7 @@
 #include "Border.h"
 #include "StackVisualizer.h"
 #include "Console.h"
+#include "Button.h"
 #include "GDBController.h"
 
 
@@ -56,6 +57,9 @@ namespace application
         
         application::Border m_borderVerticalLeft;
         application::Border m_borderVerticalRight;
+
+
+        application::Button btntst;  // temporary
         
         /*
         application::Border m_borderHorizontalCenterPanelTop;

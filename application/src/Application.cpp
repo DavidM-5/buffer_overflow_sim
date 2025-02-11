@@ -24,6 +24,13 @@ Tasks:
     .
 
 */
+
+// TEMPORARY \/\/\/
+void printHello() {
+    std::cout << "Hello, World!" << std::endl;
+}
+// TEMPORARY /\/\/\
+
 application::Application::Application() : m_window("Buffer Overflow Simulator", WINDOW_WIDTH, WINDOW_HEIGHT),
                                           m_bordVert(true, 2*WINDOW_WIDTH/3-105, 0, 10, WINDOW_HEIGHT),
                                           m_bordHor(false, 0, 2*WINDOW_HEIGHT/3-5, 2*WINDOW_WIDTH/3-100, 10),
@@ -41,9 +48,12 @@ application::Application::Application() : m_window("Buffer Overflow Simulator", 
                                                                 SDL_Color{0xFF, 0xFF, 0xFF, 0x00}),
                                           m_mainPanel(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, {0x2D, 0x2D, 0x2D, 0xFF}),
                                           m_borderWidth(10), m_innerBorderWidth(10), m_latestBreakpointLine(0),
-                                          m_requiredBreakpoints({82})
+                                          m_requiredBreakpoints({82}), 
+                                          btntst(50, 100, 200, 75, SDL_Color{0, 0, 255, 255}, "Test Button")
 {
     initFormatMap();
+
+    btntst.onClick(printHello);
 }
 
 bool application::Application::init()
@@ -195,6 +205,8 @@ void application::Application::update(SDL_Event& event)
     m_borderVerticalLeft.handleEvents(m_inputMngr);
     m_borderVerticalRight.handleEvents(m_inputMngr);
 
+    btntst.handleEvents(m_inputMngr);
+
     if (m_latestBreakpointLine > 0) {
         if (m_userBreakpoints.find(m_latestBreakpointLine) != m_userBreakpoints.end()) {
             m_userBreakpoints.erase(m_latestBreakpointLine);
@@ -253,6 +265,8 @@ void application::Application::render()
     
     m_borderVerticalLeft.render(m_renderer);
     m_borderVerticalRight.render(m_renderer);
+
+    btntst.render(m_renderer);
 
     m_renderer.present();
 }

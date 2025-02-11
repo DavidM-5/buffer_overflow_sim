@@ -180,10 +180,10 @@ void application::TextLine::fitWidthToText()
     if (m_fontName.empty() || m_fontSize <= 0)
         return;
 
-    int width;
-    TTF_SizeText(s_fonts[m_fontName][m_fontSize], m_text.c_str(), &width, nullptr);
+    if (!m_texture.isValid())
+        return;
 
-    m_transform.w = width;
+    m_transform.w = m_texture.getWidth();
     m_updated = true;
 }
 
@@ -192,10 +192,10 @@ void application::TextLine::fitHeightToText()
     if (m_fontName.empty() || m_fontSize <= 0)
         return;
 
-    int height;
-    TTF_SizeText(s_fonts[m_fontName][m_fontSize], m_text.c_str(), &height, nullptr);
+    if (!m_texture.isValid())
+        return;
 
-    m_transform.h = height;
+    m_transform.h = m_texture.getHeight();
     m_updated = true;
 }
 
