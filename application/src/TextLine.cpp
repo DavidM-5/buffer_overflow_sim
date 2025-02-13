@@ -56,79 +56,91 @@ int application::TextLine::appendText(const std::string& text, bool ignoreNotFit
     }
 
     m_ignoreNotFitted = ignoreNotFitted;
-    
+
     if (ignoreNotFitted) {
         m_text += text;
         m_updated = true;
-
         return 0;
     }
 
-    std::istringstream wordStream(text);
-    std::string word;
+    // Measure the width of a single space
+    int spaceWidth;
+    TTF_SizeText(s_fonts[m_fontName][m_fontSize], " ", &spaceWidth, nullptr);
 
+    // Measure the current width of the text
+    int currentWidth;
+    TTF_SizeText(s_fonts[m_fontName][m_fontSize], m_text.c_str(), &currentWidth, nullptr);
+
+    // Split the input text into words, spaces, and tabs
+    std::vector<std::string> tokens;
+    std::string token;
+    for (char ch : text) {
+        if (ch == ' ' || ch == '\t') {
+            if (!token.empty()) {
+                tokens.push_back(token);
+                token.clear();
+            }
+            // Treat spaces and tabs as separate tokens
+            tokens.push_back(std::string(1, ch));
+        } else {
+            token += ch;
+        }
+    }
+    if (!token.empty()) {
+        tokens.push_back(token);
+    }
+
+    // Track the number of words that did not fit
     int wordsNotAdded = 0;
     bool hasAddedWords = false;
-    std::string newText = m_text; // Work with a copy until we're sure all words fit
-    
-    int letterWidth;
-    TTF_SizeText(s_fonts[m_fontName][m_fontSize], "A", &letterWidth, nullptr);
 
-    int currentWidth;
-    TTF_SizeText(s_fonts[m_fontName][m_fontSize], newText.c_str(), &currentWidth, nullptr);
+    // Iterate through each token (word, space, or tab)
+    for (size_t i = 0; i < tokens.size(); ++i) {
+        const std::string& tokenStr = tokens[i];
 
-    int spaceIndex = 0;
-    std::vector<int> spaces = countSpaces(text);
-    
-    // First pass: count total words
-    std::string tempText = text;
-    std::istringstream countStream(tempText);
-    int totalWords = spaces.size() - 1;
-
-    int i = 0;
-    while (i < text.length() - 1 && text[i] == ' ') {
-        newText += " ";
-        i++;
-    }
-    
-    // Second pass: try to add words
-    while (wordStream >> word) {
-        std::string testWord = (newText.empty() ? "" : std::string(spaces[spaceIndex], ' ')) + word;
-        int wordWidth;
-        
-        if (TTF_SizeText(s_fonts[m_fontName][m_fontSize], testWord.c_str(), &wordWidth, nullptr) != 0) {
-            return -1;
+        // Handle spaces
+        if (tokenStr == " ") {
+            if (currentWidth + spaceWidth <= m_transform.w) {
+                m_text += ' ';
+                currentWidth += spaceWidth;
+            } else {
+                // If the space doesn't fit, stop processing
+                wordsNotAdded = tokens.size() - i;
+                break;
+            }
         }
+        // Handle tabs (replace with 2 spaces)
+        else if (tokenStr == "\t") {
+            const std::string tabReplacement = "  "; // Replace tab with 2 spaces
+            int tabWidth = spaceWidth * 2; // Width of 2 spaces
 
-        // If m_text is empty, add the first word regardless of width
-        if (m_text.empty() && !hasAddedWords) {
-            newText += word;
-            currentWidth += wordWidth;
-            hasAddedWords = true;
+            if (currentWidth + tabWidth <= m_transform.w) {
+                m_text += tabReplacement;
+                currentWidth += tabWidth;
+            } else {
+                // If the tab doesn't fit, stop processing
+                wordsNotAdded = tokens.size() - i;
+                break;
+            }
         }
-        else if (currentWidth + wordWidth <= m_transform.w - letterWidth) {
-            newText += testWord;
-            currentWidth += wordWidth;
-            hasAddedWords = true;
-        } else {
-            // If we can't add this word, we can't add any more words
-            wordsNotAdded = totalWords - (spaceIndex);
-            break;
+        // Handle words
+        else {
+            int wordWidth;
+            TTF_SizeText(s_fonts[m_fontName][m_fontSize], tokenStr.c_str(), &wordWidth, nullptr);
+
+            if (currentWidth + wordWidth <= m_transform.w) {
+                m_text += tokenStr;
+                currentWidth += wordWidth;
+                hasAddedWords = true;
+            } else {
+                // If the word doesn't fit, stop processing
+                wordsNotAdded = tokens.size() - i;
+                break;
+            }
         }
-        
-        spaceIndex++;
     }
 
-    // Only update m_text if we successfully added at least one word
-    if (hasAddedWords) {
-        // Add trailing spaces only if all words fit
-        if (wordsNotAdded == 0 && spaceIndex < spaces.size()) {
-            newText += std::string(spaces[spaceIndex], ' ');
-        }
-        m_text = newText;
-        m_updated = true;
-    }
-    
+    m_updated = true;
     return wordsNotAdded;
 }
 
@@ -245,7 +257,7 @@ bool application::TextLine::loadFont(const std::string &fontName, int size)
 void application::TextLine::updateTexture(core::Renderer &renderer, int centerHorizontally)
 {
     // Early validation checks
-    if (m_text.empty() || m_fontName.empty() || m_fontSize <= 0 ||
+    if (m_fontName.empty() || m_fontSize <= 0 ||
         s_fonts.find(m_fontName) == s_fonts.end() ||
         s_fonts[m_fontName].find(m_fontSize) == s_fonts[m_fontName].end()) {
 
@@ -255,6 +267,21 @@ void application::TextLine::updateTexture(core::Renderer &renderer, int centerHo
 
     TTF_Font* font = s_fonts[m_fontName][m_fontSize];
     if (!font) return;
+
+    // Handle empty text case
+    if (m_text.empty()) {
+        // Create an empty surface with the dimensions of the text line
+        SDL_Surface* emptySurface = SDL_CreateRGBSurface(0, m_transform.w, m_transform.h, 32, 
+            0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+        if (!emptySurface) return;
+
+        // Convert the empty surface to a texture
+        m_texture.loadFromSurface(emptySurface, renderer);
+        SDL_FreeSurface(emptySurface);
+
+        m_updated = false;
+        return;
+    }
 
     // Create surface for the complete text line
     SDL_Surface* completeSurface = SDL_CreateRGBSurface(0, m_transform.w, m_transform.h, 32, 

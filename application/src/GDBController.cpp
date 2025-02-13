@@ -78,27 +78,30 @@ std::string GDBController::formatGDBOutput(const std::string &rawOutput)
 {
     std::istringstream stream(rawOutput);
     std::string line;
-    std::string lastHumanReadableLine;
+    std::string formattedOutput;
 
     while (std::getline(stream, line)) {
         if (line.empty()) continue;
 
         // Keep only human-readable messages (lines starting with '~')
         if (line[0] == '~') {
-            // Remove the '~' prefix and store the line
-            lastHumanReadableLine = line.substr(1);
+            // Remove the '~' prefix
+            std::string humanReadableLine = line.substr(1);
 
             // Remove surrounding quotes if present
-            if (!lastHumanReadableLine.empty() && lastHumanReadableLine.front() == '"' && lastHumanReadableLine.back() == '"') {
-                lastHumanReadableLine = lastHumanReadableLine.substr(1, lastHumanReadableLine.size() - 2);
+            if (!humanReadableLine.empty() && humanReadableLine.front() == '"' && humanReadableLine.back() == '"') {
+                humanReadableLine = humanReadableLine.substr(1, humanReadableLine.size() - 2);
             }
 
             // Unescape the string
-            lastHumanReadableLine = unescapeString(lastHumanReadableLine);
+            humanReadableLine = unescapeString(humanReadableLine);
+
+            // Append the line to the formatted output
+            formattedOutput += humanReadableLine + "\n";
         }
     }
 
-    return lastHumanReadableLine;
+    return formattedOutput;
 }
 
 bool GDBController::isWaitingForInput()

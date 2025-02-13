@@ -58,8 +58,7 @@ namespace application
         application::Border m_borderVerticalLeft;
         application::Border m_borderVerticalRight;
 
-
-        application::Button btntst;  // temporary
+        application::Console consl; // temporary
         
         /*
         application::Border m_borderHorizontalCenterPanelTop;

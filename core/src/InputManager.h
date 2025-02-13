@@ -23,7 +23,7 @@ namespace core
 
         vector2i getMousePosition() const { return m_mousePosition; }
         int getMouseWheelScroll() const { return m_mouseWheelScroll; };
-        std::string getPressedKey() const;
+        std::string getPressedKey() const { return m_currentKeyPress; };
 
         vector2i getMousePosDelta() const;
     

@@ -1,6 +1,10 @@
 #pragma once
 
+#include <vector>
 #include <string>
+#include <algorithm>
+#include <cctype>
+#include <cmath>
 #include "Widget.h"
 #include "TextLine.h"
 
@@ -14,23 +18,26 @@ namespace application
         ~Console() = default;
 
         void handleEvents(const core::InputManager& inputMngr);
+        // TODO: fix rendring and handle when input="\n"
         void render(core::Renderer& renderer, const SDL_Rect* srcRect = nullptr, const SDL_Rect* dstRect = nullptr);
 
-        void addToLabel(const std::string& text);
-        void setLabel(const std::string& text);
-
-        std::string getLabel() { return m_label.getText(); }
+        void printToConsole(const std::string& str);
 
         void addDeltaTransform(int x = 0, int y = 0, int w = 0, int h = 0);
-        void setPosition(vector2i newPos);
         void setWidth(int newW);
 
     private:
-        application::TextLine m_label;
+        std::vector<application::TextLine> m_lines;
 
-        application::TextLine m_inputText;
+        application::TextLine m_activeLine;
 
-        bool m_selected;
+        bool m_thisWidgetSelected;
+
+    private:
+        int findNthWordFromEnd(const std::string& str, int n);
+        std::string trimToLastNWords(const std::string& str, int n);
+
+        bool isMouseInsideTransform(vector2i mousePos);
 
     };
 

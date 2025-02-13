@@ -48,12 +48,10 @@ application::Application::Application() : m_window("Buffer Overflow Simulator", 
                                                                 SDL_Color{0xFF, 0xFF, 0xFF, 0x00}),
                                           m_mainPanel(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, {0x2D, 0x2D, 0x2D, 0xFF}),
                                           m_borderWidth(10), m_innerBorderWidth(10), m_latestBreakpointLine(0),
-                                          m_requiredBreakpoints({82}), 
-                                          btntst(50, 100, 200, 75, SDL_Color{0, 0, 255, 255}, "Test Button")
+                                          m_requiredBreakpoints({82}),
+                                          consl(50, 100, 200, 75)
 {
     initFormatMap();
-
-    btntst.onClick(printHello);
 }
 
 bool application::Application::init()
@@ -96,6 +94,10 @@ void application::Application::run()
         return;
     }*/
     gdb = std::make_unique<GDBController>("targets/compiled/T1");
+
+    gdb->sendCommand("start");
+    gdb->sendCommand("break init_pages");
+    gdb->sendCommand("run");
 
     /*
     gdb->sendCommand("break main");
@@ -141,30 +143,48 @@ void application::Application::run()
         {
             m_window.handleEvents(event);
             
-            // temporary \/\/\/
-            if (m_inputMngr.getPressedKey() == "k") {
-                application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
-                application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");
-                application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(w);
-                // ABCDEFAB  CDEFABCD
-                stackV->push(hexToString(count++));
-            }
-            if (m_inputMngr.getPressedKey() == "i") {
-                application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
-                application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");
-                application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(w);
-                stackV->pop();
-            } 
-            
-            if (m_inputMngr.getPressedKey() == "m") {
-                // std::cout << "Memory dump:" << std::endl;
-                gdb->sendCommand("i b");
+            if (!m_inputMngr.getPressedKey().empty()) {
+                // temporary \/\/\/
+                if (m_inputMngr.getPressedKey() == "k") {
+                    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
+                    application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");
+                    application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(w);
+                    // ABCDEFAB  CDEFABCD
+                    stackV->push(hexToString(count++));
+                }
+                if (m_inputMngr.getPressedKey() == "i") {
+                    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
+                    application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");
+                    application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(w);
+                    stackV->pop();
+                } 
+                
+                if (m_inputMngr.getPressedKey() == "m") {
+                    // std::cout << "Memory dump:" << std::endl;
+                    gdb->sendCommand("i b");
 
-                std::string rawOutput = gdb->readOutput();
+                    std::string rawOutput = gdb->readOutput();
 
-                std::cout << rawOutput << std::endl;
+                    std::cout << rawOutput << std::endl;
+                }
+
+                if (m_inputMngr.getPressedKey() == "d") {
+                    std::cout << "Memory dump:" << std::endl;
+
+                    gdb->sendCommand("x/10xg $rbp");
+
+                    std::string rawOutput = gdb->readOutput();
+                    std::string formattedOutput = gdb->formatGDBOutput(rawOutput);
+
+                    std::cout << "Raw: \n\n" << rawOutput << std::endl;
+                    std::cout << "Formatted: \n\n" << formattedOutput << std::endl;
+                }
+
+                if (m_inputMngr.getPressedKey() == "p") {
+                    consl.printToConsole("Hello");
+                }
+                // temporary end /\/\/\.
             }
-            // temporary end /\/\/\.
 
             Application::update(event);
         }
@@ -205,7 +225,7 @@ void application::Application::update(SDL_Event& event)
     m_borderVerticalLeft.handleEvents(m_inputMngr);
     m_borderVerticalRight.handleEvents(m_inputMngr);
 
-    btntst.handleEvents(m_inputMngr);
+    consl.handleEvents(m_inputMngr);
 
     if (m_latestBreakpointLine > 0) {
         if (m_userBreakpoints.find(m_latestBreakpointLine) != m_userBreakpoints.end()) {
@@ -266,7 +286,7 @@ void application::Application::render()
     m_borderVerticalLeft.render(m_renderer);
     m_borderVerticalRight.render(m_renderer);
 
-    btntst.render(m_renderer);
+    consl.render(m_renderer);
 
     m_renderer.present();
 }
