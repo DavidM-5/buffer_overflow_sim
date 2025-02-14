@@ -17,8 +17,12 @@ namespace application {
     class TextLine : public Widget
     {
     public:
-        TextLine(int posX = 0, int posY = 0, int w = 100, int h = 20, SDL_Color color = {255, 255, 255, 255});
+        TextLine(int posX = 0, int posY = 0, int w = 100, int h = 20, SDL_Color color = {255, 255, 255, 255}, bool applyFormatting = true);
+        TextLine(const TextLine& other); // Copy constructor
         ~TextLine() = default;
+
+        // Add assignment operator
+        TextLine& operator=(const TextLine& other);
 
         void handleEvents(const core::InputManager& inputMngr) override {};
         void render(core::Renderer& renderer, const SDL_Rect* srcRect = nullptr, const SDL_Rect* dstRect = nullptr);
@@ -43,6 +47,8 @@ namespace application {
         int getLenght() { return m_text.length(); }
         std::string getText() { return m_text; }
 
+        bool isTextureValid() const { return m_texture.isValid(); }
+
         static bool loadFont(const std::string& fontName, int size);
 
     private:
@@ -58,6 +64,8 @@ namespace application {
 
         core::Texture m_texture;
         bool m_updated;
+
+        bool m_applyFormatting;
 
         bool m_ignoreNotFitted;
 

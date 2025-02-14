@@ -48,8 +48,7 @@ application::Application::Application() : m_window("Buffer Overflow Simulator", 
                                                                 SDL_Color{0xFF, 0xFF, 0xFF, 0x00}),
                                           m_mainPanel(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, {0x2D, 0x2D, 0x2D, 0xFF}),
                                           m_borderWidth(10), m_innerBorderWidth(10), m_latestBreakpointLine(0),
-                                          m_requiredBreakpoints({82}),
-                                          consl(50, 100, 200, 75)
+                                          m_requiredBreakpoints({82})
 {
     initFormatMap();
 }
@@ -179,10 +178,6 @@ void application::Application::run()
                     std::cout << "Raw: \n\n" << rawOutput << std::endl;
                     std::cout << "Formatted: \n\n" << formattedOutput << std::endl;
                 }
-
-                if (m_inputMngr.getPressedKey() == "p") {
-                    consl.printToConsole("Hello");
-                }
                 // temporary end /\/\/\.
             }
 
@@ -190,23 +185,6 @@ void application::Application::run()
         }
 
         Application::render();
-    
-        // temporary \/\/\/
-        /*
-        if (count2++ % 60 == 0 && m_userBreakpoints.size() > 0) {
-            bool f = false;
-            for (const auto& elem : m_userBreakpoints) {
-                std::cout << elem << " | ";
-                f = true;
-            }
-            
-            if (f) {
-                std::cout << std::endl;
-                f = false;
-            }
-        }
-        */
-        // temporary /\/\/\
 
         // Frame timing and capping
         frameTime = SDL_GetTicks() - frameStart;
@@ -224,8 +202,6 @@ void application::Application::update(SDL_Event& event)
 
     m_borderVerticalLeft.handleEvents(m_inputMngr);
     m_borderVerticalRight.handleEvents(m_inputMngr);
-
-    consl.handleEvents(m_inputMngr);
 
     if (m_latestBreakpointLine > 0) {
         if (m_userBreakpoints.find(m_latestBreakpointLine) != m_userBreakpoints.end()) {
@@ -285,8 +261,6 @@ void application::Application::render()
     
     m_borderVerticalLeft.render(m_renderer);
     m_borderVerticalRight.render(m_renderer);
-
-    consl.render(m_renderer);
 
     m_renderer.present();
 }
@@ -453,7 +427,14 @@ void application::Application::initCenterPanels()
     label->useFont("JetBrainsMono-Bold.ttf", 18);
     label->appendText("Console", true);
 
+    auto console = std::make_unique<application::Console>(
+        0 + m_innerBorderWidth, label->getPosition().y + label->getHeight() + 10,
+        label->getWidth(), centerBottomPanel->getHeight() - label->getPosition().y - label->getHeight() - m_innerBorderWidth - 10,
+        SDL_Color{72, 65, 65, 255}
+    );
+
     centerBottomPanel->addWidget("Label", std::move(label));
+    centerBottomPanel->addWidget("Console-console", std::move(console));
 
     // ===========================
     // ===========================

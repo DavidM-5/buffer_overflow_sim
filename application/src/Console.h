@@ -18,7 +18,7 @@ namespace application
         ~Console() = default;
 
         void handleEvents(const core::InputManager& inputMngr);
-        // TODO: fix rendring and handle when input="\n"
+        // TODO: fix rendring and handle when input="/"
         void render(core::Renderer& renderer, const SDL_Rect* srcRect = nullptr, const SDL_Rect* dstRect = nullptr);
 
         void printToConsole(const std::string& str);

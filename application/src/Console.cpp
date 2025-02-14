@@ -2,10 +2,10 @@
 
 application::Console::Console(int posX, int posY, int w, int h, SDL_Color color) :
                               Widget(posX, posY, w, h, color),
-                              m_activeLine(posX, posY, w, 18),
+                              m_activeLine(posX, posY, w, 20, {255, 255, 255, 255}, false),
                               m_thisWidgetSelected(false)
 {
-    m_activeLine.useFont("JetBrainsMono-Bold.ttf", 16);
+    m_activeLine.useFont("JetBrainsMono-Medium.ttf", 14);
     m_activeLine.appendText("> ", true);
 }
 
@@ -42,62 +42,35 @@ void application::Console::handleEvents(const core::InputManager &inputMngr)
 
 void application::Console::render(core::Renderer &renderer, const SDL_Rect *srcRect, const SDL_Rect *dstRect)
 {
-    renderer.drawRect(m_transform, {234, 12, 232, 255});
-    SDL_Rect renderDstRect;
+    Widget::render(renderer);
 
-    if (m_lines.empty()) {
-        // Render the active line
-        renderDstRect = {
+    // Calculate the maximum number of lines that can fit into the console's height
+    int lineHeight = m_activeLine.getHeight();
+    int maxLines = m_transform.h / lineHeight;
+    
+    // Determine the starting index for rendering lines
+    int startIndex = std::max(0, static_cast<int>(m_lines.size()) - maxLines + 1);
+    
+    // Render the lines that fit into the console's height
+    for (int i = startIndex; i < m_lines.size(); i++) {
+        SDL_Rect lineDstRect = {
             m_transform.x,
-            m_transform.y,
-            m_activeLine.getWidth(),
-            m_activeLine.getHeight()
+            m_transform.y + (i - startIndex) * lineHeight,
+            m_lines[i].getWidth(),
+            lineHeight
         };
-
-        m_activeLine.render(renderer, nullptr, &renderDstRect);
-
-        return;
+        m_lines[i].render(renderer, nullptr, &lineDstRect);
     }
 
-    int totalNmVisibleLines = std::ceil(m_transform.h / (m_activeLine.getHeight() + 2));
-    int numRenderedLines = 0;
-
-
-    if (totalNmVisibleLines * m_lines.size() - 1 <= m_transform.h) {
-        for (int i = 0; i < m_lines.size() - 1; i++, numRenderedLines++) {
-            renderDstRect = {
-                m_transform.x,
-                m_transform.y + numRenderedLines * (m_activeLine.getHeight() + 2),
-                m_activeLine.getWidth(),
-                m_activeLine.getHeight()
-            };
-
-            m_lines[i].render(renderer, nullptr, &renderDstRect);
-        }
-    }
-    else {
-        for (int i = m_lines.size() - 1 - totalNmVisibleLines; i < m_lines.size() - 1; i++, numRenderedLines++) {
-            renderDstRect = {
-                m_transform.x,
-                m_transform.y + numRenderedLines * (m_activeLine.getHeight() + 2),
-                m_activeLine.getWidth(),
-                m_activeLine.getHeight()
-            };
-
-            m_lines[i].render(renderer, nullptr, &renderDstRect);
-        }
-    }
-
-    // Render the active line
-    renderDstRect = {
+    // Render the active line at the bottom
+    SDL_Rect activeLineDstRect = {
         m_transform.x,
-        m_transform.y + numRenderedLines * (m_activeLine.getHeight() + 2),
+        m_transform.y + (maxLines - 1) * lineHeight,
         m_activeLine.getWidth(),
-        m_activeLine.getHeight()
+        lineHeight
     };
-
-    m_activeLine.render(renderer, nullptr, &renderDstRect);
-
+    m_activeLine.render(renderer, nullptr, &activeLineDstRect);
+    
 }
 
 void application::Console::printToConsole(const std::string &str)
@@ -122,6 +95,8 @@ void application::Console::addDeltaTransform(int x, int y, int w, int h)
 {
     Widget::addDeltaTransform(x, y, w, h);
 
+    m_activeLine.addDeltaTransform(x, y, w, h);
+
     for (application::TextLine& tline : m_lines) {
         tline.addDeltaTransform(x, y, w, h);
     }
@@ -130,6 +105,8 @@ void application::Console::addDeltaTransform(int x, int y, int w, int h)
 void application::Console::setWidth(int newW)
 {
     Widget::setWidth(newW);
+
+    m_activeLine.setWidth(newW);
 
     for (application::TextLine& tline : m_lines) {
         tline.setWidth(newW);

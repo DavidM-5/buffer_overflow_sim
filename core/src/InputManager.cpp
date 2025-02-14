@@ -1,10 +1,13 @@
 #include "InputManager.h"
+#include <iostream>
 
 core::InputManager::InputManager() : m_mousePosition({WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2}),
                                      m_prevMousePosition({WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2}),
                                      m_currentKeyPress(""),
                                      m_mouseWheelScroll(0)
 {
+    SDL_StartTextInput(); // Enable text input events
+
     // initialize key states to false
     for (int i = 0; i < SDL_NUM_SCANCODES; ++i) {
         m_keyStates[i] = false;

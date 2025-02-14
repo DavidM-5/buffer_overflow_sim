@@ -143,7 +143,7 @@ void application::TextBlock::render(core::Renderer &renderer, const SDL_Rect* sr
     int ln = 0;
     for (int i = m_renderStartLine; m_transform.y + m_lines[0].textLine.getHeight() * ln < m_transform.y + m_transform.h - m_lines[0].textLine.getHeight(); i++, ln++) {
         if (i >= m_lines.size())
-            continue;
+            break;
 
         if (m_lines[i].breakpoint) {
             renderer.drawRect(SDL_Rect{m_transform.x,

@@ -49,7 +49,7 @@ bool core::Texture::loadFromSurface(SDL_Surface *surface, const core::Renderer &
     return true;
 }
 
-bool core::Texture::isValid()
+bool core::Texture::isValid() const
 {
     return m_texture && m_width != 0 && m_height != 0;
 }

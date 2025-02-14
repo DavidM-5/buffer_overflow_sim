@@ -57,8 +57,6 @@ namespace application
         
         application::Border m_borderVerticalLeft;
         application::Border m_borderVerticalRight;
-
-        application::Console consl; // temporary
         
         /*
         application::Border m_borderHorizontalCenterPanelTop;

@@ -3,20 +3,49 @@
 std::unordered_map<std::string, std::unordered_map<int, TTF_Font*>> application::TextLine::s_fonts;
 bool application::TextLine::s_ttfInitialized = false;
 
-application::TextLine::TextLine(int posX, int posY, int w, int h, SDL_Color color): 
+application::TextLine::TextLine(int posX, int posY, int w, int h, SDL_Color color, bool applyFormatting): 
                                 Widget(posX, posY, w, h, color),
                                 m_text(""), m_updated(false), m_fontSize(0),
-                                m_ignoreNotFitted(false)
+                                m_ignoreNotFitted(false), m_applyFormatting(applyFormatting)
 {
 }
 
-void application::TextLine::render(core::Renderer &renderer, const SDL_Rect* srcRect, const SDL_Rect* dstRect)
+application::TextLine::TextLine(const TextLine &other) : Widget(other),  // Copy base Widget properties
+                                                        m_formatMap(other.m_formatMap),
+                                                        m_text(other.m_text),
+                                                        m_fontName(other.m_fontName),
+                                                        m_fontSize(other.m_fontSize),
+                                                        m_texture(),  // Create new empty texture
+                                                        m_updated(true),  // Mark as needing update
+                                                        m_applyFormatting(other.m_applyFormatting),
+                                                        m_ignoreNotFitted(other.m_ignoreNotFitted)
+{
+}
+
+application::TextLine &application::TextLine::operator=(const TextLine &other)
+{
+    if (this != &other) {
+        Widget::operator=(other);  // Copy base Widget properties
+        
+        m_formatMap = other.m_formatMap;
+        m_text = other.m_text;
+        m_fontName = other.m_fontName;
+        m_fontSize = other.m_fontSize;
+        m_ignoreNotFitted = other.m_ignoreNotFitted;
+        
+        m_updated = false;  // Mark as needing update
+        // m_texture will be updated on next render
+    }
+    return *this;
+}
+
+void application::TextLine::render(core::Renderer &renderer, const SDL_Rect *srcRect, const SDL_Rect *dstRect)
 {
     if (m_text.empty()) {
         return;
     }
 
-    if (m_updated) {
+    if (m_updated || !m_texture.isValid()) {
         updateTexture(renderer);
         m_updated = false;
     }
@@ -183,6 +212,7 @@ bool application::TextLine::useFont(const std::string &fontName, int size)
 void application::TextLine::clear()
 {
     m_text.clear();
+    m_texture = core::Texture();
 
     m_updated = true;
 }
@@ -295,36 +325,22 @@ void application::TextLine::updateTexture(core::Renderer &renderer, int centerHo
 
     size_t pos = 0;
     int currentX = 0;
-    bool inQuotes = false;
-    bool inSingleQuotes = false; // Track single quotes
-    bool inComment = false;
-    bool possibleFunction = true;  // Track if we might be at the start of a function name
+    bool inDoubleQuotes = false; // Track if we're inside double quotes
+    bool inSingleQuotes = false; // Track if we're inside single quotes
 
     while (pos < m_text.length()) {
-        // Handle comments
-        if (!inQuotes && !inSingleQuotes && m_text[pos] == '/' && pos + 1 < m_text.length() && m_text[pos + 1] == '/') {
-            // Render the "//" in comment color from m_formatMap
-            std::string commentMarker = "//";
-            SDL_Color commentColor = m_formatMap.find(commentMarker) != m_formatMap.end() ? 
-                                     m_formatMap[commentMarker] : m_mainColor;
-            SDL_Surface* commentMarkerSurface = TTF_RenderText_Blended(font, commentMarker.c_str(), commentColor);
-            if (commentMarkerSurface) {
-                SDL_Rect dstRect = { currentX, 0, commentMarkerSurface->w, commentMarkerSurface->h };
-                SDL_BlitSurface(commentMarkerSurface, nullptr, completeSurface, &dstRect);
-                currentX += commentMarkerSurface->w;
-                SDL_FreeSurface(commentMarkerSurface);
-            }
-            inComment = true;
-            possibleFunction = false;
-            pos += 2;
-            continue;
-        }
-
         // Handle double quotes
-        if (!inComment && !inSingleQuotes && m_text[pos] == '"') {
+        if (m_text[pos] == '"') {
             std::string quoteChar = "\"";
-            SDL_Color quoteColor = m_formatMap.find(quoteChar) != m_formatMap.end() ? 
-                                   m_formatMap[quoteChar] : m_mainColor;
+            SDL_Color quoteColor = m_mainColor; // Default color
+
+            // Apply formatting only if enabled
+            if (m_applyFormatting) {
+                quoteColor = m_formatMap.find(quoteChar) != m_formatMap.end() ? 
+                             m_formatMap[quoteChar] : m_mainColor;
+            }
+
+            // Render the quote character
             SDL_Surface* quoteSurface = TTF_RenderText_Blended(font, quoteChar.c_str(), quoteColor);
             if (quoteSurface) {
                 SDL_Rect dstRect = { currentX, 0, quoteSurface->w, quoteSurface->h };
@@ -332,17 +348,24 @@ void application::TextLine::updateTexture(core::Renderer &renderer, int centerHo
                 currentX += quoteSurface->w;
                 SDL_FreeSurface(quoteSurface);
             }
-            inQuotes = !inQuotes;
-            possibleFunction = false;
+
+            inDoubleQuotes = !inDoubleQuotes; // Toggle quote state
             pos++;
             continue;
         }
 
         // Handle single quotes
-        if (!inComment && !inQuotes && m_text[pos] == '\'') {
+        if (m_text[pos] == '\'') {
             std::string singleQuoteChar = "'";
-            SDL_Color singleQuoteColor = m_formatMap.find(singleQuoteChar) != m_formatMap.end() ? 
-                                         m_formatMap[singleQuoteChar] : m_mainColor;
+            SDL_Color singleQuoteColor = m_mainColor; // Default color
+
+            // Apply formatting only if enabled
+            if (m_applyFormatting) {
+                singleQuoteColor = m_formatMap.find(singleQuoteChar) != m_formatMap.end() ? 
+                                   m_formatMap[singleQuoteChar] : m_mainColor;
+            }
+
+            // Render the single quote character
             SDL_Surface* singleQuoteSurface = TTF_RenderText_Blended(font, singleQuoteChar.c_str(), singleQuoteColor);
             if (singleQuoteSurface) {
                 SDL_Rect dstRect = { currentX, 0, singleQuoteSurface->w, singleQuoteSurface->h };
@@ -350,102 +373,64 @@ void application::TextLine::updateTexture(core::Renderer &renderer, int centerHo
                 currentX += singleQuoteSurface->w;
                 SDL_FreeSurface(singleQuoteSurface);
             }
-            inSingleQuotes = !inSingleQuotes;
-            possibleFunction = false;
+
+            inSingleQuotes = !inSingleQuotes; // Toggle quote state
             pos++;
             continue;
         }
 
         // Handle spaces
         if (m_text[pos] == ' ') {
-            possibleFunction = true;  // Reset function detection after space
-            while (pos < m_text.length() && m_text[pos] == ' ') {
-                currentX += spaceWidth;
-                pos++;
-            }
+            currentX += spaceWidth;
+            pos++;
             continue;
         }
 
-        // Look ahead for function pattern (text followed by opening parenthesis)
-        size_t nextSpace = m_text.find_first_of(" (", pos);
-        bool isFunction = false;
-        
-        if (nextSpace != std::string::npos && 
-            m_text[nextSpace] == '(' && 
-            possibleFunction && 
-            !inQuotes && 
-            !inSingleQuotes && 
-            !inComment) {
-            isFunction = true;
-        }
-
-        // Extract word or segment
-        size_t segmentEnd = m_text.find_first_of(" \"'//()[]{}", pos); // Include curly braces in delimiters
+        // Extract the current segment
+        size_t segmentEnd = m_text.find_first_of(" \"'\t\n\r", pos); // Split on whitespace or special characters
         if (segmentEnd == std::string::npos) {
             segmentEnd = m_text.length();
         }
 
         std::string segment = m_text.substr(pos, segmentEnd - pos);
-        
+
         if (!segment.empty()) {
             SDL_Surface* segmentSurface;
-            SDL_Color color = m_mainColor;
+            SDL_Color color = m_mainColor; // Default color
 
-            if (inQuotes) {
-                std::string quoteKey = "\"";
-                color = m_formatMap.find(quoteKey) != m_formatMap.end() ? 
-                        m_formatMap[quoteKey] : m_mainColor;
-            } else if (inSingleQuotes) {
-                std::string singleQuoteKey = "'";
-                color = m_formatMap.find(singleQuoteKey) != m_formatMap.end() ? 
-                        m_formatMap[singleQuoteKey] : m_mainColor;
-            } else if (inComment) {
-                std::string commentKey = "//";
-                color = m_formatMap.find(commentKey) != m_formatMap.end() ? 
-                        m_formatMap[commentKey] : m_mainColor;
-            } else if (isFunction) {
-                // Use function color from m_formatMap, or a default color if not defined
-                std::string functionKey = "function";
-                color = m_formatMap.find(functionKey) != m_formatMap.end() ? 
-                        m_formatMap[functionKey] : SDL_Color{255, 165, 0, 255};  // Default orange
-            } else if (m_formatMap.find(segment) != m_formatMap.end()) {
-                color = m_formatMap[segment];
+            // Apply formatting only if enabled
+            if (m_applyFormatting) {
+                // Check if we're inside quotes
+                if (inDoubleQuotes) {
+                    std::string quoteKey = "\"";
+                    color = m_formatMap.find(quoteKey) != m_formatMap.end() ? 
+                            m_formatMap[quoteKey] : m_mainColor;
+                } else if (inSingleQuotes) {
+                    std::string singleQuoteKey = "'";
+                    color = m_formatMap.find(singleQuoteKey) != m_formatMap.end() ? 
+                            m_formatMap[singleQuoteKey] : m_mainColor;
+                } else if (m_formatMap.find(segment) != m_formatMap.end()) {
+                    // Handle other formatted segments
+                    color = m_formatMap[segment];
+                }
             }
 
+            // Render the segment
             segmentSurface = TTF_RenderText_Blended(font, segment.c_str(), color);
-            if (!segmentSurface) continue;
-
-            SDL_Rect dstRect = { currentX, 0, segmentSurface->w, segmentSurface->h };
-            SDL_BlitSurface(segmentSurface, nullptr, completeSurface, &dstRect);
-            
-            currentX += segmentSurface->w;
-            SDL_FreeSurface(segmentSurface);
-        }
-
-        pos = segmentEnd;
-        
-        // Handle brackets and curly braces after the segment
-        if (pos < m_text.length() && !inComment && !inQuotes && !inSingleQuotes && 
-            (m_text[pos] == '(' || m_text[pos] == ')' || m_text[pos] == '[' || m_text[pos] == ']' ||
-             m_text[pos] == '{' || m_text[pos] == '}')) {
-            std::string bracketChar(1, m_text[pos]);
-            SDL_Color bracketColor = m_formatMap.find(bracketChar) != m_formatMap.end() ? 
-                                     m_formatMap[bracketChar] : m_mainColor;
-            SDL_Surface* bracketSurface = TTF_RenderText_Blended(font, bracketChar.c_str(), bracketColor);
-            if (bracketSurface) {
-                SDL_Rect dstRect = { currentX, 0, bracketSurface->w, bracketSurface->h };
-                SDL_BlitSurface(bracketSurface, nullptr, completeSurface, &dstRect);
-                currentX += bracketSurface->w;
-                SDL_FreeSurface(bracketSurface);
+            if (segmentSurface) {
+                SDL_Rect dstRect = { currentX, 0, segmentSurface->w, segmentSurface->h };
+                SDL_BlitSurface(segmentSurface, nullptr, completeSurface, &dstRect);
+                currentX += segmentSurface->w;
+                SDL_FreeSurface(segmentSurface);
             }
-            // Do not reset possibleFunction here to allow function detection inside parentheses
-            pos++;
         }
+
+        // Move to the next segment
+        pos = segmentEnd;
     }
 
     // Convert final surface to texture
     m_texture.loadFromSurface(completeSurface, renderer);
-    
     SDL_FreeSurface(completeSurface);
 
     m_updated = false;
