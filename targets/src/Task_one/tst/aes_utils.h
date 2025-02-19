@@ -2,7 +2,7 @@
 #define AES_H
 
 #define AES_BLOCK_SIZE 16
-#define MAX_LENGTH 30
+#define MAX_LENGTH 100
 #define KEY "Sup3r5Ecur3K37!@"
 
 
@@ -13,7 +13,7 @@
 #include <stdlib.h>
 
 enum errorCode {
-    AES_SUCCESS = 0,
+    SUCCESS = 0,
     ERROR_AES_UNKNOWN_KEYSIZE,
     ERROR_MEMORY_ALLOCATION_FAILED,
 };

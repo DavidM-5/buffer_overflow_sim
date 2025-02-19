@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "sqlite3.h"
 #include <stdbool.h>
 #include <string.h>
+#include "sqlite3.h"
 #include "Pages.h"
 #include "user_types.h"
-#include "Database.h"
+#include "SecureDB.h"
 
 
 typedef struct {
@@ -33,11 +33,11 @@ void clear_screen() {
 
 void init() {
   init_pages();
-  DataBase_init();
+  SecureDB_init();
 }
 
 void close() {
-  DataBase_close();
+  SecureDB_close();
 }
 
 // Helper function to convert error code to string
@@ -87,7 +87,7 @@ Error_code login(Session* session) {
 
   UserData user;
 
-  DataBase_getUser(username, &user);
+  SecureDB_getUser(username, &user);
 
   if (user.error_code == USER_NOT_FOUND) {
     return USER_NOT_FOUND;
@@ -150,7 +150,7 @@ Error_code signup(Session* session) {
     return PASSWORDS_NOT_MATCH;
 
 
-  DataBase_addNewUser(&newUser);
+  SecureDB_addNewUser(&newUser);
 
 
   if (newUser.error_code != SUCCESS)
@@ -167,14 +167,14 @@ Error_code signup(Session* session) {
 }
 
 void print_users_data() {
-  DataBase_printDecryptedDatabse();
+  SecureDB_printDB();
 }
 
 Error_code make_manager(UserData* user) {
   if (!user)
     return INVALID_PARAMETERS;
   
-  if (DataBase_makeManager(user) != 0)
+  if (SecureDB_makeManager(user->username) != 0)
     return UNKNOWN_ERROR;
 
   return SUCCESS;
@@ -184,7 +184,7 @@ Error_code remove_manager(UserData* user) {
   if (!user)
     return INVALID_PARAMETERS;
 
-  if (DataBase_removeManager(user) != 0)
+  if (SecureDB_removeManager(user->username) != 0)
     return UNKNOWN_ERROR;
 
   return SUCCESS;
@@ -294,7 +294,7 @@ void handle_page(Page_Type* page, Session* session, bool* clearFlag) {
       user.username[strcspn(user.username, "\n")] = '\0'; // Removes the newline character
 
 
-      DataBase_deactivateUser(&user);
+      SecureDB_deactivateUser(user.username);
 
       if (user.error_code != SUCCESS) {
         snprintf(lastMessage, sizeof(lastMessage), "%s", errorToString(user.error_code));
@@ -324,7 +324,7 @@ int main(int argc, char const *argv[])
     .logged_in = false,
     .user = {}
   };
-
+  
   while (true) {
     if (clearSceenFlag)
       clear_screen();
@@ -337,6 +337,7 @@ int main(int argc, char const *argv[])
     printf("-> %s", pages[currentPage]);
     handle_page(&currentPage, &session, &clearSceenFlag);
   }
+  
 
   return 0;
 }
