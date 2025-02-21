@@ -1,7 +1,7 @@
 #include "TextBlock.h"
 
-application::TextBlock::TextBlock(int posX, int posY, int w, int h, SDL_Color color, u_int32_t* latesBreakpointLine) : 
-                                  Widget(posX, posY, w, h, color), m_GUTTER_WIDTH(30),
+application::TextBlock::TextBlock(int posX, int posY, int w, int h, SDL_Color color, u_int32_t* latesBreakpointLine, int gutterWidth) : 
+                                  Widget(posX, posY, w, h, color), m_GUTTER_WIDTH(gutterWidth),
                                   m_renderStartLine(0), m_ignoreNotFittedLine(false),
                                   m_latesBreakpointLine(*latesBreakpointLine)
 {
@@ -99,6 +99,102 @@ void application::TextBlock::setText(std::string &text, bool ignoreNotFittedLine
     m_lines = newLines;
 }
 
+void application::TextBlock::addLine(const std::string &text, bool ignoreNotFittedLine)
+{
+    m_ignoreNotFittedLine = ignoreNotFittedLine;
+
+    // Calculate the position for the new line
+    int newLineNumber = m_lines.empty() ? 1 : m_lines.back().lineNumber + 1;
+    int newLineY = m_lines.empty() ? m_transform.y : m_lines.back().textLine.getPosition().y + m_lines.back().textLine.getHeight();
+
+    // Create a new Line object
+    Line newLine = {
+        .lineNumber = newLineNumber,
+        .breakpoint = false,
+        .textLine = application::TextLine(m_transform.x + m_GUTTER_WIDTH, 
+                                          newLineY,
+                                          m_transform.w - m_GUTTER_WIDTH, 
+                                          20)
+    };
+
+    // Initialize the TextLine with the provided text
+    newLine.textLine.useFont("JetBrainsMono-Medium.ttf", 14);
+
+    // Handle empty lines and newlines
+    std::string trimmed = text;
+    trimmed.erase(0, trimmed.find_first_not_of(" \t"));  // left trim
+    trimmed.erase(trimmed.find_last_not_of(" \t\n") + 1);  // right trim
+    
+    if (trimmed.empty() || trimmed == "\n") {
+        // Just add the empty line directly without recursion
+        newLine.textLine.appendText("", true);
+        m_lines.push_back(newLine);
+        if (!m_text.empty()) {
+            m_text += "\n";
+        }
+        return;
+    }
+
+    // Rest of the original code for handling non-empty lines...
+    if (m_ignoreNotFittedLine) {
+        newLine.textLine.appendText(text, true);
+    } 
+    else {
+        // Append the text and handle overflow if necessary
+        int remainingWords = newLine.textLine.appendText(text);
+
+        if (remainingWords > 0) {
+            // Handle overflow by splitting the text
+            bool spaceEncountered = false;
+            int i = text.length() - 1;
+
+            while (i >= 0 && text[i] == ' ') {
+                i--; // Skip trailing spaces
+            }
+
+            for (; i >= 0; i--) {
+                if (text[i] == ' ') {
+                    if (spaceEncountered) {
+                        continue; // Skip consecutive spaces
+                    }
+                    spaceEncountered = true;
+                    remainingWords--;
+                } else {
+                    spaceEncountered = false;
+                }
+
+                if (remainingWords == 0) {
+                    break; // Found the split point
+                }
+            }
+
+            // Split the text into two parts
+            std::string remainingText = text.substr(i + 1);
+            std::string newTxt = text.substr(0, i + 1);
+
+            // Update the current line with the fitted text
+            newLine.textLine.clear();
+            newLine.textLine.appendText(newTxt, true);
+
+            // Add the remaining text as a new line
+            addLine(remainingText);
+            return; // Exit to avoid adding the same line twice
+        }
+    }
+
+    // Apply any existing color formatting to the new line
+    newLine.textLine.addFormatMap(m_formatMap);
+
+    // Add the new line to the vector of lines
+    m_lines.push_back(newLine);
+
+    // Update the internal text representation
+    if (!m_text.empty()) {
+        m_text += "\n";
+    }
+    m_text += text;
+}
+
 void application::TextBlock::setColorFormat(const std::unordered_map<std::string, SDL_Color> &formatMap)
 {
     m_formatMap = formatMap;
@@ -163,13 +259,6 @@ void application::TextBlock::render(core::Renderer &renderer, const SDL_Rect* sr
     }
 }
 
-void application::TextBlock::addDeltaTransform(int dx, int dy, int dw, int dh)
-{
-    Widget::addDeltaTransform(dx, dy, dw, dh);
-    
-    setText(m_text, m_ignoreNotFittedLine, false);
-}
-
 void application::TextBlock::setPosition(vector2i newPos)
 {
     m_transform.x = newPos.x;
@@ -180,12 +269,21 @@ void application::TextBlock::setPosition(vector2i newPos)
     }
 }
 
+void application::TextBlock::addDeltaTransform(int dx, int dy, int dw, int dh)
+{
+    Widget::addDeltaTransform(dx, dy, dw, dh);
+
+    for (Line& tline : m_lines) {
+        tline.textLine.addDeltaTransform(dx, dy, dw, dh);
+    }
+}
+
 void application::TextBlock::setWidth(int newW)
 {
-    m_transform.w = newW;
+    Widget::setWidth(newW);
 
-    for (Line& line : m_lines) {
-        line.textLine.setWidth(newW);
+    for (Line& tline : m_lines) {
+        tline.textLine.setWidth(newW);
     }
 }
 

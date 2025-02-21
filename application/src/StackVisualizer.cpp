@@ -1,11 +1,12 @@
 #include "StackVisualizer.h"
 
-application::StackVisualizer::StackVisualizer(int posX, int posY, int w, int h, SDL_Color color, int slotsAmount, int fontSize) : 
+application::StackVisualizer::StackVisualizer(int posX, int posY, int w, int h, SDL_Color color, int slotsAmount, const std::string& font, int fontSize) : 
                                               Widget(posX, posY, w, h, color),
                                               m_slotsAmount(slotsAmount), m_slotHeight(h / slotsAmount),
+                                              m_font(font),
                                               m_fontSize(fontSize)
 {
-    application::TextLine::loadFont("Arial.ttf", fontSize);
+    application::TextLine::loadFont(font, fontSize);
 }
 
 void application::StackVisualizer::render(core::Renderer &renderer, const SDL_Rect* srcRect, const SDL_Rect* dstRect)
@@ -41,7 +42,7 @@ void application::StackVisualizer::push(std::string str)
                               m_mainColor
                               );
 
-    txt->useFont("Arial.ttf", m_fontSize);
+    txt->useFont(m_font, m_fontSize);
     txt->appendText(str);
 
     m_slots.push_back(std::move(txt));
@@ -75,11 +76,11 @@ void application::StackVisualizer::addDeltaTransform(int x, int y, int w, int h)
 
         if (slot->getHeight() > m_slotHeight - 2) {
             slot->setHeight(m_slotHeight - 2);
-            slot->useFont("Arial.ttf", slot->getFontSize() - 1);
+            slot->useFont(m_font, slot->getFontSize() - 1);
         }
         else if (slot->getHeight() < m_slotHeight - 2) {
             slot->setHeight(m_slotHeight - 2);
-            slot->useFont("Arial.ttf", slot->getFontSize() + 1);
+            slot->useFont(m_font, slot->getFontSize() + 1);
         }
     }
 }

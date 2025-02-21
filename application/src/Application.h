@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <iostream>
+#include <iterator>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -95,6 +96,9 @@ namespace application
         std::set<std::string> extractFunctionNamesFromFile(const std::string& filePath);
 
         bool compileFile(const std::string& commandPath);
+
+        void memoryDumpToStackView(const std::string& startAddr = "$rbp", int numOfAddresses = 10);
+        void showFunctionsAddresses();
 
     };
 

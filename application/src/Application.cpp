@@ -92,11 +92,15 @@ void application::Application::run()
         std::cerr << "Failed to compile target code." << std::endl;
         return;
     }*/
-    gdb = std::make_unique<GDBController>("targets/compiled/T1");
+    gdb = std::make_unique<GDBController>("targets/compiled/t1");
 
     gdb->sendCommand("start");
     gdb->sendCommand("break init_pages");
     gdb->sendCommand("run");
+
+    gdb->readOutput();
+    gdb->readOutput();
+    gdb->readOutput();
 
     /*
     gdb->sendCommand("break main");
@@ -116,7 +120,6 @@ void application::Application::run()
     std::cout << "GDB Output 2: " << formattedOutput << std::endl;
     */
 
-
     SDL_Event event;
 
     int fps; // Desired FPS
@@ -130,9 +133,22 @@ void application::Application::run()
         fps = 60;
     }
 
+    
     const int frameDelay = 1000 / fps; // Frame duration in ms
     Uint32 frameStart;
     Uint32 frameTime;
+
+    
+    // showFunctionsAddresses is non-static and requires an instance of the class to be called.
+    // Use a lambda to pass the instance to the thread.
+    /*std::thread setupThread([this]() {
+        showFunctionsAddresses();  // Accessing 'this' to call a member function
+    });
+
+    // Detach the thread, allowing it to run independently
+    setupThread.detach();*/
+
+    showFunctionsAddresses();
 
     while (m_window.isRunning())
     {
@@ -168,15 +184,9 @@ void application::Application::run()
                 }
 
                 if (m_inputMngr.getPressedKey() == "d") {
-                    std::cout << "Memory dump:" << std::endl;
+                    std::cout << "-> Memory dump" << std::endl;
 
-                    gdb->sendCommand("x/10xg $rbp");
-
-                    std::string rawOutput = gdb->readOutput();
-                    std::string formattedOutput = gdb->formatGDBOutput(rawOutput);
-
-                    std::cout << "Raw: \n\n" << rawOutput << std::endl;
-                    std::cout << "Formatted: \n\n" << formattedOutput << std::endl;
+                    memoryDumpToStackView("$rbp", 13);
                 }
                 // temporary end /\/\/\.
             }
@@ -429,7 +439,7 @@ void application::Application::initCenterPanels()
 
     auto console = std::make_unique<application::Console>(
         0 + m_innerBorderWidth, label->getPosition().y + label->getHeight() + 10,
-        label->getWidth(), centerBottomPanel->getHeight() - label->getPosition().y - label->getHeight() - m_innerBorderWidth - 10,
+        label->getWidth(), centerBottomPanel->getHeight() - label->getPosition().y - label->getHeight() - m_innerBorderWidth * 2,
         SDL_Color{72, 65, 65, 255}
     );
 
@@ -461,11 +471,20 @@ void application::Application::initRightPanels()
         rightTopPanel->getWidth() - m_innerBorderWidth * 2, 22,
         SDL_Color{0xFF, 0xFF, 0xFF, 0xCF}
     );
+
+    auto functionsAddresses = std::make_unique<application::TextBlock>(
+        0 + m_innerBorderWidth + 15, label->getPosition().y + label->getHeight() + 10,
+        label->getWidth() - 15, rightTopPanel->getHeight() - label->getPosition().y - label->getHeight() - m_innerBorderWidth * 2,
+        SDL_Color{0xFF, 0xFF, 0xFF, 0xFF},
+        nullptr,
+        0
+    );
     
     label->useFont("JetBrainsMono-Bold.ttf", 18);
     label->appendText("Memory Addresses", true);
 
     rightTopPanel->addWidget("Label", std::move(label));
+    rightTopPanel->addWidget("TextBlock-functions_addresses", std::move(functionsAddresses));
 
     // ===========================
     // ===========================
@@ -487,7 +506,7 @@ void application::Application::initRightPanels()
         rightBottomPanel->getWidth() / 2 - 200 / 2, label->getPosition().y + 45,
         200, rightBottomPanel->getHeight() - label->getPosition().y - label->getHeight() - 25 - m_innerBorderWidth,
         SDL_Color{0xFF, 0xFF, 0xFF, 0xDF},
-        14, 18
+        14, "JetBrainsMono-Bold.ttf", 16
     );
 
     label->useFont("JetBrainsMono-Bold.ttf", 18);
@@ -501,6 +520,7 @@ void application::Application::initRightPanels()
     m_mainPanel.addWidget("Panel-right_top", std::move(rightTopPanel));
     m_mainPanel.addWidget("Panel-right_bottom", std::move(rightBottomPanel));
 }
+
 
 void application::Application::readFileToString(const std::string &filepath, std::string& dstString)
 {
@@ -586,3 +606,89 @@ bool application::Application::compileFile(const std::string& commandPath)
     return false;
 }
 
+void application::Application::memoryDumpToStackView(const std::string &startAddr, int numOfAddresses)
+{
+    // "x/10xg $rbp-80" <- print $rbp+8 (the ret address), $rbp, and 8 addresses below $rbp;
+    std::ostringstream oss;
+    oss << "x/" << numOfAddresses << "xg " << startAddr << "-" << (numOfAddresses - 2) * 8;
+
+
+    std::string command = oss.str();
+
+    gdb->sendCommand(command);
+    std::string rawOutput = gdb->readOutput();
+    std::string formattedOutput = gdb->formatGDBOutput(rawOutput);
+
+
+    std::vector<std::string> values;
+    std::istringstream ss(formattedOutput);
+    std::string line;
+
+    // Parse the string and extract the values
+    while (std::getline(ss, line)) {
+        // Clean up any leading/trailing whitespace
+        line.erase(0, line.find_first_not_of(" \n\r\t"));  // Remove leading whitespaces
+        line.erase(line.find_last_not_of(" \n\r\t") + 1);  // Remove trailing whitespaces
+
+        // Skip empty lines
+        if (line.empty()) {
+            continue;
+        }
+
+        std::istringstream lineStream(line);
+        std::string address, value1, value2;
+
+        // Extract address and values
+        lineStream >> address >> value1 >> value2;
+
+        // Add values to vector
+        values.push_back(value1);
+
+        if (!value2.empty())
+            values.push_back(value2);
+    }
+
+    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
+    application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");
+    application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(w);
+
+    for (int i = values.size() - 1; i >= 0; i--) {
+        stackV->push(values[i]);
+    }
+}
+
+void application::Application::showFunctionsAddresses()
+{
+    std::set<std::string> functions = extractFunctionNamesFromFile("targets/src/Task_one/vulnerable_system/main.c");
+
+    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_top");
+    application::Widget* w = parentWidget->getWidget("TextBlock-functions_addresses");
+    application::TextBlock* textBlock = static_cast<application::TextBlock*>(w);
+
+    for (const std::string& funcName : functions) {
+        std::ostringstream oss;
+        oss << "info address " << funcName;
+        
+        gdb->sendCommand(oss.str());
+
+        std::string rawOutput = gdb->readOutput();
+        std::string formattedOutput = gdb->formatGDBOutput(rawOutput);
+
+        formattedOutput.erase(0, formattedOutput.find_first_not_of(" \n\r\t"));  // Remove leading whitespaces
+        formattedOutput.erase(formattedOutput.find_last_not_of(" \n\r\t") + 1);  // Remove trailing whitespaces
+
+        std::string fullLine = funcName + " - ";
+
+        if (formattedOutput.find("Symbol \\\"") == 0) {
+            int start = formattedOutput.length() - 1;
+            while (start > 0 && formattedOutput.at(start) != ' ') {
+                start--;
+            }
+            
+            fullLine += formattedOutput.substr(start+1, formattedOutput.length());
+            
+            textBlock->addLine(fullLine, true);
+            textBlock->addLine("\n", true);
+        }
+    }
+}
