@@ -123,7 +123,7 @@ int SecureDB_removeUser(const char* username) {
     char command[1024];
     snprintf(command, sizeof(command), "DELETE FROM users WHERE %s;", condition);
 
-    if (!execQuery(command, NULL, NULL, NULL)) {
+    if (execQuery(command, NULL, NULL, NULL) != 0) {
         return 1;
     }
     
@@ -149,8 +149,8 @@ int SecureDB_makeManager(const char* username) {
 
     char query[1024];
     snprintf(query, sizeof(query), "UPDATE users SET is_manager = 1 WHERE %s;", condition);
-
-    if (!execQuery(query, NULL, NULL, NULL)) {
+    
+    if (execQuery(query, NULL, NULL, NULL) != 0) {
         return 1;
     }
 
@@ -176,7 +176,7 @@ int SecureDB_removeManager(const char* username) {
     char query[1024];
     snprintf(query, sizeof(query), "UPDATE users SET is_manager = 0 WHERE %s;", condition);
 
-    if (!execQuery(query, NULL, NULL, NULL)) {
+    if (execQuery(query, NULL, NULL, NULL) != 0) {
         return 1;
     }
 
@@ -203,7 +203,7 @@ int SecureDB_activateUser(const char* username) {
     char query[1024];
     snprintf(query, sizeof(query), "UPDATE users SET is_active = 1 WHERE %s;", condition);
 
-    if (!execQuery(query, NULL, NULL, NULL)) {
+    if (execQuery(query, NULL, NULL, NULL) != 0) {
         return 1;
     }
 
@@ -229,7 +229,7 @@ int SecureDB_deactivateUser(const char* username) {
     char query[1024];
     snprintf(query, sizeof(query), "UPDATE users SET is_active = 0 WHERE %s;", condition);
 
-    if (!execQuery(query, NULL, NULL, NULL)) {
+    if (execQuery(query, NULL, NULL, NULL) != 0) {
         return 1;
     }
 
@@ -341,7 +341,7 @@ static int isUserValid(UserData* user) {
         return 0;
     }
 
-    if(strlen(user->password) < 6) {
+    if(strlen(user->password) < 3) {
         user->error_code = PASSWORD_TOO_SHORT;
         return 0;
     }

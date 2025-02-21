@@ -1,0 +1,2 @@
+#### new to update ↓
+gcc -std=c99 -g -O0 main.c SecureDB.c aes_core.c aes_encrypt.c aes_decrypt.c sqlite3.c -fno-stack-protector -z noexecstack -o main -lcrypto -lpthread -ldl

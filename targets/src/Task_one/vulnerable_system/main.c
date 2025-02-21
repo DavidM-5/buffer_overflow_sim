@@ -166,20 +166,6 @@ Error_code signup(Session* session) {
   return SUCCESS;
 }
 
-void print_users_data() {
-  SecureDB_printDB();
-}
-
-Error_code make_manager(UserData* user) {
-  if (!user)
-    return INVALID_PARAMETERS;
-  
-  if (SecureDB_makeManager(user->username) != 0)
-    return UNKNOWN_ERROR;
-
-  return SUCCESS;
-}
-
 Error_code remove_manager(UserData* user) {
   if (!user)
     return INVALID_PARAMETERS;
@@ -191,6 +177,8 @@ Error_code remove_manager(UserData* user) {
 }
 
 void handle_page(Page_Type* page, Session* session, bool* clearFlag) {
+  *clearFlag = true;
+
   if (!page || !session) {
     return;
   }
@@ -201,7 +189,6 @@ void handle_page(Page_Type* page, Session* session, bool* clearFlag) {
   while ((c = getchar()) != '\n' && c != EOF);
 
   Error_code err;
-  UserData user;
 
   if (*page == WELCOME_PAGE) {
     
@@ -256,8 +243,10 @@ void handle_page(Page_Type* page, Session* session, bool* clearFlag) {
         break;
       }
 
-      print_users_data();
+      SecureDB_printDB();
       printf("\n");
+
+      *clearFlag = false;
       break;
 
     case '3':
@@ -268,18 +257,17 @@ void handle_page(Page_Type* page, Session* session, bool* clearFlag) {
 
       printf("User: ");
 
-      fgets(user.username, USERNAME_MAX_LENGHT, stdin);
-      user.username[strcspn(user.username, "\n")] = '\0'; // Removes the newline character
+      char userToElevate[USERNAME_MAX_LENGHT] = {0};
 
-
-      err = make_manager(&user);
-      if (err != SUCCESS) {
-        printf("%s\n", errorToString(err));
+      fgets(userToElevate, USERNAME_MAX_LENGHT, stdin);
+      userToElevate[strcspn(userToElevate, "\n")] = '\0'; // Removes the newline character
+      
+      if (SecureDB_makeManager(userToElevate) != 0) {
+        snprintf(lastMessage, sizeof(lastMessage), "%s", errorToString(UNKNOWN_ERROR));
         return;
       }
 
-      snprintf(lastMessage, sizeof(lastMessage), "%s is now manager.", user.username);
-      *clearFlag = false;
+      snprintf(lastMessage, sizeof(lastMessage), "%s is now manager.", userToElevate);
       break;
 
     case '4':
@@ -290,18 +278,17 @@ void handle_page(Page_Type* page, Session* session, bool* clearFlag) {
 
       printf("User: ");
 
-      fgets(user.username, USERNAME_MAX_LENGHT, stdin);
-      user.username[strcspn(user.username, "\n")] = '\0'; // Removes the newline character
+      char userToRemove[USERNAME_MAX_LENGHT] = {0};
 
+      fgets(userToRemove, USERNAME_MAX_LENGHT, stdin);
+      userToRemove[strcspn(userToRemove, "\n")] = '\0'; // Removes the newline character
 
-      SecureDB_deactivateUser(user.username);
-
-      if (user.error_code != SUCCESS) {
-        snprintf(lastMessage, sizeof(lastMessage), "%s", errorToString(user.error_code));
+      if (SecureDB_deactivateUser(userToRemove) != 0) {
+        snprintf(lastMessage, sizeof(lastMessage), "%s", errorToString(UNKNOWN_ERROR));
         return;
       }
 
-      snprintf(lastMessage, sizeof(lastMessage), "Removed %s.", user.username);
+      snprintf(lastMessage, sizeof(lastMessage), "Removed %s.", userToRemove);
       break;
     
     default:
