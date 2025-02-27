@@ -1,156 +1,128 @@
 #include "GDBController.h"
 
-GDBController::GDBController(const std::string &programPath) : programPath(programPath), gdbPid(-1)
+GDBController::GDBController(const std::string &filename, const std::string &targetDir) : 
+                               m_lastGdbOutput("")
 {
-    // Create pipes for communication
-    if (pipe(gdbToParentPipe) == -1 || pipe(parentToGdbPipe) == -1) {
-        std::cerr << "Pipe creation failed!" << std::endl;
-        exit(1);
-    }
+    m_targetAppProcess = std::make_unique<ConsoleProccess>(filename, targetDir);
 
-    // Fork to create a child process
-    gdbPid = fork();
-    if (gdbPid == -1) {
-        std::cerr << "Fork failed!" << std::endl;
-        exit(1);
-    }
+    pid_t targetPid = m_targetAppProcess->getTargetPid();
 
-    if (gdbPid == 0) {
-        // Child process (GDB)
-        close(gdbToParentPipe[0]); // Close read end
-        close(parentToGdbPipe[1]); // Close write end
-
-        // Redirect stdin and stdout
-        dup2(parentToGdbPipe[0], STDIN_FILENO);
-        dup2(gdbToParentPipe[1], STDOUT_FILENO);
-
-        // Create a new process group for the child
-        setpgid(0, 0);
-
-        // Execute GDB
-        execlp("gdb", "gdb", "--interpreter=mi2", programPath.c_str(), nullptr);
-
-        // If execlp fails
-        std::cerr << "Failed to execute GDB!" << std::endl;
-        exit(1);
-    } else {
-        // Parent process
-        close(gdbToParentPipe[1]); // Close write end
-        close(parentToGdbPipe[0]); // Close read end
-
-        // Set the pipes to non-blocking mode
-        fcntl(gdbToParentPipe[0], F_SETFL, O_NONBLOCK);
-    }
+    std::string args = filename + " " + std::to_string(targetPid);
+    m_gdbProcess = std::make_unique<ConsoleProccess>("gdb", ".", args);
 }
 
 GDBController::~GDBController()
 {
-    killGDB();
+    m_gdbProcess.~unique_ptr();
+    m_targetAppProcess.~unique_ptr();
 }
 
-void GDBController::sendCommand(const std::string& command, bool clearBufferBeforeSend)
+void GDBController::sendCommand(const std::string &command)
 {
-    if (clearBufferBeforeSend) {
-        clearBuffer(); // Clear the buffer before sending the command
+    m_gdbProcess->sendInput(command);
+}
+
+void GDBController::sendTargetInput(const std::string &input)
+{
+    m_targetAppProcess->sendInput(input);
+}
+
+std::string GDBController::getRawOutput()
+{
+    m_lastGdbOutput = m_gdbProcess->getOutput();
+    
+    return m_lastGdbOutput;
+}
+
+std::string GDBController::getTargetOutput()
+{
+    return m_targetAppProcess->getOutput();
+}
+
+bool GDBController::isAtBreakpoint()
+{
+    getRawOutput();
+
+    std::regex breakpointPattern(R"(Breakpoint\s+(\d+),\s+([\w:~]+)\s*\(.*\)\s+at\s+([^\s]+):(\d+))");
+    std::smatch match;
+
+    if (std::regex_search(m_lastGdbOutput, match, breakpointPattern)) {
+        std::cout << "Hit Breakpoint #" << match[1] << " in function " << match[2] 
+                  << " at " << match[3] << ":" << match[4] << std::endl;
+        return true;
     }
-
-    std::string fullCommand = command + "\n";
-    write(parentToGdbPipe[1], fullCommand.c_str(), fullCommand.size());
+    
+    return false;
 }
 
-std::string GDBController::readOutput(int delayMicroseconds)
+std::vector<std::string> GDBController::getMemoryDump(const std::string &startAddr, size_t numOfAddresses)
 {
-    usleep(delayMicroseconds); // Wait for GDB to process the command
+    // "x/10xg $rbp-80" <- print $rbp+8 (the ret address), $rbp, and 8 addresses below $rbp;
+    std::ostringstream oss;
+    oss << "x/" << numOfAddresses << "xg " << startAddr << "-" << (numOfAddresses - 2) * 8;
 
-    char buffer[1024];
-    std::string output;
-    ssize_t bytesRead;
+    std::string command = oss.str();
 
-    while ((bytesRead = read(gdbToParentPipe[0], buffer, sizeof(buffer) - 1)) > 0) {
-        buffer[bytesRead] = '\0';
-        output += buffer;
-    }
+    m_gdbProcess->getOutput(); // clear the buffer
+    m_gdbProcess->sendInput(command);
 
-    return output;
-}
-
-std::string GDBController::formatGDBOutput(const std::string &rawOutput)
-{
-    std::istringstream stream(rawOutput);
+    std::vector<std::string> addressess;
+    std::istringstream ss(m_gdbProcess->getOutput());
     std::string line;
-    std::string formattedOutput;
 
-    while (std::getline(stream, line)) {
-        if (line.empty()) continue;
+    // Parse the string and extract the adressess values
+    while (std::getline(ss, line)) {
+        // Clean up any leading/trailing whitespace
+        line.erase(0, line.find_first_not_of(" \n\r\t"));  // Remove leading whitespaces
+        line.erase(line.find_last_not_of(" \n\r\t") + 1);  // Remove trailing whitespaces
 
-        // Keep only human-readable messages (lines starting with '~')
-        if (line[0] == '~') {
-            // Remove the '~' prefix
-            std::string humanReadableLine = line.substr(1);
-
-            // Remove surrounding quotes if present
-            if (!humanReadableLine.empty() && humanReadableLine.front() == '"' && humanReadableLine.back() == '"') {
-                humanReadableLine = humanReadableLine.substr(1, humanReadableLine.size() - 2);
-            }
-
-            // Unescape the string
-            humanReadableLine = unescapeString(humanReadableLine);
-
-            // Append the line to the formatted output
-            formattedOutput += humanReadableLine + "\n";
+        // Skip empty lines
+        if (line.empty()) {
+            continue;
         }
+
+        std::istringstream lineStream(line);
+        std::string address, value1, value2;
+
+        // Extract address and values
+        lineStream >> address >> value1 >> value2;
+
+        // Add values to vector
+        if (!value1.empty())
+            addressess.push_back(value1);
+
+        if (!value2.empty())
+            addressess.push_back(value2);
     }
 
-    return formattedOutput;
+    std::reverse(addressess.begin(), addressess.end());
+    return addressess;
 }
 
-bool GDBController::isWaitingForInput()
+std::string GDBController::getAddress(const std::string &name)
 {
-    std::string output = readOutput();
+    std::string command = "info address " + name;
+    
+    m_gdbProcess->getOutput(); // clear the buffer
+    sendCommand(command);
+    std::string output = m_gdbProcess->getOutput();
+    
+    // if (output.length() < 6) return "";
+    
+    if (output.size() > 6)
+        output.resize(output.size()-6);
 
-    // Check if the output contains the GDB prompt
-    std::regex promptRegex("\\(gdb\\)\\s*$");
-    return std::regex_search(output, promptRegex);
-}
-
-void GDBController::killGDB()
-{
-    if (gdbPid > 0) {
-        // Kill the entire process group
-        killpg(gdbPid, SIGKILL);
-
-        // Wait for the process to terminate
-        int status;
-        waitpid(gdbPid, &status, 0);
-
-        // Reset the PID
-        gdbPid = -1;
-    }
-}
-
-std::string GDBController::unescapeString(const std::string &input)
-{
-    std::stringstream ss;
-    for (size_t i = 0; i < input.size(); ++i) {
-        if (input[i] == '\\' && i + 1 < input.size()) {
-            switch (input[i + 1]) {
-                case 'n': ss << '\n'; ++i; break; // Convert \n to newline
-                case 't': ss << '\t'; ++i; break; // Convert \t to tab
-                case '\\': ss << '\\'; ++i; break; // Convert \\ to \
-                case '"': ss << '"'; ++i; break; // Convert \" to "
-                default: ss << input[i]; break; // Leave other escape sequences as-is
-            }
-        } else {
-            ss << input[i];
+    output.erase(0, output.find_first_not_of(" \n\r\t"));  // Remove leading whitespaces
+    output.erase(output.find_last_not_of(" \n\r\t") + 1);  // Remove trailing whitespaces
+    
+    if (output.find("Symbol \"") == 0) {
+        int start = output.length() - 1;
+        while (start > 0 && output.at(start) != ' ') {
+            start--;
         }
+        
+        return output.substr(start+1, output.length());
     }
-    return ss.str();
-}
 
-void GDBController::clearBuffer()
-{
-    char buffer[1024];
-    while (read(gdbToParentPipe[0], buffer, sizeof(buffer)) > 0) {
-        // Discard the data
-    }
+    return "";
 }

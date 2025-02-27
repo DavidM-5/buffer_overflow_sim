@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdarg.h>
 #include "sqlite3.h"
 #include "Pages.h"
 #include "user_types.h"
@@ -29,6 +30,17 @@ void clear_screen() {
   #else
     system("clear"); // Linux and macOS
   #endif
+}
+
+void print_and_flush(const char *format, ...) {
+  va_list args;
+  va_start(args, format);  // Initialize the va_list with the first argument (format)
+
+  vprintf(format, args);   // Print using vprintf, which takes a va_list
+
+  fflush(stdout);          // Flush the output buffer to ensure it's written immediately
+
+  va_end(args);            // Clean up the va_list
 }
 
 void init() {
@@ -82,7 +94,7 @@ const char* errorToString(Error_code err) {
 Error_code login(Session* session) {
   char username[USERNAME_MAX_LENGHT];
   
-  printf("Username: ");
+  print_and_flush("Username: ");
   gets(username); // <-- ?
 
   UserData user;
@@ -97,7 +109,7 @@ Error_code login(Session* session) {
     return USER_NOT_ACTIVE;
   }
 
-  printf("Password: ");
+  print_and_flush("Password: ");
 
   char password[PASSWORD_MAX_LENGHT];
   if (fgets(password, PASSWORD_MAX_LENGHT, stdin))
@@ -129,18 +141,18 @@ Error_code signup(Session* session) {
     .error_code = SUCCESS
   };
 
-  printf("Username: ");
+  print_and_flush("Username: ");
   fgets(newUser.username, USERNAME_MAX_LENGHT, stdin);
   newUser.username[strcspn(newUser.username, "\n")] = '\0'; // Removes the newline character
   
 
-  printf("Password: ");
+  print_and_flush("Password: ");
   fgets(newUser.password, PASSWORD_MAX_LENGHT, stdin);
   newUser.password[strcspn(newUser.password, "\n")] = '\0'; // Removes the newline character
 
 
   char confPassword[PASSWORD_MAX_LENGHT];
-  printf("Confirm password: ");
+  print_and_flush("Confirm password: ");
   fgets(confPassword, PASSWORD_MAX_LENGHT, stdin);
   confPassword[strcspn(confPassword, "\n")] = '\0'; // Removes the newline character
 
@@ -244,7 +256,7 @@ void handle_page(Page_Type* page, Session* session, bool* clearFlag) {
       }
 
       SecureDB_printDB();
-      printf("\n");
+      print_and_flush("\n");
 
       *clearFlag = false;
       break;
@@ -255,7 +267,7 @@ void handle_page(Page_Type* page, Session* session, bool* clearFlag) {
         break;
       }
 
-      printf("User: ");
+      print_and_flush("User: ");
 
       char userToElevate[USERNAME_MAX_LENGHT] = {0};
 
@@ -276,7 +288,7 @@ void handle_page(Page_Type* page, Session* session, bool* clearFlag) {
         break;
       }
 
-      printf("User: ");
+      print_and_flush("User: ");
 
       char userToRemove[USERNAME_MAX_LENGHT] = {0};
 
@@ -314,14 +326,15 @@ int main(int argc, char const *argv[])
   
   while (true) {
     if (clearSceenFlag)
-      clear_screen();
+      // clear_screen();
 
     if (strlen(lastMessage) > 0) {
-      printf("%s\n\n", lastMessage);
+      print_and_flush("%s\n\n", lastMessage);
       lastMessage[0] = '\0';
     }
 
-    printf("-> %s", pages[currentPage]);
+    print_and_flush("-> %s", pages[currentPage]);
+
     handle_page(&currentPage, &session, &clearSceenFlag);
   }
   

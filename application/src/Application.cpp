@@ -92,15 +92,26 @@ void application::Application::run()
         std::cerr << "Failed to compile target code." << std::endl;
         return;
     }*/
-    gdb = std::make_unique<GDBController>("targets/compiled/t1");
+    gdb = std::make_unique<GDBController>("./t1", "./targets/compiled");
 
-    gdb->sendCommand("start");
-    gdb->sendCommand("break init_pages");
-    gdb->sendCommand("run");
+    // gdb->sendCommand("start");
+    // gdb->sendCommand("break init_pages");
+    gdb->sendCommand("break login");
+    gdb->sendCommand("continue");
+    // gdb->readOutput();
+    // gdb->readOutput();
+    // gdb->getRawOutput();
+    
+    // Read program output
+    std::string output = gdb->getTargetOutput();
+    std::cout << "Target output: \n" << output << std::endl;
 
-    gdb->readOutput();
-    gdb->readOutput();
-    gdb->readOutput();
+    gdb->sendTargetInput("1");
+
+    output = gdb->getTargetOutput();
+    std::cout << "Target output: \n" << output << std::endl;
+
+    
 
     /*
     gdb->sendCommand("break main");
@@ -178,7 +189,7 @@ void application::Application::run()
                     // std::cout << "Memory dump:" << std::endl;
                     gdb->sendCommand("i b");
 
-                    std::string rawOutput = gdb->readOutput();
+                    std::string rawOutput = gdb->getRawOutput();
 
                     std::cout << rawOutput << std::endl;
                 }
@@ -222,8 +233,8 @@ void application::Application::update(SDL_Event& event)
             command << "info line targets/src/Task_one/vulnerable_system/main.c:" << m_latestBreakpointLine;
             gdb->sendCommand(command.str());
 
-            std::string rawOutput = gdb->readOutput();
-            std::string formattedOutput = gdb->formatGDBOutput(rawOutput);
+            // std::string rawOutput = gdb->readOutput();
+            std::string formattedOutput = gdb->getRawOutput();
 
             if (formattedOutput.find("but contains no code.") == std::string::npos) {
                 std::ostringstream command2;
@@ -242,8 +253,8 @@ void application::Application::update(SDL_Event& event)
             command << "info line targets/src/Task_one/vulnerable_system/main.c:" << m_latestBreakpointLine;
             gdb->sendCommand(command.str());
 
-            std::string rawOutput = gdb->readOutput();
-            std::string formattedOutput = gdb->formatGDBOutput(rawOutput);
+            // std::string rawOutput = gdb->readOutput();
+            std::string formattedOutput = gdb->getRawOutput();
 
             if (formattedOutput.find("but contains no code.") == std::string::npos) {
                 std::ostringstream command2;
@@ -254,8 +265,8 @@ void application::Application::update(SDL_Event& event)
             }
         }
 
-        std::string rawOutput = gdb->readOutput();
-        std::string formattedOutput = gdb->formatGDBOutput(rawOutput);
+        // std::string rawOutput = gdb->readOutput();
+        std::string formattedOutput = gdb->getRawOutput();
 
         std::cout << formattedOutput << std::endl;
 
@@ -440,7 +451,7 @@ void application::Application::initCenterPanels()
     auto console = std::make_unique<application::Console>(
         0 + m_innerBorderWidth, label->getPosition().y + label->getHeight() + 10,
         label->getWidth(), centerBottomPanel->getHeight() - label->getPosition().y - label->getHeight() - m_innerBorderWidth * 2,
-        SDL_Color{72, 65, 65, 255}
+        SDL_Color{0x18, 0x18, 0x18, 0xFF}
     );
 
     centerBottomPanel->addWidget("Label", std::move(label));
@@ -608,52 +619,14 @@ bool application::Application::compileFile(const std::string& commandPath)
 
 void application::Application::memoryDumpToStackView(const std::string &startAddr, int numOfAddresses)
 {
-    // "x/10xg $rbp-80" <- print $rbp+8 (the ret address), $rbp, and 8 addresses below $rbp;
-    std::ostringstream oss;
-    oss << "x/" << numOfAddresses << "xg " << startAddr << "-" << (numOfAddresses - 2) * 8;
-
-
-    std::string command = oss.str();
-
-    gdb->sendCommand(command);
-    std::string rawOutput = gdb->readOutput();
-    std::string formattedOutput = gdb->formatGDBOutput(rawOutput);
-
-
-    std::vector<std::string> values;
-    std::istringstream ss(formattedOutput);
-    std::string line;
-
-    // Parse the string and extract the values
-    while (std::getline(ss, line)) {
-        // Clean up any leading/trailing whitespace
-        line.erase(0, line.find_first_not_of(" \n\r\t"));  // Remove leading whitespaces
-        line.erase(line.find_last_not_of(" \n\r\t") + 1);  // Remove trailing whitespaces
-
-        // Skip empty lines
-        if (line.empty()) {
-            continue;
-        }
-
-        std::istringstream lineStream(line);
-        std::string address, value1, value2;
-
-        // Extract address and values
-        lineStream >> address >> value1 >> value2;
-
-        // Add values to vector
-        values.push_back(value1);
-
-        if (!value2.empty())
-            values.push_back(value2);
-    }
+    std::vector<std::string> addresses = gdb->getMemoryDump("$rbp", 11);
 
     application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
     application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");
     application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(w);
 
-    for (int i = values.size() - 1; i >= 0; i--) {
-        stackV->push(values[i]);
+    for (const std::string& addr : addresses) {
+        stackV->push(addr);
     }
 }
 
@@ -664,31 +637,11 @@ void application::Application::showFunctionsAddresses()
     application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_top");
     application::Widget* w = parentWidget->getWidget("TextBlock-functions_addresses");
     application::TextBlock* textBlock = static_cast<application::TextBlock*>(w);
-
+    
     for (const std::string& funcName : functions) {
-        std::ostringstream oss;
-        oss << "info address " << funcName;
+        std::string fullLine = funcName + " - " + gdb->getAddress(funcName);
         
-        gdb->sendCommand(oss.str());
-
-        std::string rawOutput = gdb->readOutput();
-        std::string formattedOutput = gdb->formatGDBOutput(rawOutput);
-
-        formattedOutput.erase(0, formattedOutput.find_first_not_of(" \n\r\t"));  // Remove leading whitespaces
-        formattedOutput.erase(formattedOutput.find_last_not_of(" \n\r\t") + 1);  // Remove trailing whitespaces
-
-        std::string fullLine = funcName + " - ";
-
-        if (formattedOutput.find("Symbol \\\"") == 0) {
-            int start = formattedOutput.length() - 1;
-            while (start > 0 && formattedOutput.at(start) != ' ') {
-                start--;
-            }
-            
-            fullLine += formattedOutput.substr(start+1, formattedOutput.length());
-            
-            textBlock->addLine(fullLine, true);
-            textBlock->addLine("\n", true);
-        }
+        textBlock->addLine(fullLine, true);
+        textBlock->addLine("\n", true);
     }
 }

@@ -1,61 +1,33 @@
 #pragma once
 
-#include <iostream>
-#include <string>
 #include <vector>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <fcntl.h>
+#include <algorithm>
+#include <memory>
 #include <regex>
-#include <map>
+#include <sstream>
+#include "ConsoleProccess.h"
 
-class GDBController {
+class GDBController
+{
 public:
-    GDBController(const std::string& programPath);
+    GDBController(const std::string& filename, const std::string &targetDir);
     ~GDBController();
 
-    void sendCommand(const std::string& command, bool clearBufferBeforeSend = true);
+    void sendCommand(const std::string& command);
+    void sendTargetInput(const std::string& input);
 
-    // Read the output (with an optional delay to allow GDB to process the command)
-    std::string readOutput(int delayMicroseconds = 100000);
-    std::string formatGDBOutput(const std::string& rawOutput);
+    std::string getRawOutput();
+    std::string getTargetOutput();
 
-    bool isWaitingForInput();
+    bool isAtBreakpoint();
+    std::vector<std::string> getMemoryDump(const std::string& startAddr = "$rbp", size_t numOfAddresses = 10);
 
-    void killGDB();
-
-
-private:
-    std::string programPath;
-    pid_t gdbPid;
-    int gdbToParentPipe[2]; // Pipe for GDB -> Parent communication
-    int parentToGdbPipe[2]; // Pipe for Parent -> GDB communication
+    std::string getAddress(const std::string& name);
 
 private:
-    std::string unescapeString(const std::string& input);
+    std::unique_ptr<ConsoleProccess> m_targetAppProcess;
+    std::unique_ptr<ConsoleProccess> m_gdbProcess;
 
-    void clearBuffer();
+    std::string m_lastGdbOutput;
 
 };
-
-
-/*
-
-int main() {
-    GDBController gdbController("./your_program");
-
-    // Send a GDB command
-    gdbController.sendCommand("break main");
-    gdbController.sendCommand("run");
-
-    // Read GDB output
-    std::string output = gdbController.readOutput();
-    std::cout << "GDB Output: " << output << std::endl;
-
-    // Continue doing other work...
-    std::cout << "Main program continues to run..." << std::endl;
-
-    return 0;
-}
-
-*/

@@ -12,6 +12,7 @@ add_executable(buffer_overflow_sim
     src/StackVisualizer.cpp
     src/TextLine.cpp
     src/Console.cpp
+    src/ConsoleProccess.cpp
     src/GDBController.cpp
     src/Button.cpp
 )

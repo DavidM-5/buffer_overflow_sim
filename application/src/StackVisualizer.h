@@ -24,7 +24,7 @@ namespace application
         void render(core::Renderer& renderer, const SDL_Rect* srcRect = nullptr, const SDL_Rect* dstRect = nullptr);
         void handleEvents(const core::InputManager& inputMngr) {};
 
-        void push(std::string str);
+        void push(const std::string& str);
         void pop();
 
         void clear();

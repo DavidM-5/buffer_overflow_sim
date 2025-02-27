@@ -32,7 +32,7 @@ void application::StackVisualizer::render(core::Renderer &renderer, const SDL_Re
     }
 }
 
-void application::StackVisualizer::push(std::string str)
+void application::StackVisualizer::push(const std::string& str)
 {
     auto txt = std::make_unique<application::TextLine>(
                               m_transform.x, 
