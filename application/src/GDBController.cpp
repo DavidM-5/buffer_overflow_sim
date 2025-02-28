@@ -1,14 +1,16 @@
 #include "GDBController.h"
 
 GDBController::GDBController(const std::string &filename, const std::string &targetDir) : 
-                               m_lastGdbOutput("")
+                               m_lastGdbOutput(""),
+                               m_hitBreakpoint(false)
 {
     m_targetAppProcess = std::make_unique<ConsoleProccess>(filename, targetDir);
 
     pid_t targetPid = m_targetAppProcess->getTargetPid();
 
+    usleep(200000);
     std::string args = filename + " " + std::to_string(targetPid);
-    m_gdbProcess = std::make_unique<ConsoleProccess>("gdb", ".", args);
+    m_gdbProcess = std::make_unique<ConsoleProccess>("gdb", "/", args);
 }
 
 GDBController::~GDBController()
@@ -27,31 +29,36 @@ void GDBController::sendTargetInput(const std::string &input)
     m_targetAppProcess->sendInput(input);
 }
 
-std::string GDBController::getRawOutput()
+std::string GDBController::getGdbOutput()
 {
-    m_lastGdbOutput = m_gdbProcess->getOutput();
-    
-    return m_lastGdbOutput;
+    return m_gdbProcess->getOutput();
 }
 
 std::string GDBController::getTargetOutput()
 {
-    return m_targetAppProcess->getOutput();
+    std::string out = m_targetAppProcess->getOutput();
+
+    std::regex breakpointPattern(R"(Breakpoint\s+(\d+),\s+([\w:~]+)\s*\(.*\)\s+at\s+([^\s]+):(\d+))");
+    if (std::regex_search(out, breakpointPattern)) {
+        m_hitBreakpoint = true;
+        return out;
+    }
+
+    m_hitBreakpoint = false;
+    return out;
 }
 
 bool GDBController::isAtBreakpoint()
 {
-    getRawOutput();
-
-    std::regex breakpointPattern(R"(Breakpoint\s+(\d+),\s+([\w:~]+)\s*\(.*\)\s+at\s+([^\s]+):(\d+))");
-    std::smatch match;
-
-    if (std::regex_search(m_lastGdbOutput, match, breakpointPattern)) {
-        std::cout << "Hit Breakpoint #" << match[1] << " in function " << match[2] 
-                  << " at " << match[3] << ":" << match[4] << std::endl;
-        return true;
-    }
+    int status;
+    pid_t result = waitpid(m_targetAppProcess->getTargetPid(), &status, WNOHANG);
     
+    if (result > 0) {
+        // Check if process is stopped due to a trap (breakpoint)
+        if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGTRAP) {
+            return true;
+        }
+    }
     return false;
 }
 
@@ -63,11 +70,11 @@ std::vector<std::string> GDBController::getMemoryDump(const std::string &startAd
 
     std::string command = oss.str();
 
-    m_gdbProcess->getOutput(); // clear the buffer
+    getGdbOutput(); // clear the buffer
     m_gdbProcess->sendInput(command);
 
     std::vector<std::string> addressess;
-    std::istringstream ss(m_gdbProcess->getOutput());
+    std::istringstream ss(getGdbOutput());
     std::string line;
 
     // Parse the string and extract the adressess values
@@ -101,11 +108,14 @@ std::vector<std::string> GDBController::getMemoryDump(const std::string &startAd
 
 std::string GDBController::getAddress(const std::string &name)
 {
-    std::string command = "info address " + name;
+    usleep(200000); // Give time for the previous commands to process
+    getGdbOutput(); // clear the buffer
     
-    m_gdbProcess->getOutput(); // clear the buffer
+    std::string command = "info address " + name;
+
     sendCommand(command);
-    std::string output = m_gdbProcess->getOutput();
+    usleep(100000); // Give time for the command to process
+    std::string output = getGdbOutput();
     
     // if (output.length() < 6) return "";
     

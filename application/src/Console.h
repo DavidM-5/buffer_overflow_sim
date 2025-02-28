@@ -7,6 +7,7 @@
 #include <cmath>
 #include "Widget.h"
 #include "TextLine.h"
+#include "GDBController.h"
 
 namespace application
 {
@@ -18,8 +19,9 @@ namespace application
         ~Console() = default;
 
         void handleEvents(const core::InputManager& inputMngr);
-        // TODO: fix rendring and handle when input="/"
         void render(core::Renderer& renderer, const SDL_Rect* srcRect = nullptr, const SDL_Rect* dstRect = nullptr);
+
+        void attachGDB(const std::shared_ptr<GDBController>& gdb);
 
         void printToConsole(const std::string& str);
 
@@ -27,11 +29,14 @@ namespace application
         void setWidth(int newW);
 
     private:
+        std::shared_ptr<GDBController> m_gdb;
+
         std::vector<application::TextLine> m_lines;
 
         application::TextLine m_activeLine;
 
         bool m_thisWidgetSelected;
+        bool m_gdbAttached;
 
     private:
         int findNthWordFromEnd(const std::string& str, int n);

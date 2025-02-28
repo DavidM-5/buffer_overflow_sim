@@ -4,7 +4,8 @@ application::StackVisualizer::StackVisualizer(int posX, int posY, int w, int h, 
                                               Widget(posX, posY, w, h, color),
                                               m_slotsAmount(slotsAmount), m_slotHeight(h / slotsAmount),
                                               m_font(font),
-                                              m_fontSize(fontSize)
+                                              m_fontSize(fontSize),
+                                              m_selectedSlot(-1)
 {
     application::TextLine::loadFont(font, fontSize);
 }
@@ -18,6 +19,10 @@ void application::StackVisualizer::render(core::Renderer &renderer, const SDL_Re
                             m_transform.y + m_slotHeight * i,
                             m_slots[startIdx + i]->getWidth(),
                             m_slotHeight};
+
+        if (startIdx + i == m_selectedSlot) {
+            renderer.drawRect(dstRect, {0x71, 0x71, 0xD5, 0xFF});
+        }
 
         m_slots[startIdx + i]->render(renderer, nullptr, &dstRect);
     }
@@ -53,6 +58,11 @@ void application::StackVisualizer::pop()
     if (m_slots.size() > 0) {
         m_slots.pop_back();
     }
+}
+
+void application::StackVisualizer::selectSlot(int slot)
+{
+    m_selectedSlot = slot;
 }
 
 void application::StackVisualizer::clear()

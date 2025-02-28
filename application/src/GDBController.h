@@ -16,7 +16,7 @@ public:
     void sendCommand(const std::string& command);
     void sendTargetInput(const std::string& input);
 
-    std::string getRawOutput();
+    std::string getGdbOutput();
     std::string getTargetOutput();
 
     bool isAtBreakpoint();
@@ -29,5 +29,7 @@ private:
     std::unique_ptr<ConsoleProccess> m_gdbProcess;
 
     std::string m_lastGdbOutput;
+
+    bool m_hitBreakpoint;
 
 };

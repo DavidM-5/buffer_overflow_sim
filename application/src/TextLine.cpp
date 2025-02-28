@@ -86,91 +86,48 @@ int application::TextLine::appendText(const std::string& text, bool ignoreNotFit
 
     m_ignoreNotFitted = ignoreNotFitted;
 
+    // If ignoring fit constraints, simply append the text and return
     if (ignoreNotFitted) {
         m_text += text;
         m_updated = true;
         return 0;
     }
 
-    // Measure the width of a single space
-    int spaceWidth;
-    TTF_SizeText(s_fonts[m_fontName][m_fontSize], " ", &spaceWidth, nullptr);
+    // Get the font
+    TTF_Font* font = s_fonts[m_fontName][m_fontSize];
+    if (!font) return -1;
 
     // Measure the current width of the text
-    int currentWidth;
-    TTF_SizeText(s_fonts[m_fontName][m_fontSize], m_text.c_str(), &currentWidth, nullptr);
+    int currentWidth = 0;
+    if (!m_text.empty()) {
+        TTF_SizeText(font, m_text.c_str(), &currentWidth, nullptr);
+    }
 
-    // Split the input text into words, spaces, and tabs
-    std::vector<std::string> tokens;
-    std::string token;
-    for (char ch : text) {
-        if (ch == ' ' || ch == '\t') {
-            if (!token.empty()) {
-                tokens.push_back(token);
-                token.clear();
-            }
-            // Treat spaces and tabs as separate tokens
-            tokens.push_back(std::string(1, ch));
+    // Try adding characters one by one to find where it stops fitting
+    std::string textToAdd;
+    for (size_t i = 0; i < text.size(); i++) {
+        char c = text[i];
+        std::string charToAdd = (c == '\t') ? "  " : std::string(1, c);
+        
+        // Test if adding this character would exceed width
+        int testWidth;
+        TTF_SizeText(font, (m_text + textToAdd + charToAdd).c_str(), &testWidth, nullptr);
+        
+        if (testWidth <= m_transform.w) {
+            // Character fits, add it
+            textToAdd += charToAdd;
         } else {
-            token += ch;
+            // Character doesn't fit - return the exact position where it stops fitting
+            m_text += textToAdd;
+            m_updated = true;
+            return i;
         }
     }
-    if (!token.empty()) {
-        tokens.push_back(token);
-    }
-
-    // Track the number of words that did not fit
-    int wordsNotAdded = 0;
-    bool hasAddedWords = false;
-
-    // Iterate through each token (word, space, or tab)
-    for (size_t i = 0; i < tokens.size(); ++i) {
-        const std::string& tokenStr = tokens[i];
-
-        // Handle spaces
-        if (tokenStr == " ") {
-            if (currentWidth + spaceWidth <= m_transform.w) {
-                m_text += ' ';
-                currentWidth += spaceWidth;
-            } else {
-                // If the space doesn't fit, stop processing
-                wordsNotAdded = tokens.size() - i;
-                break;
-            }
-        }
-        // Handle tabs (replace with 2 spaces)
-        else if (tokenStr == "\t") {
-            const std::string tabReplacement = "  "; // Replace tab with 2 spaces
-            int tabWidth = spaceWidth * 2; // Width of 2 spaces
-
-            if (currentWidth + tabWidth <= m_transform.w) {
-                m_text += tabReplacement;
-                currentWidth += tabWidth;
-            } else {
-                // If the tab doesn't fit, stop processing
-                wordsNotAdded = tokens.size() - i;
-                break;
-            }
-        }
-        // Handle words
-        else {
-            int wordWidth;
-            TTF_SizeText(s_fonts[m_fontName][m_fontSize], tokenStr.c_str(), &wordWidth, nullptr);
-
-            if (currentWidth + wordWidth <= m_transform.w) {
-                m_text += tokenStr;
-                currentWidth += wordWidth;
-                hasAddedWords = true;
-            } else {
-                // If the word doesn't fit, stop processing
-                wordsNotAdded = tokens.size() - i;
-                break;
-            }
-        }
-    }
-
+    
+    // All text fit
+    m_text += textToAdd;
     m_updated = true;
-    return wordsNotAdded;
+    return text.size();
 }
 
 void application::TextLine::editText(int start, int end, const std::string &newText)

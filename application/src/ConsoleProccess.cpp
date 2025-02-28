@@ -77,7 +77,7 @@ void ConsoleProccess::sendInput(const std::string &input)
 
 std::string ConsoleProccess::getOutput() const
 {
-    usleep(100000);
+    // usleep(200000);
 
     std::string output;
 

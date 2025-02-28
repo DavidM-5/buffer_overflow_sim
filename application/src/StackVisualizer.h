@@ -27,6 +27,8 @@ namespace application
         void push(const std::string& str);
         void pop();
 
+        void selectSlot(int slot);
+
         void clear();
 
         void addDeltaTransform(int x = 0, int y = 0, int w = 0, int h = 0) override;
@@ -36,6 +38,8 @@ namespace application
         
         int m_slotsAmount;
         int m_slotHeight;
+
+        int m_selectedSlot;
         
         std::string m_font;
         int m_fontSize;

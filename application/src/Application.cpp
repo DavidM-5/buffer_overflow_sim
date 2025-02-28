@@ -66,14 +66,6 @@ bool application::Application::init()
         return false;
     }
 
-    // compile the target code
-    /*
-    if (!compileFile("targets/src/Task_one/compile_command_linux.txt")) {
-        std::cerr << "Failed to compile target code." << std::endl;
-        return false;
-    }
-    */
-
     return true;
 }
 
@@ -92,24 +84,28 @@ void application::Application::run()
         std::cerr << "Failed to compile target code." << std::endl;
         return;
     }*/
-    gdb = std::make_unique<GDBController>("./t1", "./targets/compiled");
+    gdb = std::make_shared<GDBController>("./t1", "./targets/compiled");
 
-    // gdb->sendCommand("start");
-    // gdb->sendCommand("break init_pages");
-    gdb->sendCommand("break login");
-    gdb->sendCommand("continue");
-    // gdb->readOutput();
-    // gdb->readOutput();
-    // gdb->getRawOutput();
+    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-center_bottom");
+    application::Widget* w = parentWidget->getWidget("Console-console");
+    application::Console* con = static_cast<application::Console*>(w);
+
+    con->attachGDB(gdb);
+
+    gdb->sendCommand("break gets");
+    showFunctionsAddresses();
+
+    // gdb->sendCommand("continue");
+    // gdb->sendCommand("continue");
     
     // Read program output
-    std::string output = gdb->getTargetOutput();
-    std::cout << "Target output: \n" << output << std::endl;
+    // std::string output = gdb->getTargetOutput();
+    // std::cout << "Target output: \n" << output << std::endl;
 
-    gdb->sendTargetInput("1");
+    // gdb->sendTargetInput("1");
 
-    output = gdb->getTargetOutput();
-    std::cout << "Target output: \n" << output << std::endl;
+    // output = gdb->getTargetOutput();
+    // std::cout << "Target output: \n" << output << std::endl;
 
     
 
@@ -159,7 +155,6 @@ void application::Application::run()
     // Detach the thread, allowing it to run independently
     setupThread.detach();*/
 
-    showFunctionsAddresses();
 
     while (m_window.isRunning())
     {
@@ -189,15 +184,36 @@ void application::Application::run()
                     // std::cout << "Memory dump:" << std::endl;
                     gdb->sendCommand("i b");
 
-                    std::string rawOutput = gdb->getRawOutput();
+                    std::string rawOutput = gdb->getGdbOutput();
 
                     std::cout << rawOutput << std::endl;
+                }
+
+                if (m_inputMngr.getPressedKey() == "b") {
+                    std::cout << "breakpoint: " << gdb->isAtBreakpoint() << std::endl;
                 }
 
                 if (m_inputMngr.getPressedKey() == "d") {
                     std::cout << "-> Memory dump" << std::endl;
 
                     memoryDumpToStackView("$rbp", 13);
+
+                    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
+                    application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");
+                    application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(w);
+
+                    stackV->selectSlot(1);
+                }
+
+                if (m_inputMngr.getPressedKey() == "p") {
+                    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-center_bottom");
+                    application::Widget* w = parentWidget->getWidget("Console-console");
+                    application::Console* con = static_cast<application::Console*>(w);
+
+                    con->printToConsole("abcdefg");
+                    con->printToConsole("012345678901234567890123456789012345678901234567890123456789");
+                    con->printToConsole("Hello, \n World!");
+
                 }
                 // temporary end /\/\/\.
             }
@@ -234,7 +250,7 @@ void application::Application::update(SDL_Event& event)
             gdb->sendCommand(command.str());
 
             // std::string rawOutput = gdb->readOutput();
-            std::string formattedOutput = gdb->getRawOutput();
+            std::string formattedOutput = gdb->getGdbOutput();
 
             if (formattedOutput.find("but contains no code.") == std::string::npos) {
                 std::ostringstream command2;
@@ -254,7 +270,7 @@ void application::Application::update(SDL_Event& event)
             gdb->sendCommand(command.str());
 
             // std::string rawOutput = gdb->readOutput();
-            std::string formattedOutput = gdb->getRawOutput();
+            std::string formattedOutput = gdb->getGdbOutput();
 
             if (formattedOutput.find("but contains no code.") == std::string::npos) {
                 std::ostringstream command2;
@@ -266,12 +282,13 @@ void application::Application::update(SDL_Event& event)
         }
 
         // std::string rawOutput = gdb->readOutput();
-        std::string formattedOutput = gdb->getRawOutput();
+        std::string formattedOutput = gdb->getGdbOutput();
 
         std::cout << formattedOutput << std::endl;
 
         m_latestBreakpointLine = 0;
     }
+
 }
 
 void application::Application::render()
@@ -282,6 +299,8 @@ void application::Application::render()
     
     m_borderVerticalLeft.render(m_renderer);
     m_borderVerticalRight.render(m_renderer);
+
+    m_renderer.drawRect({630, 874, 200, 30}, {255,255,255,255});
 
     m_renderer.present();
 }
@@ -427,7 +446,17 @@ void application::Application::initCenterPanels()
 
     centerMiddlePanel->addRightBottomBorder(m_borderVerticalLeft);
     centerMiddlePanel->addLeftTopBorder(m_borderVerticalRight);
-    
+
+    auto continueBtn = std::make_unique<application::Button>(
+        0 + m_innerBorderWidth, 0 + m_innerBorderWidth,
+        150, centerMiddlePanel->getHeight() - m_innerBorderWidth * 2,
+        SDL_Color{0x1B, 0x51, 0xCC, 0xFF},
+        "Continue",
+        vector2i{centerMiddlePanel->getPosition().x + m_innerBorderWidth, centerMiddlePanel->getPosition().y + m_innerBorderWidth}
+    );
+
+    centerMiddlePanel->addWidget("Buttom-continue_btn", std::move(continueBtn));
+
     // ===========================
     // ===========================
     auto centerBottomPanel = std::make_unique<application::Panel>(

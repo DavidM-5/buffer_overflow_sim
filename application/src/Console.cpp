@@ -3,7 +3,8 @@
 application::Console::Console(int posX, int posY, int w, int h, SDL_Color color) :
                               Widget(posX, posY, w, h, color),
                               m_activeLine(posX, posY, w, 20, {255, 255, 255, 255}, false),
-                              m_thisWidgetSelected(false)
+                              m_thisWidgetSelected(false),
+                              m_gdbAttached(false)
 {
     m_activeLine.useFont("JetBrainsMono-Medium.ttf", 14);
     m_activeLine.appendText("> ", true);
@@ -11,6 +12,16 @@ application::Console::Console(int posX, int posY, int w, int h, SDL_Color color)
 
 void application::Console::handleEvents(const core::InputManager &inputMngr)
 {
+    if (m_gdbAttached) {
+        std::string out = m_gdb->getTargetOutput();
+
+        if (!out.empty()) {
+            printToConsole(out);
+        }
+        
+    }
+
+
     vector2i mousePos = inputMngr.getMousePosition();
 
     if (inputMngr.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -26,6 +37,13 @@ void application::Console::handleEvents(const core::InputManager &inputMngr)
     std::string input = inputMngr.getPressedKey();
 
     if (input == "\n") {
+        if (m_gdbAttached) {
+            if (m_activeLine.getText().substr(2) == "c" || m_activeLine.getText().substr(2) == "continue")
+                m_gdb->sendCommand("continue");
+            else
+                m_gdb->sendTargetInput(m_activeLine.getText().substr(2));
+        }
+
         m_lines.push_back(m_activeLine);
         m_activeLine.clear();
 
@@ -73,22 +91,134 @@ void application::Console::render(core::Renderer &renderer, const SDL_Rect *srcR
     
 }
 
+void application::Console::attachGDB(const std::shared_ptr<GDBController> &gdb)
+{
+    m_gdb = gdb;
+    m_gdbAttached = true;
+}
+
 void application::Console::printToConsole(const std::string &str)
 {
-    int remainingWords = m_activeLine.appendText(str);
+    // Save the current user input to restore later
+    std::string presentActiveText = m_activeLine.getText().substr(2);
+    m_activeLine.clear();
+    m_activeLine.appendText("> ", true);
 
-    while (remainingWords > 0) {
+    // Split the input string by newline characters
+    std::string::size_type pos = 0;
+    std::string::size_type prev = 0;
+    bool isFirstLine = true;
+    
+    while ((pos = str.find('\n', prev)) != std::string::npos) {
+        // Get the current line segment
+        std::string line = str.substr(prev, pos - prev);
+        
+        // Add proper indentation for all lines except the first one
+        if (!isFirstLine) {
+            // Start with 2 spaces for new lines from '\n'
+            m_activeLine.appendText("  ", true);
+        }
+        isFirstLine = false;
+        
+        // Process this line (might need to be wrapped)
+        int addedUntil = m_activeLine.appendText(line);
+        
+        // Store the current line
         m_lines.push_back(m_activeLine);
         m_activeLine.clear();
-
-        std::string additionalText = trimToLastNWords(str, remainingWords);
-        remainingWords = m_activeLine.appendText("  " + additionalText);
+        
+        // If there's text that didn't fit in the current line, handle it
+        if (addedUntil > 0 && addedUntil < static_cast<int>(line.length())) {
+            std::string remainingText = line.substr(addedUntil);
+            
+            while (!remainingText.empty()) {
+                // Add indentation for continuation lines
+                std::string continuationLine = "  " + remainingText;
+                
+                // Try to append to a new active line
+                int continuationAdded = m_activeLine.appendText(continuationLine);
+                
+                // Store this line
+                m_lines.push_back(m_activeLine);
+                m_activeLine.clear();
+                
+                // If everything fits or there was an error, we're done with this segment
+                if (continuationAdded == 0 || continuationAdded == -1)
+                    break;
+                
+                // The returned index is relative to the indented string
+                int actualIndex = continuationAdded > 2 ? continuationAdded - 2 : 0;
+                
+                // Get the remaining text for the next iteration
+                remainingText = remainingText.substr(actualIndex);
+            }
+        }
+        
+        // Move to the next line in the input string
+        prev = pos + 1;
     }
-
-    m_lines.push_back(m_activeLine);
-    m_activeLine.clear();
-
+    
+    // Process the last part of the string (after the last newline or the entire string if no newlines)
+    if (prev < str.length()) {
+        std::string lastPart = str.substr(prev);
+        
+        // Add proper indentation if this isn't the first line
+        if (!isFirstLine) {
+            // Start with 2 spaces for new lines from '\n'
+            m_activeLine.appendText("  ", true);
+        }
+        
+        // Process this final segment similar to the existing logic
+        int addedUntil = m_activeLine.appendText(lastPart);
+        
+        // If everything was added successfully or there was an error
+        if (addedUntil == 0 || addedUntil == -1) {
+            // Only add the final line if it's not empty
+            if (!m_activeLine.getText().empty()) {
+                m_lines.push_back(m_activeLine);
+                m_activeLine.clear();
+            }
+        } else {
+            // Store the current line
+            m_lines.push_back(m_activeLine);
+            m_activeLine.clear();
+            
+            // Process remaining text until everything fits
+            std::string remainingText = lastPart.substr(addedUntil);
+            
+            while (!remainingText.empty()) {
+                // Add indentation for continuation lines
+                std::string line = "  " + remainingText;
+                
+                // Try to append to the new active line
+                addedUntil = m_activeLine.appendText(line);
+                
+                // If everything fits, we're done
+                if (addedUntil == 0 || addedUntil == -1)
+                    break;
+                
+                // Otherwise, store this line and prepare for the next one
+                m_lines.push_back(m_activeLine);
+                m_activeLine.clear();
+                
+                // Adjust the index relative to the indented string
+                int actualIndex = addedUntil > 2 ? addedUntil - 2 : 0;
+                
+                // Get the remaining text for the next iteration
+                remainingText = remainingText.substr(actualIndex);
+            }
+            
+            // Only add the final line if it's not empty
+            if (!m_activeLine.getText().empty()) {
+                m_lines.push_back(m_activeLine);
+                m_activeLine.clear();
+            }
+        }
+    }
+    
+    // Prepare a new command prompt with the previous user input
     m_activeLine.appendText("> ", true);
+    m_activeLine.appendText(presentActiveText);
 }
 
 void application::Console::addDeltaTransform(int x, int y, int w, int h)

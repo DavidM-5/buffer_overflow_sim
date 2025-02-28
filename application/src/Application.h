@@ -72,7 +72,7 @@ namespace application
         std::unordered_set<u_int32_t> m_requiredBreakpoints;
 
 
-        std::unique_ptr<GDBController> gdb;
+        std::shared_ptr<GDBController> gdb;
 
         uint64_t count = 0xAC342BFC178205A0;// temporary
         uint64_t count2 = 0; // temporary
