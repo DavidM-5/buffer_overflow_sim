@@ -648,7 +648,7 @@ bool application::Application::compileFile(const std::string& commandPath)
 
 void application::Application::memoryDumpToStackView(const std::string &startAddr, int numOfAddresses)
 {
-    std::vector<std::string> addresses = gdb->getMemoryDump("$rbp", 11);
+    std::vector<std::string> addresses = gdb->getMemoryDump("$rbp", 12);
 
     application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
     application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");

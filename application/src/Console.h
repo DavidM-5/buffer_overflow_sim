@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -37,6 +38,8 @@ namespace application
 
         bool m_thisWidgetSelected;
         bool m_gdbAttached;
+
+        int m_renderStartLine;
 
     private:
         int findNthWordFromEnd(const std::string& str, int n);

@@ -66,15 +66,18 @@ std::vector<std::string> GDBController::getMemoryDump(const std::string &startAd
 {
     // "x/10xg $rbp-80" <- print $rbp+8 (the ret address), $rbp, and 8 addresses below $rbp;
     std::ostringstream oss;
+    numOfAddresses--;
     oss << "x/" << numOfAddresses << "xg " << startAddr << "-" << (numOfAddresses - 2) * 8;
 
     std::string command = oss.str();
 
-    getGdbOutput(); // clear the buffer
+    // getGdbOutput(); // clear the buffer
     m_gdbProcess->sendInput(command);
 
+    std::string out = getGdbOutput();
+
     std::vector<std::string> addressess;
-    std::istringstream ss(getGdbOutput());
+    std::istringstream ss(out);
     std::string line;
 
     // Parse the string and extract the adressess values
@@ -94,11 +97,20 @@ std::vector<std::string> GDBController::getMemoryDump(const std::string &startAd
         // Extract address and values
         lineStream >> address >> value1 >> value2;
 
+        if (value1.substr(0, 2) != "0x") {
+            value1 = value2;
+
+            if (lineStream.eof())
+                value2.clear();
+            else
+                lineStream >> value2;
+        }
+
         // Add values to vector
-        if (!value1.empty())
+        if (!value1.empty() && value1.substr(0, 2) == "0x")
             addressess.push_back(value1);
 
-        if (!value2.empty())
+        if (!value2.empty() && value2.substr(0, 2) == "0x")
             addressess.push_back(value2);
     }
 

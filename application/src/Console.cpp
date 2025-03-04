@@ -4,7 +4,8 @@ application::Console::Console(int posX, int posY, int w, int h, SDL_Color color)
                               Widget(posX, posY, w, h, color),
                               m_activeLine(posX, posY, w, 20, {255, 255, 255, 255}, false),
                               m_thisWidgetSelected(false),
-                              m_gdbAttached(false)
+                              m_gdbAttached(false),
+                              m_renderStartLine(0)
 {
     m_activeLine.useFont("JetBrainsMono-Medium.ttf", 14);
     m_activeLine.appendText("> ", true);
@@ -23,6 +24,16 @@ void application::Console::handleEvents(const core::InputManager &inputMngr)
 
 
     vector2i mousePos = inputMngr.getMousePosition();
+
+    // Check for scrolling
+    if (isMouseInsideTransform(mousePos) && inputMngr.getMouseWheelScroll() != 0) {
+        m_renderStartLine -= inputMngr.getMouseWheelScroll();
+
+        if (m_renderStartLine < 0)
+            m_renderStartLine = 0;
+        else if (m_renderStartLine >= m_lines.size())
+            m_renderStartLine = m_lines.size() - 1;
+    }
 
     if (inputMngr.isMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         if (!isMouseInsideTransform(mousePos))
@@ -48,6 +59,8 @@ void application::Console::handleEvents(const core::InputManager &inputMngr)
         m_activeLine.clear();
 
         m_activeLine.appendText("> ", true);
+
+        m_renderStartLine++;
     }
     else if (input == "\b") {
         if (m_activeLine.getLenght() > 2)
@@ -66,14 +79,18 @@ void application::Console::render(core::Renderer &renderer, const SDL_Rect *srcR
     int lineHeight = m_activeLine.getHeight();
     int maxLines = m_transform.h / lineHeight;
     
-    // Determine the starting index for rendering lines
-    int startIndex = std::max(0, static_cast<int>(m_lines.size()) - maxLines + 1);
+    // Ensure m_renderStartLine doesn't go beyond the total number of lines
+    int totalLines = m_lines.size();
+    m_renderStartLine = std::min(m_renderStartLine, std::max(0, totalLines - (maxLines - 1)));
     
     // Render the lines that fit into the console's height
-    for (int i = startIndex; i < m_lines.size(); i++) {
+    for (int i = m_renderStartLine; 
+         i < totalLines && (i - m_renderStartLine) < maxLines - 1; 
+         i++) 
+    {
         SDL_Rect lineDstRect = {
             m_transform.x,
-            m_transform.y + (i - startIndex) * lineHeight,
+            m_transform.y + (i - m_renderStartLine) * lineHeight,
             m_lines[i].getWidth(),
             lineHeight
         };
@@ -126,6 +143,8 @@ void application::Console::printToConsole(const std::string &str)
         // Store the current line
         m_lines.push_back(m_activeLine);
         m_activeLine.clear();
+
+        m_renderStartLine++;
         
         // If there's text that didn't fit in the current line, handle it
         if (addedUntil > 0 && addedUntil < static_cast<int>(line.length())) {
@@ -141,6 +160,8 @@ void application::Console::printToConsole(const std::string &str)
                 // Store this line
                 m_lines.push_back(m_activeLine);
                 m_activeLine.clear();
+
+                m_renderStartLine++;
                 
                 // If everything fits or there was an error, we're done with this segment
                 if (continuationAdded == 0 || continuationAdded == -1)
@@ -177,11 +198,15 @@ void application::Console::printToConsole(const std::string &str)
             if (!m_activeLine.getText().empty()) {
                 m_lines.push_back(m_activeLine);
                 m_activeLine.clear();
+
+                m_renderStartLine++;
             }
         } else {
             // Store the current line
             m_lines.push_back(m_activeLine);
             m_activeLine.clear();
+
+            m_renderStartLine++;
             
             // Process remaining text until everything fits
             std::string remainingText = lastPart.substr(addedUntil);
@@ -200,6 +225,8 @@ void application::Console::printToConsole(const std::string &str)
                 // Otherwise, store this line and prepare for the next one
                 m_lines.push_back(m_activeLine);
                 m_activeLine.clear();
+
+                m_renderStartLine++;
                 
                 // Adjust the index relative to the indented string
                 int actualIndex = addedUntil > 2 ? addedUntil - 2 : 0;
@@ -212,6 +239,8 @@ void application::Console::printToConsole(const std::string &str)
             if (!m_activeLine.getText().empty()) {
                 m_lines.push_back(m_activeLine);
                 m_activeLine.clear();
+
+                m_renderStartLine++;
             }
         }
     }
