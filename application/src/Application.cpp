@@ -71,7 +71,7 @@ bool application::Application::init()
 
 // temp
 std::string hexToString(uint64_t hexValue) {
-    std::stringstream ss;
+    std::stringstream ss; 
     ss << std::hex << hexValue;  // Convert to hex
     return ss.str();
 }
@@ -84,6 +84,18 @@ void application::Application::run()
         std::cerr << "Failed to compile target code." << std::endl;
         return;
     }*/
+
+    /*
+    ============================
+        IDEA!!!
+        Instead of passing the actual string value to gdb,
+        just claculate the number of 'A', needed ( ($rbp+8) - (&username) ),
+        and when the user enters the correct string run the command:
+        set *((int *)($rbp + 8)) = 0x55555555e867
+        in gdb.
+    ============================
+    */
+
     gdb = std::make_shared<GDBController>("./t1", "./targets/compiled");
 
     application::Widget* parentWidget = m_mainPanel.getWidget("Panel-center_bottom");
@@ -95,37 +107,6 @@ void application::Application::run()
     gdb->sendCommand("break gets");
     showFunctionsAddresses();
 
-    // gdb->sendCommand("continue");
-    // gdb->sendCommand("continue");
-    
-    // Read program output
-    // std::string output = gdb->getTargetOutput();
-    // std::cout << "Target output: \n" << output << std::endl;
-
-    // gdb->sendTargetInput("1");
-
-    // output = gdb->getTargetOutput();
-    // std::cout << "Target output: \n" << output << std::endl;
-
-    
-
-    /*
-    gdb->sendCommand("break main");
-
-    std::string rawOutput = gdb->readOutput();
-    std::string formattedOutput = gdb->formatGDBOutput(rawOutput);
-    std::cout << "\n\nGDB Output 1: \n" << formattedOutput << std::endl;
-    std::cout << "\n\n\n\n" << std::endl;
-    */
-
-    /*
-    gdb->sendCommand("run");
-
-    // Read GDB output
-    rawOutput = gdb->readOutput();
-    formattedOutput = gdb->formatGDBOutput(rawOutput);
-    std::cout << "GDB Output 2: " << formattedOutput << std::endl;
-    */
 
     SDL_Event event;
 
@@ -144,16 +125,6 @@ void application::Application::run()
     const int frameDelay = 1000 / fps; // Frame duration in ms
     Uint32 frameStart;
     Uint32 frameTime;
-
-    
-    // showFunctionsAddresses is non-static and requires an instance of the class to be called.
-    // Use a lambda to pass the instance to the thread.
-    /*std::thread setupThread([this]() {
-        showFunctionsAddresses();  // Accessing 'this' to call a member function
-    });
-
-    // Detach the thread, allowing it to run independently
-    setupThread.detach();*/
 
 
     while (m_window.isRunning())
@@ -193,10 +164,18 @@ void application::Application::run()
                     std::cout << "breakpoint: " << gdb->isAtBreakpoint() << std::endl;
                 }
 
+                if (m_inputMngr.getPressedKey() == "r") {
+                    gdb->sendCommand("info registers rbp");
+
+                    std::string rawOutput = gdb->getGdbOutput();
+
+                    std::cout << "registers:\n" << rawOutput << std::endl;
+                }
+
                 if (m_inputMngr.getPressedKey() == "d") {
                     std::cout << "-> Memory dump" << std::endl;
-
-                    memoryDumpToStackView("$rbp", 13);
+                    
+                    memoryDumpToStackView("$rbp", 12);
 
                     application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
                     application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");
@@ -297,10 +276,9 @@ void application::Application::render()
 
     m_mainPanel.render(m_renderer);
     
-    m_borderVerticalLeft.render(m_renderer);
-    m_borderVerticalRight.render(m_renderer);
-
-    m_renderer.drawRect({630, 874, 200, 30}, {255,255,255,255});
+    // They are transparent
+    // m_borderVerticalLeft.render(m_renderer);
+    // m_borderVerticalRight.render(m_renderer);
 
     m_renderer.present();
 }
@@ -396,7 +374,40 @@ void application::Application::initLeftPanels()
     label->useFont("JetBrainsMono-Bold.ttf", 18);
     label->appendText("Tasks", true);
 
+    
+    auto task1 = std::make_unique<application::Paragraph>(
+        label->getPosition().x, label->getPosition().y + label->getHeight() + 15,
+        label->getWidth(), 75,
+        SDL_Color{0xFF, 0xFF, 0xFF, 0x00},
+        vector2i{m_borderWidth, m_borderWidth},
+        "JetBrainsMono-Light.ttf", 16, 20
+    );
+    task1->setText("1. put a breakpoint at the line with unsafe input.");
+
+
+    auto task2 = std::make_unique<application::Paragraph>(
+        label->getPosition().x, task1->getPosition().y + task1->getHeight() + 15,
+        label->getWidth(), 75,
+        SDL_Color{0xFF, 0xFF, 0xFF, 0x00},
+        vector2i{m_borderWidth, m_borderWidth},
+        "JetBrainsMono-Light.ttf", 16, 20
+    );
+    task2->setText("2. Enter the payload to overflow the buffer.");
+
+
+    auto task3 = std::make_unique<application::Paragraph>(
+        label->getPosition().x, task2->getPosition().y + task2->getHeight() + 15,
+        label->getWidth(), 75,
+        SDL_Color{0xFF, 0xFF, 0xFF, 0x00},
+        vector2i{m_borderWidth, m_borderWidth},
+        "JetBrainsMono-Light.ttf", 16, 20
+    );
+    task3->setText("3. Enter the function address you want to replace the return address with.");
+
     leftPanel->addWidget("Label", std::move(label));
+    leftPanel->addWidget("Paragraph-Task1", std::move(task1));
+    leftPanel->addWidget("Paragraph-Task2", std::move(task2));
+    leftPanel->addWidget("Paragraph-Task3", std::move(task3));
 
     // ===========================
     // ===========================
@@ -454,6 +465,9 @@ void application::Application::initCenterPanels()
         "Continue",
         vector2i{centerMiddlePanel->getPosition().x + m_innerBorderWidth, centerMiddlePanel->getPosition().y + m_innerBorderWidth}
     );
+
+    // Bind the function to the button
+    continueBtn->onClick([this]() { gdb->sendCommand("continue"); });
 
     centerMiddlePanel->addWidget("Buttom-continue_btn", std::move(continueBtn));
 
@@ -648,7 +662,7 @@ bool application::Application::compileFile(const std::string& commandPath)
 
 void application::Application::memoryDumpToStackView(const std::string &startAddr, int numOfAddresses)
 {
-    std::vector<std::string> addresses = gdb->getMemoryDump("$rbp", 12);
+    std::vector<std::string> addresses = gdb->getMemoryDump("$rbp", numOfAddresses);
 
     application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
     application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");
@@ -657,6 +671,8 @@ void application::Application::memoryDumpToStackView(const std::string &startAdd
     for (const std::string& addr : addresses) {
         stackV->push(addr);
     }
+
+    gdb->getGdbOutput(); // Clear buffers
 }
 
 void application::Application::showFunctionsAddresses()
@@ -673,4 +689,11 @@ void application::Application::showFunctionsAddresses()
         textBlock->addLine(fullLine, true);
         textBlock->addLine("\n", true);
     }
+}
+
+void application::Application::setTasks()
+{
+    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
+    application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");
+    application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(w);
 }

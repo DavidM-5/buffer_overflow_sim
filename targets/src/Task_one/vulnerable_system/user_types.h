@@ -2,8 +2,8 @@
 
 #include <stdbool.h>
 
-#define USERNAME_MAX_LENGHT 100
-#define PASSWORD_MAX_LENGHT 100
+#define USERNAME_MAX_LENGHT 10
+#define PASSWORD_MAX_LENGHT 10
 
 typedef enum {
     SUCCESS = 0,

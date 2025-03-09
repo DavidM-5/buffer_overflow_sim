@@ -15,6 +15,7 @@ add_executable(buffer_overflow_sim
     src/ConsoleProccess.cpp
     src/GDBController.cpp
     src/Button.cpp
+    src/Paragraph.cpp
 )
 
 # Set the output directory for the executable

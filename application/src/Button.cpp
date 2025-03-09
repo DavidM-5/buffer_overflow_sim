@@ -33,7 +33,7 @@ void application::Button::render(core::Renderer &renderer, const SDL_Rect *srcRe
     m_textLine.render(renderer);
 }
 
-void application::Button::onClick(void (*callback)())
+void application::Button::onClick(Callback callback)
 {
     m_onClick = callback;
 }

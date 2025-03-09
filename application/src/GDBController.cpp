@@ -66,7 +66,6 @@ std::vector<std::string> GDBController::getMemoryDump(const std::string &startAd
 {
     // "x/10xg $rbp-80" <- print $rbp+8 (the ret address), $rbp, and 8 addresses below $rbp;
     std::ostringstream oss;
-    numOfAddresses--;
     oss << "x/" << numOfAddresses << "xg " << startAddr << "-" << (numOfAddresses - 2) * 8;
 
     std::string command = oss.str();

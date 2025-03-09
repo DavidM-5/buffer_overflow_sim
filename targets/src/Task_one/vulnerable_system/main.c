@@ -9,6 +9,16 @@
 #include "SecureDB.h"
 
 
+/*
+
+NOTE!
+-----
+USERNAME_MAX_LENGHT = 10
+PASSWORD_MAX_LENGHT = 10
+-----
+
+*/
+
 typedef struct {
   bool logged_in;
   UserData user;
@@ -30,6 +40,10 @@ void clear_screen() {
   #else
     system("clear"); // Linux and macOS
   #endif
+}
+
+void print_users() {
+  SecureDB_printDB();
 }
 
 void print_and_flush(const char *format, ...) {
@@ -92,7 +106,9 @@ const char* errorToString(Error_code err) {
 
 
 Error_code login(Session* session) {
-  char username[USERNAME_MAX_LENGHT];
+  __asm__ volatile ("" ::: "memory"); // Prevent reordering
+  char username[USERNAME_MAX_LENGHT] = {0};
+  __asm__ volatile ("" ::: "memory"); // Prevent reordering
   
   print_and_flush("Username: ");
   gets(username); // <-- ?
@@ -255,7 +271,7 @@ void handle_page(Page_Type* page, Session* session, bool* clearFlag) {
         break;
       }
 
-      SecureDB_printDB();
+      print_users();
       print_and_flush("\n");
 
       *clearFlag = false;

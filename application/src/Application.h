@@ -13,6 +13,7 @@
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
+#include <functional>
 #include <SDL2/SDL.h>
 
 #include "../../core/src/config.h"
@@ -27,6 +28,7 @@
 #include "StackVisualizer.h"
 #include "Console.h"
 #include "Button.h"
+#include "Paragraph.h"
 #include "GDBController.h"
 
 
@@ -99,6 +101,8 @@ namespace application
 
         void memoryDumpToStackView(const std::string& startAddr = "$rbp", int numOfAddresses = 10);
         void showFunctionsAddresses();
+
+        void setTasks();
 
     };
 
