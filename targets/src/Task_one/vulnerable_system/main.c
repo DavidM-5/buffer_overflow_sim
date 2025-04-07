@@ -131,7 +131,6 @@ Error_code login(Session* session) {
   if (fgets(password, PASSWORD_MAX_LENGHT, stdin))
     password[strcspn(password, "\n")] = '\0';
 
-
   if (strcmp(password, user.password) != 0) {
     return WRONG_PASSWORD;
   }
@@ -334,6 +333,15 @@ int main(int argc, char const *argv[])
   Page_Type currentPage = WELCOME_PAGE;
 
   bool clearSceenFlag = true;
+
+  UserData usr = {
+    .is_manager = true,
+    .is_active = true,
+    .username = "DavidM",
+    .password = "123456"
+  };
+  SecureDB_addNewUser(&usr);
+  print_users();
 
   Session session = {
     .logged_in = false,

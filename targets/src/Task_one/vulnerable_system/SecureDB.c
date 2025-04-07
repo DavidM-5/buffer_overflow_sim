@@ -74,11 +74,13 @@ int SecureDB_addNewUser(UserData* user) {
     
     // Encrypt username
     strncpy((char*)userToAdd.username, user->username, USERNAME_MAX_LENGHT - 1);
-    Encrypt((unsigned char*)userToAdd.username, (unsigned char*)KEY);
+    char encryptedUsername[256];
+    Encrypt((unsigned char*)userToAdd.username, (unsigned char*)KEY, encryptedUsername, sizeof(encryptedUsername));
     
     // Encrypt password
     strncpy((char*)userToAdd.password, user->password, PASSWORD_MAX_LENGHT - 1);
-    Encrypt((unsigned char*)userToAdd.password, (unsigned char*)KEY);
+    char encryptedPassword[256];
+    Encrypt((unsigned char*)userToAdd.password, (unsigned char*)KEY, encryptedPassword, sizeof(encryptedPassword));
 
 
     // Check if username already taken
@@ -91,11 +93,11 @@ int SecureDB_addNewUser(UserData* user) {
 
 
     // Create the SQL INSERT statement
-    char query[1024];
+    char query[2048];
     snprintf(query, sizeof(query), 
         "INSERT INTO users (is_manager, is_active, username, password) "
         "VALUES (%d, %d, '%s', '%s');", 
-        userToAdd.is_manager, userToAdd.is_active, userToAdd.username, userToAdd.password);
+        userToAdd.is_manager, userToAdd.is_active, encryptedUsername, encryptedPassword);
 
     execQuery(query, NULL, NULL, NULL);
 
@@ -112,13 +114,14 @@ int SecureDB_removeUser(const char* username) {
 
 
     // Encrypt username
-    char userNameToRemove[USERNAME_MAX_LENGHT*2] = {0};
+    char userNameToRemove[USERNAME_MAX_LENGHT] = {0};
     strncpy((char*)userNameToRemove, username, USERNAME_MAX_LENGHT - 1);
-    Encrypt((unsigned char*)userNameToRemove, (unsigned char*)KEY);
+    char encryptedUsername[256];
+    Encrypt((unsigned char*)userNameToRemove, (unsigned char*)KEY, encryptedUsername, sizeof(encryptedUsername));
     
 
     char condition[512];
-    snprintf(condition, sizeof(condition), "username = '%s'", userNameToRemove);
+    snprintf(condition, sizeof(condition), "username = '%s'", encryptedUsername);
 
     char command[1024];
     snprintf(command, sizeof(command), "DELETE FROM users WHERE %s;", condition);
@@ -141,13 +144,14 @@ int SecureDB_makeManager(const char* username) {
     // Encrypt username
     char userNameToMakeMangr[USERNAME_MAX_LENGHT*2] = {0};
     strncpy((char*)userNameToMakeMangr, username, USERNAME_MAX_LENGHT - 1);
-    Encrypt((unsigned char*)userNameToMakeMangr, (unsigned char*)KEY);
+    char encryptedUsername[256];
+    Encrypt((unsigned char*)userNameToMakeMangr, (unsigned char*)KEY, encryptedUsername, sizeof(encryptedUsername));
     
 
     char condition[512];
-    snprintf(condition, sizeof(condition), "username = '%s'", userNameToMakeMangr);
+    snprintf(condition, sizeof(condition), "username = '%s'", encryptedUsername);
 
-    char query[1024];
+    char query[2048];
     snprintf(query, sizeof(query), "UPDATE users SET is_manager = 1 WHERE %s;", condition);
     
     if (execQuery(query, NULL, NULL, NULL) != 0) {
@@ -167,11 +171,12 @@ int SecureDB_removeManager(const char* username) {
     // Encrypt username
     char userNameToMakeMangr[USERNAME_MAX_LENGHT*2] = {0};
     strncpy((char*)userNameToMakeMangr, username, USERNAME_MAX_LENGHT - 1);
-    Encrypt((unsigned char*)userNameToMakeMangr, (unsigned char*)KEY);
+    char encryptedUsername[256];
+    Encrypt((unsigned char*)userNameToMakeMangr, (unsigned char*)KEY, encryptedUsername, sizeof(encryptedUsername));
     
 
     char condition[512];
-    snprintf(condition, sizeof(condition), "username = '%s'", userNameToMakeMangr);
+    snprintf(condition, sizeof(condition), "username = '%s'", encryptedUsername);
 
     char query[1024];
     snprintf(query, sizeof(query), "UPDATE users SET is_manager = 0 WHERE %s;", condition);
@@ -194,11 +199,12 @@ int SecureDB_activateUser(const char* username) {
     // Encrypt username
     char userNameToMakeMangr[USERNAME_MAX_LENGHT*2] = {0};
     strncpy((char*)userNameToMakeMangr, username, USERNAME_MAX_LENGHT - 1);
-    Encrypt((unsigned char*)userNameToMakeMangr, (unsigned char*)KEY);
+    char encryptedUsername[256];
+    Encrypt((unsigned char*)userNameToMakeMangr, (unsigned char*)KEY, encryptedUsername, sizeof(encryptedUsername));
     
 
     char condition[512];
-    snprintf(condition, sizeof(condition), "username = '%s'", userNameToMakeMangr);
+    snprintf(condition, sizeof(condition), "username = '%s'", encryptedUsername);
 
     char query[1024];
     snprintf(query, sizeof(query), "UPDATE users SET is_active = 1 WHERE %s;", condition);
@@ -220,11 +226,12 @@ int SecureDB_deactivateUser(const char* username) {
     // Encrypt username
     char userNameToMakeMangr[USERNAME_MAX_LENGHT*2] = {0};
     strncpy((char*)userNameToMakeMangr, username, USERNAME_MAX_LENGHT - 1);
-    Encrypt((unsigned char*)userNameToMakeMangr, (unsigned char*)KEY);
+    char encryptedUsername[256];
+    Encrypt((unsigned char*)userNameToMakeMangr, (unsigned char*)KEY, encryptedUsername, sizeof(encryptedUsername));
     
 
     char condition[512];
-    snprintf(condition, sizeof(condition), "username = '%s'", userNameToMakeMangr);
+    snprintf(condition, sizeof(condition), "username = '%s'", encryptedUsername);
 
     char query[1024];
     snprintf(query, sizeof(query), "UPDATE users SET is_active = 0 WHERE %s;", condition);
@@ -241,22 +248,20 @@ void SecureDB_getUser(const char* username, UserData* dstUser) {
         return;
     }
 
-
     // Encrypt username for database lookup
-    char encryptedUserNameForLookup[USERNAME_MAX_LENGHT * 2] = { 0 };
-    strncpy((char*)encryptedUserNameForLookup, username, USERNAME_MAX_LENGHT - 1);
-    Encrypt((unsigned char*)encryptedUserNameForLookup, (unsigned char*)KEY);
+    char userNameForLookup[USERNAME_MAX_LENGHT] = { 0 };
+    strncpy((char*)userNameForLookup, username, USERNAME_MAX_LENGHT - 1);
+    char encryptedUsername[256];
+    Encrypt((unsigned char*)userNameForLookup, (unsigned char*)KEY, encryptedUsername, sizeof(encryptedUsername));
 
     // Prepare the query with the encrypted username
-    char query[1024];
+    char query[2048];
     snprintf(query, sizeof(query), 
         "SELECT is_manager, is_active, username, password FROM users WHERE username = '%s';", 
-        encryptedUserNameForLookup);
-
+        encryptedUsername);
 
     sqlite3_stmt *stmt;
     if (sqlite3_prepare_v2(DB, query, -1, &stmt, NULL) != SQLITE_OK) {
-        // fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
         dstUser->error_code = UNKNOWN_ERROR;
         return;
     }
@@ -268,26 +273,27 @@ void SecureDB_getUser(const char* username, UserData* dstUser) {
         dstUser->is_manager = sqlite3_column_int(stmt, 0);
         dstUser->is_active = sqlite3_column_int(stmt, 1);
 
-
-        // Copy encrypted username and password
-        const unsigned char *encryptedUsername = sqlite3_column_text(stmt, 2);
-        const unsigned char *encryptedPassword = sqlite3_column_text(stmt, 3);
-
-
+        // Get encrypted password from the database
+        const char *encryptedPassword = (const char *)sqlite3_column_text(stmt, 3);
+        
+        // Create buffer for decrypted password with proper size
         char decryptedPassword[PASSWORD_MAX_LENGHT] = { 0 };
-        strncpy((char*)decryptedPassword, encryptedPassword, PASSWORD_MAX_LENGHT - 1);
-        Decrypt((unsigned char*)decryptedPassword, (unsigned char*)KEY);
-
+        
+        // Directly decrypt the base64 encoded string from the database
+        Decrypt(encryptedPassword, (unsigned char*)KEY, decryptedPassword, sizeof(decryptedPassword));
 
         // Copy decrypted username and password to destination user
-        strcpy(dstUser->username, username);
-        memcpy(dstUser->password, decryptedPassword, PASSWORD_MAX_LENGHT);
+        strncpy(dstUser->username, username, USERNAME_MAX_LENGHT - 1);
+        strncpy(dstUser->password, decryptedPassword, PASSWORD_MAX_LENGHT - 1);
+        
+        // Ensure null termination
+        dstUser->username[USERNAME_MAX_LENGHT - 1] = '\0';
+        dstUser->password[PASSWORD_MAX_LENGHT - 1] = '\0';
 
         dstUser->error_code = SUCCESS;
     }
     else {
         // No user found
-        // fprintf(stderr, "No user found with username: %s\n", username);
         dstUser->error_code = USER_NOT_FOUND;
     }
 
@@ -373,41 +379,39 @@ static int isUserExists(void *data, int argc, char **argv, char **azColName) {
 }
 
 static int printDecryptedDB(void *data, int argc, char **argv, char **azColName) {
-    EncryptedUserData encryptedUser;
-
-    for(int i = 0; i < argc; i++) {
-        // Check the column names to assign the values to the corresponding fields
+    // Get the encrypted values
+    char *encryptedUsername = NULL;
+    char *encryptedPassword = NULL;
+    bool isManager = false;
+    bool isActive = false;
+    
+    for (int i = 0; i < argc; i++) {
         if (strcmp(azColName[i], "username") == 0) {
-            strncpy(encryptedUser.username, argv[i], USERNAME_MAX_LENGHT * 2);
-        }
-        else if (strcmp(azColName[i], "password") == 0) {
-            strncpy(encryptedUser.password, argv[i], PASSWORD_MAX_LENGHT * 2);
-        }
-        else if (strcmp(azColName[i], "is_manager") == 0) {
-            encryptedUser.is_manager = (strcmp(argv[i], "1") == 0);
-        }
-        else if (strcmp(azColName[i], "is_active") == 0) {
-            encryptedUser.is_active = (strcmp(argv[i], "1") == 0);
+            encryptedUsername = argv[i];
+        } else if (strcmp(azColName[i], "password") == 0) {
+            encryptedPassword = argv[i];
+        } else if (strcmp(azColName[i], "is_manager") == 0) {
+            isManager = (strcmp(argv[i], "1") == 0);
+        } else if (strcmp(azColName[i], "is_active") == 0) {
+            isActive = (strcmp(argv[i], "1") == 0);
         }
     }
-
-    // Decrypt user data
-    char decryptedUserName[USERNAME_MAX_LENGHT] = { 0 };
-    strncpy((char*)decryptedUserName, encryptedUser.username, USERNAME_MAX_LENGHT - 1);
-    Decrypt((unsigned char*)decryptedUserName, (unsigned char*)KEY);
     
-    char decryptedPassword[PASSWORD_MAX_LENGHT] = { 0 };
-    strncpy((char*)decryptedPassword, encryptedUser.password, PASSWORD_MAX_LENGHT - 1);
-    Decrypt((unsigned char*)decryptedPassword, (unsigned char*)KEY);
-
-
-    printf("| %-7s || %-10s || %-16s || %-16s |\n", 
-            encryptedUser.is_manager ? "manager" : "user", 
-            encryptedUser.is_active ? "active" : "not active", 
-            decryptedUserName, 
+    if (encryptedUsername && encryptedPassword) {
+        char decryptedUsername[USERNAME_MAX_LENGHT];
+        char decryptedPassword[PASSWORD_MAX_LENGHT];
+        
+        // Properly decrypt the base64 encoded strings
+        Decrypt(encryptedUsername, (unsigned char*)KEY, decryptedUsername, sizeof(decryptedUsername));
+        Decrypt(encryptedPassword, (unsigned char*)KEY, decryptedPassword, sizeof(decryptedPassword));
+        
+        printf("| %-7s || %-10s || %-16s || %-16s |\n", 
+            isManager ? "manager" : "user", 
+            isActive ? "active" : "not active", 
+            decryptedUsername, 
             decryptedPassword);
+    }
     
     printf("____________________________________________________________________\n");
-
     return 0;
 }

@@ -18,4 +18,3 @@ int SecureDB_deactivateUser(const char* username);
 void SecureDB_getUser(const char* username, UserData* dstUser);
 
 void SecureDB_printDB();
-

@@ -211,5 +211,3 @@ char aes_encrypt(unsigned char* input, unsigned char* output,unsigned char* key,
 
     return AES_SUCCESS;
 }
-
-

@@ -45,7 +45,11 @@ void aes_invRound(unsigned char* state, unsigned char* roundKey);
 void aes_invMain(unsigned char* state, unsigned char* expandedKey, int nbrRounds);
 char aes_decrypt(unsigned char* input, unsigned char* output, unsigned char* key, int size);
 
-void Encrypt(unsigned char* plaintext, unsigned char* key);
-void Decrypt(unsigned char* ciphertext, unsigned char* key);
+char* base64_encode_buf(const unsigned char* input, size_t len, char* output, size_t outSize);
+unsigned char base64_reverse(char c);
+unsigned char* base64_decode(const char* input, size_t* out_len);
+
+void Encrypt(const unsigned char* plaintext, unsigned char* key, char* output, size_t outputSize);
+void Decrypt(const char* base64Ciphertext, unsigned char* key, char* output, size_t outputSize);
 
 #endif // AES_H

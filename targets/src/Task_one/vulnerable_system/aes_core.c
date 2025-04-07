@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include "aes_utils.h"
 
+
+static const char base64_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
 // S-Box array
 unsigned char sbox[256] = {
     // 0     1    2      3     4    5     6     7      8    9     A      B    C     D     E     F
@@ -152,73 +155,137 @@ void expandKey(unsigned char* expandedKey,
     }
 }
 
-void Encrypt(unsigned char* plaintext, unsigned char* key) {
+
+char* base64_encode_buf(const unsigned char* input, size_t len, char* output, size_t outSize) {
+    size_t encodedLen = 4 * ((len + 2) / 3);
+    if (outSize < encodedLen + 1) return NULL;
+
+    size_t i, j;
+    for (i = 0, j = 0; i < len;) {
+        unsigned int octet_a = i < len ? input[i++] : 0;
+        unsigned int octet_b = i < len ? input[i++] : 0;
+        unsigned int octet_c = i < len ? input[i++] : 0;
+
+        unsigned int triple = (octet_a << 16) | (octet_b << 8) | octet_c;
+
+        output[j++] = base64_table[(triple >> 18) & 0x3F];
+        output[j++] = base64_table[(triple >> 12) & 0x3F];
+        output[j++] = base64_table[(triple >> 6) & 0x3F];
+        output[j++] = base64_table[triple & 0x3F];
+    }
+
+    for (size_t k = 0; k < (3 - (len % 3)) % 3; k++)
+        output[encodedLen - 1 - k] = '=';
+
+    output[encodedLen] = '\0';
+    return output;
+}
+
+unsigned char base64_reverse(char c) {
+    if ('A' <= c && c <= 'Z') return c - 'A';
+    if ('a' <= c && c <= 'z') return c - 'a' + 26;
+    if ('0' <= c && c <= '9') return c - '0' + 52;
+    if (c == '+') return 62;
+    if (c == '/') return 63;
+    return 0;
+}
+
+unsigned char* base64_decode(const char* input, size_t* out_len) {
+    size_t len = strlen(input);
+    if (len % 4 != 0) return NULL;
+
+    size_t padding = 0;
+    if (len >= 2 && input[len - 1] == '=' && input[len - 2] == '=') padding = 2;
+    else if (len >= 1 && input[len - 1] == '=') padding = 1;
+
+    *out_len = len / 4 * 3 - padding;
+    unsigned char* output = malloc(*out_len);
+    if (!output) return NULL;
+
+    size_t i, j;
+    for (i = 0, j = 0; i < len;) {
+        unsigned int sextet_a = input[i] == '=' ? 0 & i++ : base64_reverse(input[i++]);
+        unsigned int sextet_b = input[i] == '=' ? 0 & i++ : base64_reverse(input[i++]);
+        unsigned int sextet_c = input[i] == '=' ? 0 & i++ : base64_reverse(input[i++]);
+        unsigned int sextet_d = input[i] == '=' ? 0 & i++ : base64_reverse(input[i++]);
+
+        unsigned int triple = (sextet_a << 18) | (sextet_b << 12) | (sextet_c << 6) | sextet_d;
+
+        if (j < *out_len) output[j++] = (triple >> 16) & 0xFF;
+        if (j < *out_len) output[j++] = (triple >> 8) & 0xFF;
+        if (j < *out_len) output[j++] = triple & 0xFF;
+    }
+
+    return output;
+}
+
+
+void Encrypt(const unsigned char* plaintext, unsigned char* key, char* output, size_t outputSize) {
     int expandedKeySize = 176;
     unsigned char expandedKey[176];
 
     size_t plaintextLength = strlen((const char*)plaintext);
-    size_t paddedLength = plaintextLength + (AES_BLOCK_SIZE - (plaintextLength % AES_BLOCK_SIZE)); // paddedLength = 16 or 32 or ...
-    unsigned char ciphertextBuffer[1024];  // Ensure this buffer is large enough for your expected data.
+    size_t padValue = AES_BLOCK_SIZE - (plaintextLength % AES_BLOCK_SIZE);
+    size_t paddedLength = plaintextLength + padValue;
 
-    if (sizeof(ciphertextBuffer) < paddedLength) {
-        fprintf(stderr, "Buffer too small for padded plaintext.\n");
+    unsigned char* paddedPlaintext = malloc(paddedLength);
+    unsigned char* ciphertext = malloc(paddedLength);
+    if (!paddedPlaintext || !ciphertext) {
+        fprintf(stderr, "Memory allocation failed\n");
+        free(paddedPlaintext);
+        free(ciphertext);
         return;
     }
 
-    unsigned char* paddedPlaintext = malloc(paddedLength);
-    if (!paddedPlaintext) {
-        fprintf(stderr, "Memory allocation failed\n");
-        return;  // Check if malloc failed
-    }
     memcpy(paddedPlaintext, plaintext, plaintextLength);
-
-    // Apply PKCS7 padding
-    unsigned char padValue = AES_BLOCK_SIZE - (plaintextLength % AES_BLOCK_SIZE);
     memset(paddedPlaintext + plaintextLength, padValue, padValue);
 
-    // Expand the key
     expandKey(expandedKey, key, 16, expandedKeySize);
 
-    // Encrypt each block
     for (size_t i = 0; i < paddedLength / AES_BLOCK_SIZE; i++) {
-        aes_encrypt(paddedPlaintext + i * AES_BLOCK_SIZE, ciphertextBuffer + i * AES_BLOCK_SIZE, expandedKey, 16);
+        aes_encrypt(paddedPlaintext + i * AES_BLOCK_SIZE, ciphertext + i * AES_BLOCK_SIZE, expandedKey, 16);
     }
-    memcpy(plaintext, ciphertextBuffer, paddedLength);
-    plaintext[paddedLength] = '\0';  // Add null-terminator
+
+    if (!base64_encode_buf(ciphertext, paddedLength, output, outputSize)) {
+        fprintf(stderr, "Base64 encoding failed or output buffer too small.\n");
+    }
 
     free(paddedPlaintext);
+    free(ciphertext);
 }
 
 
-void Decrypt(unsigned char* ciphertext, unsigned char* key) {
+void Decrypt(const char* base64Ciphertext, unsigned char* key, char* output, size_t outputSize) {
     int expandedKeySize = 176;
     unsigned char expandedKey[176];
 
-    size_t ciphertextLength = strlen((const char*)ciphertext);
-    unsigned char plaintextBuffer[1024];  // Ensure this buffer is large enough for your expected data.
-
-    if (sizeof(plaintextBuffer) < ciphertextLength) {
-        fprintf(stderr, "Buffer too small for decrypted data.\n");
+    size_t cipherLen;
+    unsigned char* ciphertext = base64_decode(base64Ciphertext, &cipherLen);
+    if (!ciphertext) {
+        fprintf(stderr, "Base64 decoding failed\n");
         return;
     }
 
-    // Expand the key
+    unsigned char* plaintext = malloc(cipherLen);
+    if (!plaintext) {
+        fprintf(stderr, "Memory allocation failed\n");
+        free(ciphertext);
+        return;
+    }
+
     expandKey(expandedKey, key, 16, expandedKeySize);
 
-    // Decrypt each block
-    for (size_t i = 0; i < ciphertextLength / AES_BLOCK_SIZE; i++) {
-        aes_decrypt(ciphertext + i * AES_BLOCK_SIZE, plaintextBuffer + i * AES_BLOCK_SIZE, expandedKey, 16);
+    for (size_t i = 0; i < cipherLen / AES_BLOCK_SIZE; i++) {
+        aes_decrypt(ciphertext + i * AES_BLOCK_SIZE, plaintext + i * AES_BLOCK_SIZE, expandedKey, 16);
     }
 
-    // Remove PKCS7 padding
-    unsigned char lastByte = plaintextBuffer[ciphertextLength - 1];
-    if (lastByte > 0 && lastByte <= AES_BLOCK_SIZE) {  // Validate padding
-        size_t realLength = ciphertextLength - lastByte;
-        memcpy(ciphertext, plaintextBuffer, realLength);
-        ciphertext[realLength] = '\0'; // Ensure null-termination
-    }
-    else {
-        return;
-    }
+    unsigned char padValue = plaintext[cipherLen - 1];
+    size_t realLength = cipherLen - padValue;
+    if (realLength >= outputSize) realLength = outputSize - 1;
+
+    memcpy(output, plaintext, realLength);
+    output[realLength] = '\0';
+
+    free(ciphertext);
+    free(plaintext);
 }
-
