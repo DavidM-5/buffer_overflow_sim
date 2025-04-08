@@ -13,6 +13,7 @@
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
+#include <cctype>
 #include <functional>
 #include <SDL2/SDL.h>
 
@@ -45,6 +46,13 @@ namespace application
         void run();
 
     private:
+        enum UserTask {
+            PUT_BREAKPOINT_AT_PROBLEM_LINE = 0,
+            ENTER_PAYLOAD,
+            LOGIN_AS_MANAGER,
+            TOTAL_TASKS
+        };
+
         core::Window m_window;
         core::Renderer m_renderer;
         core::InputManager m_inputMngr;
@@ -52,8 +60,19 @@ namespace application
         std::vector<std::unique_ptr<application::Panel>> m_panels;
         application::Panel m_mainPanel;
 
+        
+        // List of all the tasks the user should do.
+        // True if the task completed, False otherwise.
+        bool m_userTasksStatus[TOTAL_TASKS] = {0};
+
+        bool m_userInLoginFunction;
+        std::string m_printUsersFunctionAddress;
+
+
         int m_borderWidth;
         int m_innerBorderWidth;
+
+        application::Console* m_targetConsole;
 
         application::Border m_bordVert;
         application::Border m_bordHor;
@@ -69,15 +88,15 @@ namespace application
 
         std::unordered_map<std::string, SDL_Color> formatMap; // temp
 
-        u_int32_t m_latestBreakpointLine;
-        std::unordered_set<u_int32_t> m_userBreakpoints;
-        std::unordered_set<u_int32_t> m_requiredBreakpoints;
+        int m_userLatestBreakpoint;
 
 
         std::shared_ptr<GDBController> gdb;
 
         uint64_t count = 0xAC342BFC178205A0;// temporary
         uint64_t count2 = 0; // temporary
+
+        
 
     private:
         void update(SDL_Event& event);
@@ -97,12 +116,18 @@ namespace application
         bool loadTargetSourceCodeFromPath(const std::string& filepath);
         std::set<std::string> extractFunctionNamesFromFile(const std::string& filePath);
 
+        bool fileExists(const std::string& filePath);
         bool compileFile(const std::string& commandPath);
 
         void memoryDumpToStackView(const std::string& startAddr = "$rbp", int numOfAddresses = 10);
+        void fillStackViewLoginFunc();
         void showFunctionsAddresses();
 
-        void setTasks();
+        std::string getRequieredAddressInput();
+
+        void markTaskDone(int taskNum);
+
+        bool is_number(const std::string& s);
 
     };
 

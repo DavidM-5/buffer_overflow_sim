@@ -5,6 +5,7 @@ application::Console::Console(int posX, int posY, int w, int h, SDL_Color color)
                               m_activeLine(posX, posY, w, 20, {255, 255, 255, 255}, false),
                               m_thisWidgetSelected(false),
                               m_gdbAttached(false),
+                              m_locked(false),
                               m_renderStartLine(0)
 {
     m_activeLine.useFont("JetBrainsMono-Medium.ttf", 14);
@@ -48,7 +49,11 @@ void application::Console::handleEvents(const core::InputManager &inputMngr)
     std::string input = inputMngr.getPressedKey();
 
     if (input == "\n") {
-        if (m_gdbAttached) {
+        if (m_locked)
+            return;
+
+        // TODO: Remove lines below. The console SHOULD NOT send commands to gdb.
+        if (m_gdbAttached) { // send commands to gdb / target
             if (m_activeLine.getText().substr(2) == "c" || m_activeLine.getText().substr(2) == "continue")
                 m_gdb->sendCommand("continue");
             else
@@ -112,6 +117,24 @@ void application::Console::attachGDB(const std::shared_ptr<GDBController> &gdb)
 {
     m_gdb = gdb;
     m_gdbAttached = true;
+}
+
+std::string application::Console::getLastInput(size_t n)
+{
+    if (n == 0 || m_lines.empty()) return "";
+
+    // Determine the start index to get the last n strings
+    size_t start = m_lines.size() > n ? m_lines.size() - n : 0;
+
+    std::ostringstream result;
+    for (size_t i = start; i < m_lines.size(); ++i) {
+        result << m_lines[i].getText().substr(2);
+        if (i != m_lines.size() - 1) {
+            result << "\n"; // Add space between strings
+        }
+    }
+
+    return result.str();
 }
 
 void application::Console::printToConsole(const std::string &str)
@@ -270,64 +293,6 @@ void application::Console::setWidth(int newW)
     for (application::TextLine& tline : m_lines) {
         tline.setWidth(newW);
     }
-}
-
-int application::Console::findNthWordFromEnd(const std::string &str, int n)
-{
-    if (n <= 0) {
-        return -1; // Invalid input
-    }
-
-    int wordCount = 0;
-    int index = str.length() - 1;
-
-    // Skip trailing whitespace
-    while (index >= 0 && std::isspace(str[index])) {
-        index--;
-    }
-
-    // Iterate from the end to find the n-th word
-    while (index >= 0) {
-        if (std::isspace(str[index])) {
-            wordCount++;
-            if (wordCount == n) {
-                // Return the starting index of the n-th word
-                return index + 1;
-            }
-            // Skip consecutive spaces
-            while (index >= 0 && std::isspace(str[index])) {
-                index--;
-            }
-        } else {
-            index--;
-        }
-    }
-
-    // If the n-th word is the first word in the string
-    if (wordCount + 1 == n) {
-        return 0;
-    }
-
-    return -1; // n-th word not found
-}
-
-std::string application::Console::trimToLastNWords(const std::string &str, int n)
-{
-    int startIndex = findNthWordFromEnd(str, n);
-    if (startIndex == -1) {
-        return ""; // n-th word not found, return an empty string
-    }
-
-    // Extract the substring starting from the n-th word
-    std::string result = str.substr(startIndex);
-
-    // Ensure the result does not start with a space
-    size_t firstNonSpace = result.find_first_not_of(' ');
-    if (firstNonSpace != std::string::npos) {
-        result = result.substr(firstNonSpace);
-    }
-
-    return result;
 }
 
 bool application::Console::isMouseInsideTransform(vector2i mousePos)

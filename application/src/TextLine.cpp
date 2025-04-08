@@ -219,6 +219,13 @@ void application::TextLine::setHeight(int newH)
     m_updated = true;
 }
 
+void application::TextLine::setColor(const SDL_Color &color)
+{
+    Widget::setColor(color);
+
+    m_updated = true;
+}
+
 bool application::TextLine::loadFont(const std::string &fontName, int size)
 {
     if (!s_ttfInitialized) {

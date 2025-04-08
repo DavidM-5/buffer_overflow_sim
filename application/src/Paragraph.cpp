@@ -23,7 +23,7 @@ application::Paragraph::Paragraph(const Paragraph &other) :
 
 void application::Paragraph::render(core::Renderer &renderer, const SDL_Rect *srcRect, const SDL_Rect *dstRect)
 {
-    Widget::render(renderer);
+    // Widget::render(renderer);
 
     for (application::TextLine& tline : m_lines) {
         tline.render(renderer);
@@ -144,5 +144,14 @@ void application::Paragraph::setHeight(int newH)
 
     for (TextLine& tline : m_lines) {
         tline.setHeight(newH);
+    }
+}
+
+void application::Paragraph::setColor(const SDL_Color &color)
+{
+    Widget::setColor(color);
+
+    for (TextLine& tline : m_lines) {
+        tline.setColor(color);
     }
 }

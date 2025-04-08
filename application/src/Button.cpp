@@ -40,9 +40,9 @@ void application::Button::onClick(Callback callback)
 
 void application::Button::addDeltaTransform(int x, int y, int w, int h)
 {
-    Widget::addDeltaTransform(x, y, w, h);
+    Widget::addDeltaTransform(x, y, 0, 0);
 
-    m_textLine.addDeltaTransform(x, y, w, h);
+    m_textLine.addDeltaTransform(x, y, 0, 0);
 }
 
 bool application::Button::isMouseInsideTransform(vector2i mousePos)

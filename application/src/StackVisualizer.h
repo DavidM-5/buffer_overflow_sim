@@ -27,7 +27,7 @@ namespace application
         void push(const std::string& str);
         void pop();
 
-        void selectSlot(int slot);
+        void selectBPSlot(int slot);
 
         void clear();
 
@@ -35,11 +35,12 @@ namespace application
 
     private:
         std::vector<std::unique_ptr<application::TextLine>> m_slots;
+        application::TextLine m_bpText;
         
         int m_slotsAmount;
         int m_slotHeight;
 
-        int m_selectedSlot;
+        int m_selectedBpSlot;
         
         std::string m_font;
         int m_fontSize;

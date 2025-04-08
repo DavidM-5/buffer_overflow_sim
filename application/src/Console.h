@@ -24,7 +24,14 @@ namespace application
 
         void attachGDB(const std::shared_ptr<GDBController>& gdb);
 
+        std::string getLastInput(size_t n = 1);
+        std::string getCurrentInput() { return m_activeLine.getText().substr(2); }
+
         void printToConsole(const std::string& str);
+
+        void lock() { m_locked = true; }
+        void unlock() { m_locked = false; }
+        bool isLocked() { return m_locked; }
 
         void addDeltaTransform(int x = 0, int y = 0, int w = 0, int h = 0);
         void setWidth(int newW);
@@ -39,12 +46,11 @@ namespace application
         bool m_thisWidgetSelected;
         bool m_gdbAttached;
 
+        bool m_locked;
+
         int m_renderStartLine;
 
     private:
-        int findNthWordFromEnd(const std::string& str, int n);
-        std::string trimToLastNWords(const std::string& str, int n);
-
         bool isMouseInsideTransform(vector2i mousePos);
 
     };

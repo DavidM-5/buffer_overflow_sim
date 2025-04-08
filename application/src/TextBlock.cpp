@@ -1,9 +1,9 @@
 #include "TextBlock.h"
 
-application::TextBlock::TextBlock(int posX, int posY, int w, int h, SDL_Color color, u_int32_t* latesBreakpointLine, int gutterWidth) : 
+application::TextBlock::TextBlock(int posX, int posY, int w, int h, SDL_Color color, int gutterWidth, int* latestBreakpoint) : 
                                   Widget(posX, posY, w, h, color), m_GUTTER_WIDTH(gutterWidth),
                                   m_renderStartLine(0), m_ignoreNotFittedLine(false),
-                                  m_latesBreakpointLine(*latesBreakpointLine)
+                                  m_latestBreakpoint(latestBreakpoint)
 {
 }
 
@@ -227,7 +227,9 @@ void application::TextBlock::handleEvents(const core::InputManager &inputMngr)
                 if (m_renderStartLine + lineNumber <= m_lines.size()) {
                     m_lines[m_renderStartLine + lineNumber - 1].breakpoint = !m_lines[m_renderStartLine + lineNumber - 1].breakpoint;
 
-                    m_latesBreakpointLine = m_renderStartLine + lineNumber;
+                    if (m_latestBreakpoint) {
+                        *m_latestBreakpoint = m_renderStartLine + lineNumber;
+                    }
                 }
             }
         }

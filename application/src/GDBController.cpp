@@ -125,7 +125,7 @@ std::string GDBController::getAddress(const std::string &name)
     std::string command = "info address " + name;
 
     sendCommand(command);
-    usleep(100000); // Give time for the command to process
+    usleep(150000); // Give time for the command to process
     std::string output = getGdbOutput();
     
     // if (output.length() < 6) return "";

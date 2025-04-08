@@ -15,22 +15,6 @@ m_borderHorizontalCenterPanelBottom(false,
                                     SDL_Color{255, 120, 255, 120}),
 */
 
-/*
-
-Tasks:
-1) Put a breakpoint on a suspected function
-    .
-    .
-    .
-
-*/
-
-// TEMPORARY \/\/\/
-void printHello() {
-    std::cout << "Hello, World!" << std::endl;
-}
-// TEMPORARY /\/\/\
-
 application::Application::Application() : m_window("Buffer Overflow Simulator", WINDOW_WIDTH, WINDOW_HEIGHT),
                                           m_bordVert(true, 2*WINDOW_WIDTH/3-105, 0, 10, WINDOW_HEIGHT),
                                           m_bordHor(false, 0, 2*WINDOW_HEIGHT/3-5, 2*WINDOW_WIDTH/3-100, 10),
@@ -47,8 +31,10 @@ application::Application::Application() : m_window("Buffer Overflow Simulator", 
                                                                 m_mainPanel.getHeight() - m_borderWidth * 2,
                                                                 SDL_Color{0xFF, 0xFF, 0xFF, 0x00}),
                                           m_mainPanel(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, {0x2D, 0x2D, 0x2D, 0xFF}),
-                                          m_borderWidth(10), m_innerBorderWidth(10), m_latestBreakpointLine(0),
-                                          m_requiredBreakpoints({82})
+                                          m_borderWidth(10), m_innerBorderWidth(10),
+                                          m_userLatestBreakpoint(0),
+                                          m_userInLoginFunction(false),
+                                          m_targetConsole(nullptr)
 {
     initFormatMap();
 }
@@ -61,10 +47,27 @@ bool application::Application::init()
 
     initPanels();
 
+    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-center_bottom");
+    application::Widget* w = parentWidget->getWidget("Console-console");
+    m_targetConsole = static_cast<application::Console*>(w);
+
+    if (!m_targetConsole)
+        return false;
+
+
     if (!loadTargetSourceCodeFromPath("targets/src/Task_one/vulnerable_system/main.c")) {
         std::cerr << "Failed to load source code." << std::endl;
         return false;
     }
+
+    // Compile the target program if not already compiled.
+    if (!fileExists("./targets/compiled/t1")) {
+        if (!compileFile("targets/src/Task_one/compile_command_linux.txt")) {
+            std::cerr << "Failed to compile target code." << std::endl;
+            return false;
+        }
+    }
+
 
     return true;
 }
@@ -80,12 +83,6 @@ std::string hexToString(uint64_t hexValue) {
 void application::Application::run()
 {
     /*
-    if (!compileFile("targets/src/Task_one/compile_command_linux.txt")) {
-        std::cerr << "Failed to compile target code." << std::endl;
-        return;
-    }*/
-
-    /*
     ============================
         IDEA!!!
         Instead of passing the actual string value to gdb,
@@ -98,15 +95,15 @@ void application::Application::run()
 
     gdb = std::make_shared<GDBController>("./t1", "./targets/compiled");
 
-    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-center_bottom");
-    application::Widget* w = parentWidget->getWidget("Console-console");
-    application::Console* con = static_cast<application::Console*>(w);
-
-    con->attachGDB(gdb);
+    // Attach the gdb proccess to the console widget,
+    // so that the console will be able to show gdb output.
+    m_targetConsole->attachGDB(gdb);
 
     gdb->sendCommand("break gets");
     showFunctionsAddresses();
 
+    m_printUsersFunctionAddress = getRequieredAddressInput();
+    std::cout << "REQ ADDRESS: " << m_printUsersFunctionAddress << std::endl;
 
     SDL_Event event;
 
@@ -175,25 +172,9 @@ void application::Application::run()
                 if (m_inputMngr.getPressedKey() == "d") {
                     std::cout << "-> Memory dump" << std::endl;
                     
-                    memoryDumpToStackView("$rbp", 12);
-
-                    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
-                    application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");
-                    application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(w);
-
-                    stackV->selectSlot(1);
+                    fillStackViewLoginFunc();
                 }
 
-                if (m_inputMngr.getPressedKey() == "p") {
-                    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-center_bottom");
-                    application::Widget* w = parentWidget->getWidget("Console-console");
-                    application::Console* con = static_cast<application::Console*>(w);
-
-                    con->printToConsole("abcdefg");
-                    con->printToConsole("012345678901234567890123456789012345678901234567890123456789");
-                    con->printToConsole("Hello, \n World!");
-
-                }
                 // temporary end /\/\/\.
             }
 
@@ -216,58 +197,46 @@ void application::Application::update(SDL_Event& event)
 
     m_mainPanel.handleEvents(m_inputMngr);
 
+
     m_borderVerticalLeft.handleEvents(m_inputMngr);
     m_borderVerticalRight.handleEvents(m_inputMngr);
 
-    if (m_latestBreakpointLine > 0) {
-        if (m_userBreakpoints.find(m_latestBreakpointLine) != m_userBreakpoints.end()) {
-            m_userBreakpoints.erase(m_latestBreakpointLine);
-
-            std::ostringstream command;
-
-            command << "info line targets/src/Task_one/vulnerable_system/main.c:" << m_latestBreakpointLine;
-            gdb->sendCommand(command.str());
-
-            // std::string rawOutput = gdb->readOutput();
-            std::string formattedOutput = gdb->getGdbOutput();
-
-            if (formattedOutput.find("but contains no code.") == std::string::npos) {
-                std::ostringstream command2;
-
-                command2 << "clear " << m_latestBreakpointLine;
-                gdb->sendCommand(command2.str());
-
-                std::cout << "Command: " << command2.str() << std::endl;
-            }
+    
+    std::string consoleInput = m_targetConsole->getLastInput(2);
+    if (!consoleInput.empty()) {
+        std::string_view reqLoginText = "1\n"
+                                        "Username: ";
+        
+        if (consoleInput == reqLoginText) {
+            m_userInLoginFunction = true;
         }
         else {
-            m_userBreakpoints.insert(m_latestBreakpointLine);
-
-            std::ostringstream command;
-
-            command << "info line targets/src/Task_one/vulnerable_system/main.c:" << m_latestBreakpointLine;
-            gdb->sendCommand(command.str());
-
-            // std::string rawOutput = gdb->readOutput();
-            std::string formattedOutput = gdb->getGdbOutput();
-
-            if (formattedOutput.find("but contains no code.") == std::string::npos) {
-                std::ostringstream command2;
-                command2 << "break " << m_latestBreakpointLine;
-                gdb->sendCommand(command2.str());
-                
-                std::cout << "Command: " << command2.str() << std::endl;
-            }
+            m_userInLoginFunction = false;
         }
-
-        // std::string rawOutput = gdb->readOutput();
-        std::string formattedOutput = gdb->getGdbOutput();
-
-        std::cout << formattedOutput << std::endl;
-
-        m_latestBreakpointLine = 0;
     }
+    
+    // Check if the user put the breakpoint at 
+    // the correct line and act accordingly.
+    if (!m_userTasksStatus[PUT_BREAKPOINT_AT_PROBLEM_LINE]) {
+        if (m_userLatestBreakpoint == 114) {
+            m_userTasksStatus[PUT_BREAKPOINT_AT_PROBLEM_LINE] = true;
+            markTaskDone(1);
+        }
+    }
+    else if (!m_userTasksStatus[ENTER_PAYLOAD] && m_userInLoginFunction) { // The user put the breakpoint and can continue to the next step
+        if (!m_targetConsole->isLocked())
+            m_targetConsole->lock();
+        
+        std::string userInput = m_targetConsole->getCurrentInput();
+        int neededLenght = 10 + m_printUsersFunctionAddress.length(); // 10 A's (dummy input) + the function address
 
+        if (userInput.length() < neededLenght) { /* do nothing */ }
+        else if (userInput.substr(10, m_printUsersFunctionAddress.length()) == m_printUsersFunctionAddress) {
+            m_targetConsole->unlock();
+            m_userTasksStatus[ENTER_PAYLOAD] = true;
+            markTaskDone(2);
+        }
+    }
 }
 
 void application::Application::render()
@@ -377,37 +346,49 @@ void application::Application::initLeftPanels()
     
     auto task1 = std::make_unique<application::Paragraph>(
         label->getPosition().x, label->getPosition().y + label->getHeight() + 15,
-        label->getWidth(), 75,
+        label->getWidth(), 85,
         SDL_Color{0xFF, 0xFF, 0xFF, 0x00},
         vector2i{m_borderWidth, m_borderWidth},
         "JetBrainsMono-Light.ttf", 16, 20
     );
-    task1->setText("1. put a breakpoint at the line with unsafe input.");
+    task1->setText("1) put a breakpoint at the line with unsafe input.");
 
 
     auto task2 = std::make_unique<application::Paragraph>(
         label->getPosition().x, task1->getPosition().y + task1->getHeight() + 15,
-        label->getWidth(), 75,
+        label->getWidth(), 205,
         SDL_Color{0xFF, 0xFF, 0xFF, 0x00},
         vector2i{m_borderWidth, m_borderWidth},
         "JetBrainsMono-Light.ttf", 16, 20
     );
-    task2->setText("2. Enter the payload to overflow the buffer.");
+    task2->setText("2) Enter the payload to overflow the buffer, followed by the function address you want to replace the return address with. (In little endian format)");
 
+    /*
+    auto task3 = std::make_unique<application::Paragraph>(
+        label->getPosition().x, task2->getPosition().y + task2->getHeight() + 15,
+        label->getWidth(), 135,
+        SDL_Color{0xFF, 0xFF, 0xFF, 0x00},
+        vector2i{m_borderWidth, m_borderWidth},
+        "JetBrainsMono-Light.ttf", 16, 20
+    );
+    task3->setText("3) Enter the function address you want to replace the return address with.");
+    */
 
     auto task3 = std::make_unique<application::Paragraph>(
         label->getPosition().x, task2->getPosition().y + task2->getHeight() + 15,
-        label->getWidth(), 75,
+        label->getWidth(), 100,
         SDL_Color{0xFF, 0xFF, 0xFF, 0x00},
         vector2i{m_borderWidth, m_borderWidth},
         "JetBrainsMono-Light.ttf", 16, 20
     );
-    task3->setText("3. Enter the function address you want to replace the return address with.");
+    task3->setText("3) Read the output and login as a manager.");
+
 
     leftPanel->addWidget("Label", std::move(label));
     leftPanel->addWidget("Paragraph-Task1", std::move(task1));
     leftPanel->addWidget("Paragraph-Task2", std::move(task2));
-    leftPanel->addWidget("Paragraph-Task3", std::move(task3));
+    // leftPanel->addWidget("Paragraph-Task3", std::move(task3));
+    leftPanel->addWidget("Paragraph-Task4", std::move(task3));
 
     // ===========================
     // ===========================
@@ -441,7 +422,8 @@ void application::Application::initCenterPanels()
         0 + m_innerBorderWidth, label->getPosition().y + label->getHeight() + 15,
         label->getWidth(), centerTopPanel->getHeight() - label->getPosition().y - label->getHeight() - 25 - m_innerBorderWidth,
         SDL_Color{0xFF, 0xFF, 0xFF, 0xFF},
-        &m_latestBreakpointLine
+        30,
+        &m_userLatestBreakpoint
     );
 
     centerTopPanel->addWidget("Label", std::move(label));
@@ -489,7 +471,7 @@ void application::Application::initCenterPanels()
     );
     
     label->useFont("JetBrainsMono-Bold.ttf", 18);
-    label->appendText("Console", true);
+    label->appendText("Console - Vulnerable Program", true);
 
     auto console = std::make_unique<application::Console>(
         0 + m_innerBorderWidth, label->getPosition().y + label->getHeight() + 10,
@@ -530,7 +512,6 @@ void application::Application::initRightPanels()
         0 + m_innerBorderWidth + 15, label->getPosition().y + label->getHeight() + 10,
         label->getWidth() - 15, rightTopPanel->getHeight() - label->getPosition().y - label->getHeight() - m_innerBorderWidth * 2,
         SDL_Color{0xFF, 0xFF, 0xFF, 0xFF},
-        nullptr,
         0
     );
     
@@ -558,9 +539,9 @@ void application::Application::initRightPanels()
     
     auto stackView = std::make_unique<application::StackVisualizer>(
         rightBottomPanel->getWidth() / 2 - 200 / 2, label->getPosition().y + 45,
-        200, rightBottomPanel->getHeight() - label->getPosition().y - label->getHeight() - 25 - m_innerBorderWidth,
+        200, rightBottomPanel->getHeight() - label->getPosition().y - label->getHeight() - 25 - m_innerBorderWidth - 40,
         SDL_Color{0xFF, 0xFF, 0xFF, 0xDF},
-        14, "JetBrainsMono-Bold.ttf", 16
+        10, "JetBrainsMono-Bold.ttf", 17
     );
 
     label->useFont("JetBrainsMono-Bold.ttf", 18);
@@ -644,7 +625,12 @@ std::set<std::string> application::Application::extractFunctionNamesFromFile(con
     return functionNames;
 }
 
-bool application::Application::compileFile(const std::string& commandPath)
+bool application::Application::fileExists(const std::string &filePath)
+{
+    return std::filesystem::exists(filePath);
+}
+
+bool application::Application::compileFile(const std::string &commandPath)
 {
     std::string compileCommand;
 
@@ -675,6 +661,26 @@ void application::Application::memoryDumpToStackView(const std::string &startAdd
     gdb->getGdbOutput(); // Clear buffers
 }
 
+void application::Application::fillStackViewLoginFunc()
+{
+    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
+    application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");
+    application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(w);
+    
+    std::vector<std::string> addresses = gdb->getMemoryDump("$rbp", 2);
+
+    for (const std::string& addr : addresses) {
+        stackV->push(addr);
+    }
+
+    stackV->push("0x0000000000000000");
+    stackV->push("0x0000000000000000");
+    stackV->push("...");
+    stackV->push("...");
+
+    stackV->selectBPSlot(1);
+}
+
 void application::Application::showFunctionsAddresses()
 {
     std::set<std::string> functions = extractFunctionNamesFromFile("targets/src/Task_one/vulnerable_system/main.c");
@@ -691,9 +697,64 @@ void application::Application::showFunctionsAddresses()
     }
 }
 
-void application::Application::setTasks()
+std::string application::Application::getRequieredAddressInput()
 {
-    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
-    application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");
-    application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(w);
+    std::string printFunctionAddress = gdb->getAddress("print_users");
+
+    if (printFunctionAddress.empty())
+        return "";
+    
+    std::string hexPart = printFunctionAddress.substr(2); // Remove "0x" prefix
+    hexPart.pop_back(); // Remove "." at the end
+
+    // Pad with '0' at the front to make it 16 characters
+    if (hexPart.length() < 16) {
+        hexPart.insert(0, 16 - hexPart.length(), '0');
+    }
+
+    std::string result;
+
+    // Process 2 characters at a time in reverse
+    for (int i = hexPart.length() - 2; i >= 0; i -= 2) {
+        result += "\\0x";
+        result += hexPart.substr(i, 2);
+    }
+
+    return result;
+}
+
+void application::Application::markTaskDone(int taskNum)
+{
+    std::string widgetName;
+
+    switch (taskNum)
+    {
+    case 1:
+        widgetName = "Paragraph-Task1";
+        break;
+    case 2:
+        widgetName = "Paragraph-Task2";
+        break;
+    case 3:
+        widgetName = "Paragraph-Task4";
+        break;
+    
+    default:
+        return;
+    }
+
+    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-left");
+    application::Widget* w = parentWidget->getWidget(widgetName);
+    application::Paragraph* task = static_cast<application::Paragraph*>(w);
+
+    task->setColor(SDL_Color{0x05, 0xCD, 0x00, 0xFF});
+    task->appendText("  DONE!");
+
+}
+
+bool application::Application::is_number(const std::string &s)
+{
+    std::string::const_iterator it = s.begin();
+    while (it != s.end() && std::isdigit(*it)) ++it;
+    return !s.empty() && it == s.end();
 }

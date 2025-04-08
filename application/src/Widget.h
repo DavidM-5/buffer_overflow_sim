@@ -29,6 +29,8 @@ namespace application
         virtual int getHeight() { return m_transform.h; }
         virtual void setHeight(int newH) { m_transform.h = newH; }
 
+        virtual void setColor(const SDL_Color &color) { m_mainColor = color; }
+
         virtual Widget* getWidget(std::string name) { return nullptr; }
         
     protected:

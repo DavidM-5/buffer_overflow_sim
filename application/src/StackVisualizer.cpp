@@ -5,9 +5,15 @@ application::StackVisualizer::StackVisualizer(int posX, int posY, int w, int h, 
                                               m_slotsAmount(slotsAmount), m_slotHeight(h / slotsAmount),
                                               m_font(font),
                                               m_fontSize(fontSize),
-                                              m_selectedSlot(-1)
+                                              m_selectedBpSlot(-1)
 {
     application::TextLine::loadFont(font, fontSize);
+
+    m_bpText.useFont(font, fontSize);
+    m_bpText.appendText("bp-> ", true);
+
+    m_bpText.setHeight(m_slotHeight);
+    m_bpText.setWidth(50);
 }
 
 void application::StackVisualizer::render(core::Renderer &renderer, const SDL_Rect* srcRect, const SDL_Rect* dstRect)
@@ -20,8 +26,14 @@ void application::StackVisualizer::render(core::Renderer &renderer, const SDL_Re
                             m_slots[startIdx + i]->getWidth(),
                             m_slotHeight};
 
-        if (startIdx + i == m_selectedSlot) {
+        if (startIdx + i == m_selectedBpSlot) {
             renderer.drawRect(dstRect, {0x71, 0x71, 0xD5, 0xFF});
+            
+            SDL_Rect bpDstRect = { dstRect.x - m_bpText.getWidth(),
+                                   dstRect.y,
+                                   m_bpText.getWidth(),
+                                   m_bpText.getHeight() };
+            m_bpText.render(renderer, nullptr, &bpDstRect);
         }
 
         m_slots[startIdx + i]->render(renderer, nullptr, &dstRect);
@@ -60,9 +72,9 @@ void application::StackVisualizer::pop()
     }
 }
 
-void application::StackVisualizer::selectSlot(int slot)
+void application::StackVisualizer::selectBPSlot(int slot)
 {
-    m_selectedSlot = slot;
+    m_selectedBpSlot = slot;
 }
 
 void application::StackVisualizer::clear()

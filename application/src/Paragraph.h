@@ -32,6 +32,8 @@ namespace application
         void setWidth(int newW);
         void setHeight(int newH);
 
+        void setColor(const SDL_Color &color);
+
     private:
         std::vector<TextLine> m_lines;
 

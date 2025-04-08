@@ -43,6 +43,7 @@ namespace application {
         void addDeltaTransform(int x = 0, int y = 0, int w = 0, int h = 0);
         void setWidth(int newW);
         void setHeight(int newH);
+        void setColor(const SDL_Color &color);
 
         int getLenght() { return m_text.length(); }
         std::string getText() { return m_text; }
