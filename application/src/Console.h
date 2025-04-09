@@ -33,6 +33,8 @@ namespace application
         void unlock() { m_locked = false; }
         bool isLocked() { return m_locked; }
 
+        void clearInputLine();
+
         void addDeltaTransform(int x = 0, int y = 0, int w = 0, int h = 0);
         void setWidth(int newW);
 

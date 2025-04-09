@@ -66,13 +66,15 @@ namespace application
         bool m_userTasksStatus[TOTAL_TASKS] = {0};
 
         bool m_userInLoginFunction;
-        std::string m_printUsersFunctionAddress;
+        std::string m_requieredAddressInput;
+        uint64_t m_requieredFunctionAddress;
 
 
         int m_borderWidth;
         int m_innerBorderWidth;
 
         application::Console* m_targetConsole;
+        application::StackVisualizer* m_stackView;
 
         application::Border m_bordVert;
         application::Border m_bordHor;

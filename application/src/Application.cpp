@@ -34,7 +34,8 @@ application::Application::Application() : m_window("Buffer Overflow Simulator", 
                                           m_borderWidth(10), m_innerBorderWidth(10),
                                           m_userLatestBreakpoint(0),
                                           m_userInLoginFunction(false),
-                                          m_targetConsole(nullptr)
+                                          m_targetConsole(nullptr),
+                                          m_stackView(nullptr)
 {
     initFormatMap();
 }
@@ -51,7 +52,11 @@ bool application::Application::init()
     application::Widget* w = parentWidget->getWidget("Console-console");
     m_targetConsole = static_cast<application::Console*>(w);
 
-    if (!m_targetConsole)
+    parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
+    w = parentWidget->getWidget("StackVisualizer-stack_view");
+    m_stackView = static_cast<application::StackVisualizer*>(w);
+
+    if (!m_targetConsole || !m_stackView)
         return false;
 
 
@@ -102,8 +107,8 @@ void application::Application::run()
     gdb->sendCommand("break gets");
     showFunctionsAddresses();
 
-    m_printUsersFunctionAddress = getRequieredAddressInput();
-    std::cout << "REQ ADDRESS: " << m_printUsersFunctionAddress << std::endl;
+    m_requieredAddressInput = getRequieredAddressInput();
+    std::cout << "REQ ADDRESS: " << m_requieredAddressInput << std::endl;
 
     SDL_Event event;
 
@@ -226,15 +231,26 @@ void application::Application::update(SDL_Event& event)
     else if (!m_userTasksStatus[ENTER_PAYLOAD] && m_userInLoginFunction) { // The user put the breakpoint and can continue to the next step
         if (!m_targetConsole->isLocked())
             m_targetConsole->lock();
-        
+
+        if (m_stackView->empty()) {
+            fillStackViewLoginFunc();
+        }
+
         std::string userInput = m_targetConsole->getCurrentInput();
-        int neededLenght = 10 + m_printUsersFunctionAddress.length(); // 10 A's (dummy input) + the function address
+        int neededLenght = 10 + m_requieredAddressInput.length(); // 10 A's (dummy input) + the function address
 
         if (userInput.length() < neededLenght) { /* do nothing */ }
-        else if (userInput.substr(10, m_printUsersFunctionAddress.length()) == m_printUsersFunctionAddress) {
-            m_targetConsole->unlock();
-            m_userTasksStatus[ENTER_PAYLOAD] = true;
-            markTaskDone(2);
+        else if (userInput.substr(10, m_requieredAddressInput.length()) == m_requieredAddressInput) {
+            if (m_inputMngr.getPressedKey() == "\n") { // the user sent the correct input
+                std::string userCorrectInput = m_targetConsole->getCurrentInput();
+                m_targetConsole->printToConsole(userCorrectInput);
+                m_targetConsole->clearInputLine();
+                gdb->sendCommand("continue");
+                gdb->sendTargetInput(userCorrectInput.substr(0, 10));
+                m_targetConsole->unlock();
+                m_userTasksStatus[ENTER_PAYLOAD] = true;
+                markTaskDone(2);
+            }
         }
     }
 }
@@ -663,22 +679,50 @@ void application::Application::memoryDumpToStackView(const std::string &startAdd
 
 void application::Application::fillStackViewLoginFunc()
 {
-    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
-    application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");
-    application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(w);
+    std::vector<std::string> addresses = gdb->getMemoryDump("$rbp", 2); // clear gdb buffers
     
-    std::vector<std::string> addresses = gdb->getMemoryDump("$rbp", 2);
+    usleep(200000);
+    
+    gdb->sendCommand("x/1xg $rbp+8");
+    std::string rawOutput = gdb->getGdbOutput();
 
-    for (const std::string& addr : addresses) {
-        stackV->push(addr);
+    std::istringstream iss(rawOutput);
+    std::string word;
+    int count = 0;
+
+    while (iss >> word) {
+        count++;
+        if (count == 2) {
+            m_stackView->push(word);
+            break;
+        }
     }
 
-    stackV->push("0x0000000000000000");
-    stackV->push("0x0000000000000000");
-    stackV->push("...");
-    stackV->push("...");
+    usleep(300000);
+    
+    gdb->sendCommand("info registers rbp");
+    rawOutput = gdb->getGdbOutput();
 
-    stackV->selectBPSlot(1);
+    std::istringstream iss2(rawOutput);
+    std::string word2;
+    count = 0;
+
+    while (iss2 >> word2) {
+        count++;
+        if (count == 2) {
+            m_stackView->push(word2);
+            break;
+        }
+    }
+
+    m_stackView->push("0x0000000000000000");
+    m_stackView->push("0x0000000000000000");
+    m_stackView->push("...");
+    m_stackView->push("...");
+
+    m_stackView->selectBPSlot(1);
+
+    gdb->getGdbOutput(); // Clear buffers
 }
 
 void application::Application::showFunctionsAddresses()
@@ -706,6 +750,10 @@ std::string application::Application::getRequieredAddressInput()
     
     std::string hexPart = printFunctionAddress.substr(2); // Remove "0x" prefix
     hexPart.pop_back(); // Remove "." at the end
+
+    std::stringstream ss;
+    ss << std::hex << hexPart;
+    ss >> m_requieredFunctionAddress;
 
     // Pad with '0' at the front to make it 16 characters
     if (hexPart.length() < 16) {

@@ -30,6 +30,7 @@ namespace application
         void selectBPSlot(int slot);
 
         void clear();
+        bool empty() { return m_slots.empty(); }
 
         void addDeltaTransform(int x = 0, int y = 0, int w = 0, int h = 0) override;
 

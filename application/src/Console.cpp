@@ -59,7 +59,7 @@ void application::Console::handleEvents(const core::InputManager &inputMngr)
             else
                 m_gdb->sendTargetInput(m_activeLine.getText().substr(2));
         }
-
+        
         m_lines.push_back(m_activeLine);
         m_activeLine.clear();
 
@@ -271,6 +271,12 @@ void application::Console::printToConsole(const std::string &str)
     // Prepare a new command prompt with the previous user input
     m_activeLine.appendText("> ", true);
     m_activeLine.appendText(presentActiveText);
+}
+
+void application::Console::clearInputLine()
+{
+    m_activeLine.clear();
+    m_activeLine.appendText("> ", true);
 }
 
 void application::Console::addDeltaTransform(int x, int y, int w, int h)
