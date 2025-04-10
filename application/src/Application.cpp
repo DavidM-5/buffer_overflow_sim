@@ -223,12 +223,12 @@ void application::Application::update(SDL_Event& event)
     // Check if the user put the breakpoint at 
     // the correct line and act accordingly.
     if (!m_userTasksStatus[PUT_BREAKPOINT_AT_PROBLEM_LINE]) {
-        if (m_userLatestBreakpoint == 114) {
+        if (m_userLatestBreakpoint == 115) {
             m_userTasksStatus[PUT_BREAKPOINT_AT_PROBLEM_LINE] = true;
             markTaskDone(1);
         }
     }
-    else if (!m_userTasksStatus[ENTER_PAYLOAD] && m_userInLoginFunction) { // The user put the breakpoint and can continue to the next step
+    else if (!m_userTasksStatus[ENTER_PAYLOAD] && m_userInLoginFunction) { // Check if user did not complete the second step
         if (!m_targetConsole->isLocked())
             m_targetConsole->lock();
 
@@ -245,13 +245,29 @@ void application::Application::update(SDL_Event& event)
                 std::string userCorrectInput = m_targetConsole->getCurrentInput();
                 m_targetConsole->printToConsole(userCorrectInput);
                 m_targetConsole->clearInputLine();
+
+                std::stringstream ss;
+                ss << "0x" << std::hex << std::setw(16) << std::setfill('0') << m_requieredFunctionAddress;
+                m_stackView->editSlot(0, ss.str());
+                
+                std::string gdbComm = "set *((void **)($rbp + 8)) = (void *)" + ss.str();
+                // set *((int *)($rbp + 8)) = 0x55555555e867
+                gdb->sendCommand(gdbComm);
                 gdb->sendCommand("continue");
+                
+                // usleep(200000);
+                std::cout << "tar: " << gdb->getTargetOutput() << std::endl;
+                std::cout << "gdb:" << gdb->getGdbOutput() << std::endl;
+                
                 gdb->sendTargetInput(userCorrectInput.substr(0, 10));
                 m_targetConsole->unlock();
                 m_userTasksStatus[ENTER_PAYLOAD] = true;
                 markTaskDone(2);
             }
         }
+    }
+    else if (!m_userTasksStatus[LOGIN_AS_MANAGER] && m_userTasksStatus[ENTER_PAYLOAD]) { // Check if user did not complete the third step and completed the second
+        
     }
 }
 

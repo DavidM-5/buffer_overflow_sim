@@ -44,6 +44,7 @@ void clear_screen() {
 
 void print_users() {
   SecureDB_printDB();
+  fflush(stdout);
 }
 
 void print_and_flush(const char *format, ...) {

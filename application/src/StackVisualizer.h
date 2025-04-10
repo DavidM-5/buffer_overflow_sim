@@ -28,6 +28,7 @@ namespace application
         void pop();
 
         void selectBPSlot(int slot);
+        void editSlot(int slotNum, const std::string& newText);
 
         void clear();
         bool empty() { return m_slots.empty(); }

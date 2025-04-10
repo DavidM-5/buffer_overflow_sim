@@ -77,6 +77,15 @@ void application::StackVisualizer::selectBPSlot(int slot)
     m_selectedBpSlot = slot;
 }
 
+void application::StackVisualizer::editSlot(int slotNum, const std::string &newText)
+{
+    if (slotNum < 0 || slotNum >= m_slots.size())
+        return;
+    
+    m_slots[slotNum]->clear();
+    m_slots[slotNum]->appendText(newText);
+}
+
 void application::StackVisualizer::clear()
 {
     m_slots.clear();
