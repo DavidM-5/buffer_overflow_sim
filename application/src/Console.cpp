@@ -119,6 +119,12 @@ void application::Console::attachGDB(const std::shared_ptr<GDBController> &gdb)
     m_gdbAttached = true;
 }
 
+void application::Console::detachGDB()
+{
+    m_gdb.reset();
+    m_gdbAttached = false;
+}
+
 std::string application::Console::getLastInput(size_t n)
 {
     if (n == 0 || m_lines.empty()) return "";

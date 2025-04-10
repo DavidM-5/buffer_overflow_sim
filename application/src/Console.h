@@ -23,6 +23,7 @@ namespace application
         void render(core::Renderer& renderer, const SDL_Rect* srcRect = nullptr, const SDL_Rect* dstRect = nullptr);
 
         void attachGDB(const std::shared_ptr<GDBController>& gdb);
+        void detachGDB();
 
         std::string getLastInput(size_t n = 1);
         std::string getCurrentInput() { return m_activeLine.getText().substr(2); }

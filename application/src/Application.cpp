@@ -110,6 +110,8 @@ void application::Application::run()
     m_requieredAddressInput = getRequieredAddressInput();
     std::cout << "REQ ADDRESS: " << m_requieredAddressInput << std::endl;
 
+    gdb->sendCommand("continue");
+
     SDL_Event event;
 
     int fps; // Desired FPS
@@ -255,19 +257,29 @@ void application::Application::update(SDL_Event& event)
                 gdb->sendCommand(gdbComm);
                 gdb->sendCommand("continue");
                 
-                // usleep(200000);
-                std::cout << "tar: " << gdb->getTargetOutput() << std::endl;
-                std::cout << "gdb:" << gdb->getGdbOutput() << std::endl;
                 
                 gdb->sendTargetInput(userCorrectInput.substr(0, 10));
                 m_targetConsole->unlock();
                 m_userTasksStatus[ENTER_PAYLOAD] = true;
                 markTaskDone(2);
+                
+
+                // usleep(500000);
+                m_targetConsole->printToConsole(" ");
+                m_targetConsole->printToConsole("Program crushed. Restarting...");
+                m_targetConsole->printToConsole(" ");
+                m_targetConsole->detachGDB();
+                
+                gdb.reset();
+                gdb = std::make_shared<GDBController>("./t1", "./targets/compiled");
+                m_targetConsole->attachGDB(gdb);
+
+                gdb->sendCommand("continue");
             }
         }
     }
     else if (!m_userTasksStatus[LOGIN_AS_MANAGER] && m_userTasksStatus[ENTER_PAYLOAD]) { // Check if user did not complete the third step and completed the second
-        
+
     }
 }
 
