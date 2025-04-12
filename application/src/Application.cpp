@@ -211,6 +211,7 @@ void application::Application::update(SDL_Event& event)
     m_borderVerticalLeft.handleEvents(m_inputMngr);
     m_borderVerticalRight.handleEvents(m_inputMngr);
 
+    static bool sentContinueComm = false;
     
     std::string consoleInput = m_targetConsole->getLastInput(2);
     if (!consoleInput.empty()) {
@@ -222,6 +223,7 @@ void application::Application::update(SDL_Event& event)
         }
         else {
             m_userInLoginFunction = false;
+            sentContinueComm = false;
         }
     }
     
@@ -232,9 +234,12 @@ void application::Application::update(SDL_Event& event)
             m_userTasksStatus[PUT_BREAKPOINT_AT_PROBLEM_LINE] = true;
             markTaskDone(1);
         }
-        /* else {
-            gdb->sendCommand("continue");
-        }*/
+        else {
+            if (!sentContinueComm && m_userInLoginFunction) {
+                gdb->sendCommand("continue");
+                sentContinueComm = true;
+            }
+        }
     }
     else if (!m_userTasksStatus[ENTER_PAYLOAD] && m_userInLoginFunction) { // Check if user did not complete the second step
         if (!m_targetConsole->isLocked())
@@ -734,11 +739,13 @@ void application::Application::memoryDumpToStackView(const std::string &startAdd
 
 void application::Application::fillStackViewLoginFunc()
 {
-    std::vector<std::string> addresses = gdb->getMemoryDump("$rbp", 2); // clear gdb buffers
+    // std::vector<std::string> addresses = gdb->getMemoryDump("$rbp", 2); // clear gdb buffers
     
-    usleep(200000);
+    gdb->getGdbOutput(); // clear buffers
+    usleep(50000);
     
     gdb->sendCommand("x/1xg $rbp+8");
+    usleep(200000);
     std::string rawOutput = gdb->getGdbOutput();
 
     std::istringstream iss(rawOutput);
@@ -753,9 +760,10 @@ void application::Application::fillStackViewLoginFunc()
         }
     }
 
-    usleep(300000);
+    usleep(100000);
     
     gdb->sendCommand("info registers rbp");
+    usleep(200000);
     rawOutput = gdb->getGdbOutput();
 
     std::istringstream iss2(rawOutput);
@@ -777,7 +785,7 @@ void application::Application::fillStackViewLoginFunc()
 
     m_stackView->selectBPSlot(1);
 
-    gdb->getGdbOutput(); // Clear buffers
+    // gdb->getGdbOutput(); // Clear buffers
 }
 
 void application::Application::showFunctionsAddresses()
