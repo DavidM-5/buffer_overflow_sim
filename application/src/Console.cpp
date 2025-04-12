@@ -27,7 +27,7 @@ void application::Console::handleEvents(const core::InputManager &inputMngr)
     vector2i mousePos = inputMngr.getMousePosition();
 
     // Check for scrolling
-    if (isMouseInsideTransform(mousePos) && inputMngr.getMouseWheelScroll() != 0) {
+    if (isMouseInsideTransform(mousePos) && inputMngr.getMouseWheelScroll() != 0 && m_lines.size() > 0) {
         m_renderStartLine -= inputMngr.getMouseWheelScroll();
 
         if (m_renderStartLine < 0)
@@ -54,10 +54,7 @@ void application::Console::handleEvents(const core::InputManager &inputMngr)
 
         // TODO: Remove lines below. The console SHOULD NOT send commands to gdb.
         if (m_gdbAttached) { // send commands to gdb / target
-            if (m_activeLine.getText().substr(2) == "c" || m_activeLine.getText().substr(2) == "continue")
-                m_gdb->sendCommand("continue");
-            else
-                m_gdb->sendTargetInput(m_activeLine.getText().substr(2));
+            m_gdb->sendTargetInput(m_activeLine.getText().substr(2));
         }
         
         m_lines.push_back(m_activeLine);

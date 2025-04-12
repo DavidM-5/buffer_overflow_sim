@@ -253,8 +253,7 @@ void handle_page(Page_Type* page, Session* session, bool* clearFlag) {
     }
 
   }
-  else if (*page == OPERATION_SELECT) {
-
+  else if (*page == OPERATION_SELECT) {    
     switch (choice)
     {
     case '0':
@@ -335,15 +334,6 @@ int main(int argc, char const *argv[])
 
   bool clearSceenFlag = true;
 
-  UserData usr = {
-    .is_manager = true,
-    .is_active = true,
-    .username = "DavidM",
-    .password = "123456"
-  };
-  SecureDB_addNewUser(&usr);
-  print_users();
-
   Session session = {
     .logged_in = false,
     .user = {}
@@ -358,6 +348,9 @@ int main(int argc, char const *argv[])
       lastMessage[0] = '\0';
     }
 
+    if (session.user.is_manager) {
+      print_and_flush("Hello, manager!\n");
+    }
     print_and_flush("-> %s", pages[currentPage]);
 
     handle_page(&currentPage, &session, &clearSceenFlag);

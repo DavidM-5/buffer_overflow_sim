@@ -100,10 +100,6 @@ void application::Application::run()
 
     gdb = std::make_shared<GDBController>("./t1", "./targets/compiled");
 
-    // Attach the gdb proccess to the console widget,
-    // so that the console will be able to show gdb output.
-    m_targetConsole->attachGDB(gdb);
-
     gdb->sendCommand("break gets");
     showFunctionsAddresses();
 
@@ -111,6 +107,13 @@ void application::Application::run()
     std::cout << "REQ ADDRESS: " << m_requieredAddressInput << std::endl;
 
     gdb->sendCommand("continue");
+    std::string out = gdb->getTargetOutput(); // clear buffer
+
+    // Attach the gdb proccess to the console widget,
+    // so that the console will be able to show gdb output.
+    m_targetConsole->attachGDB(gdb);
+    gdb->sendTargetInput("9");
+
 
     SDL_Event event;
 
@@ -138,7 +141,7 @@ void application::Application::run()
         while (SDL_PollEvent(&event))
         {
             m_window.handleEvents(event);
-            
+            /*
             if (!m_inputMngr.getPressedKey().empty()) {
                 // temporary \/\/\/
                 if (m_inputMngr.getPressedKey() == "k") {
@@ -176,15 +179,15 @@ void application::Application::run()
                     std::cout << "registers:\n" << rawOutput << std::endl;
                 }
 
-                if (m_inputMngr.getPressedKey() == "d") {
+                if (m_inputMngr.getPressedKey() == "n") {
                     std::cout << "-> Memory dump" << std::endl;
-                    
+
                     fillStackViewLoginFunc();
                 }
-
+                
                 // temporary end /\/\/\.
             }
-
+            */
             Application::update(event);
         }
 
@@ -229,6 +232,9 @@ void application::Application::update(SDL_Event& event)
             m_userTasksStatus[PUT_BREAKPOINT_AT_PROBLEM_LINE] = true;
             markTaskDone(1);
         }
+        /* else {
+            gdb->sendCommand("continue");
+        }*/
     }
     else if (!m_userTasksStatus[ENTER_PAYLOAD] && m_userInLoginFunction) { // Check if user did not complete the second step
         if (!m_targetConsole->isLocked())
@@ -264,9 +270,9 @@ void application::Application::update(SDL_Event& event)
                 markTaskDone(2);
                 
 
-                // usleep(500000);
+                usleep(300000);
                 m_targetConsole->printToConsole(" ");
-                m_targetConsole->printToConsole("Program crushed. Restarting...");
+                m_targetConsole->printToConsole("Program crashed. Restarting...");
                 m_targetConsole->printToConsole(" ");
                 m_targetConsole->detachGDB();
                 
@@ -279,7 +285,17 @@ void application::Application::update(SDL_Event& event)
         }
     }
     else if (!m_userTasksStatus[LOGIN_AS_MANAGER] && m_userTasksStatus[ENTER_PAYLOAD]) { // Check if user did not complete the third step and completed the second
-
+        std::string consoleInput = m_targetConsole->getLastInput(8);
+        if (!consoleInput.empty()) {
+            std::string_view reqLoginText = "Hello, manager!\n"
+                                            "-> Select operation:\n";
+            
+            if (reqLoginText == consoleInput.substr(0, reqLoginText.length())) {
+                markTaskDone(3);
+                showCompletionText();
+                m_userTasksStatus[LOGIN_AS_MANAGER] = true;
+            }
+        }
     }
 }
 
@@ -428,11 +444,22 @@ void application::Application::initLeftPanels()
     task3->setText("3) Read the output and login as a manager.");
 
 
+    auto completionText = std::make_unique<application::Paragraph>(
+        label->getPosition().x, task3->getPosition().y + task3->getHeight() + 15,
+        label->getWidth(), 100,
+        SDL_Color{0xFF, 0xFF, 0xFF, 0x00},
+        vector2i{m_borderWidth, m_borderWidth},
+        "JetBrainsMono-Light.ttf", 20, 26
+    );
+    completionText->setText("");
+
+
     leftPanel->addWidget("Label", std::move(label));
     leftPanel->addWidget("Paragraph-Task1", std::move(task1));
     leftPanel->addWidget("Paragraph-Task2", std::move(task2));
     // leftPanel->addWidget("Paragraph-Task3", std::move(task3));
-    leftPanel->addWidget("Paragraph-Task4", std::move(task3));
+    leftPanel->addWidget("Paragraph-Task3", std::move(task3));
+    leftPanel->addWidget("Paragraph-completionText", std::move(completionText));
 
     // ===========================
     // ===========================
@@ -812,7 +839,7 @@ void application::Application::markTaskDone(int taskNum)
         widgetName = "Paragraph-Task2";
         break;
     case 3:
-        widgetName = "Paragraph-Task4";
+        widgetName = "Paragraph-Task3";
         break;
     
     default:
@@ -826,6 +853,16 @@ void application::Application::markTaskDone(int taskNum)
     task->setColor(SDL_Color{0x05, 0xCD, 0x00, 0xFF});
     task->appendText("  DONE!");
 
+}
+
+void application::Application::showCompletionText()
+{
+    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-left");
+    application::Widget* w = parentWidget->getWidget("Paragraph-completionText");
+    application::Paragraph* completionText = static_cast<application::Paragraph*>(w);
+
+    completionText->setColor(SDL_Color{0x6D, 0xE8, 0x6A, 0xFF});
+    completionText->appendText("GOOD JOB!!!");
 }
 
 bool application::Application::is_number(const std::string &s)

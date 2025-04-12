@@ -128,6 +128,7 @@ namespace application
         std::string getRequieredAddressInput();
 
         void markTaskDone(int taskNum);
+        void showCompletionText();
 
         bool is_number(const std::string& s);
 
