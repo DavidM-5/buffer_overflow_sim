@@ -13,7 +13,7 @@ namespace application
     public:
         using Callback = std::function<void()>;
 
-        Button(int posX = 0, int posY = 0, int w = 100, int h = 100, SDL_Color color = {255, 255, 255, 255}, const std::string& label = "Button", vector2i globalPos = {0, 0});
+        Button(int posX = 0, int posY = 0, int w = 100, int h = 100, SDL_Color color = {255, 255, 255, 255}, const std::string& label = "Button", vector2i globalPos = {0, 0}, int labelW = 100);
         ~Button() = default;
 
         void handleEvents(const core::InputManager& inputMngr) override;

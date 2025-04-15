@@ -338,6 +338,8 @@ int main(int argc, char const *argv[])
     .logged_in = false,
     .user = {}
   };
+
+  print_users();
   
   while (true) {
     if (clearSceenFlag)

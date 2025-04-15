@@ -1,6 +1,6 @@
 #include "Button.h"
 
-application::Button::Button(int posX, int posY, int w, int h, SDL_Color color, const std::string &label, vector2i globalPos) :
+application::Button::Button(int posX, int posY, int w, int h, SDL_Color color, const std::string &label, vector2i globalPos, int labelW) :
                             Widget(posX, posY, w, h, color),
                             m_textLine()
 {
@@ -8,7 +8,7 @@ application::Button::Button(int posX, int posY, int w, int h, SDL_Color color, c
     m_textLine.appendText(label, true);
 
     m_textLine.fitHeightToText();
-    m_textLine.fitWidthToText();
+    m_textLine.setWidth(labelW);
 
     m_textLine.setPosition({globalPos.x + w / 2 - m_textLine.getWidth() / 2,
                             globalPos.y + h / 2 - m_textLine.getHeight() / 2});

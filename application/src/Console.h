@@ -8,7 +8,7 @@
 #include <cmath>
 #include "Widget.h"
 #include "TextLine.h"
-#include "GDBController.h"
+#include "BOApplication/GDBController.h"
 
 namespace application
 {
