@@ -63,3 +63,34 @@ target_include_directories(BOAppExec PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${SDL2_INCLUDE_DIRS}
 )
+
+
+# ------------------- PEApplication Standalone Executable -------------------
+
+add_executable(PEAppExec
+    src/BOApplication/BOApplication.cpp
+    src/BOApplication/ConsoleProccess.cpp
+    src/BOApplication/GDBController.cpp
+    src/PEApplication/Main.cpp               # Create this file
+    src/PEApplication/PEApplication.cpp
+    src/Widget.cpp
+    src/Panel.cpp
+    src/TextBlock.cpp
+    src/Border.cpp
+    src/StackVisualizer.cpp
+    src/TextLine.cpp
+    src/Console.cpp
+    src/Button.cpp
+    src/Paragraph.cpp
+    src/Table.cpp
+)
+
+set_target_properties(PEAppExec PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build
+)
+
+target_link_libraries(PEAppExec PRIVATE core ${SDL2_LIBRARIES})
+target_include_directories(PEAppExec PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${SDL2_INCLUDE_DIRS}
+)

@@ -131,5 +131,24 @@ void application::Application::createBufferOverflow()
 
 void application::Application::createPrivilegeEscalation()
 {
-    std::cout << "Work in progress" << std::endl;
+    m_PEchildPID = fork();
+
+    if (m_PEchildPID < 0) {
+        std::cerr << "Failed to fork process for PEApplication." << std::endl;
+        return;
+    }
+
+    if (m_PEchildPID == 0) {
+        // --- Child process ---
+        setsid(); // detach from terminal
+        char* args[] = { (char*)"./PEAppExec", nullptr };
+        execvp(args[0], args);
+        std::cerr << "Failed to launch PEAppExec" << std::endl;
+        exit(1);
+    }
+    else {
+        // --- Parent process ---
+        m_PEInitialized = true;
+        // Don't wait, continue main app
+    }
 }
