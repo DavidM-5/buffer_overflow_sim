@@ -38,7 +38,7 @@ void core::InputManager::update(SDL_Event& event)
             m_currentKeyPress = "\n";
         }
         else if (keycode == SDLK_TAB) {
-            m_currentKeyPress = "\t";
+            m_currentKeyPress = "  ";
         }
         else if (keycode == SDLK_BACKSPACE) {
             m_currentKeyPress = "\b";

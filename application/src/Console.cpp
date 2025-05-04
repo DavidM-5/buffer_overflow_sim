@@ -69,7 +69,7 @@ void application::Console::handleEvents(const core::InputManager &inputMngr)
             m_activeLine.editText(m_activeLine.getLenght() - 1, m_activeLine.getLenght(), "");
     }
     else {
-        m_activeLine.appendText(input);
+        m_activeLine.appendText(input, true);
     }
 }
 

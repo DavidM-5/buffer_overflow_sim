@@ -20,6 +20,8 @@ namespace application
 
         std::string getText(const vector2i& coord);
         void setText(const vector2i& coord, const std::string& text);
+
+        vector2i getSize();
     
     private:
         int m_rows, m_columns;

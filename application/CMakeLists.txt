@@ -83,6 +83,7 @@ add_executable(PEAppExec
     src/Button.cpp
     src/Paragraph.cpp
     src/Table.cpp
+    src/InputLine.cpp
 )
 
 set_target_properties(PEAppExec PROPERTIES
