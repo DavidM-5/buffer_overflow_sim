@@ -507,7 +507,7 @@ void application::BOApplication::initCenterPanels()
 
     // ===========================
     // ===========================
-    auto centerMiddlePanel = std::make_unique<application::Panel>(
+    /*auto centerMiddlePanel = std::make_unique<application::Panel>(
         centerTopPanel->getPosition().x, centerTopPanel->getPosition().y + centerTopPanel->getHeight() + m_borderWidth,
         centerTopPanel->getWidth(), 50,
         SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
@@ -528,12 +528,12 @@ void application::BOApplication::initCenterPanels()
     continueBtn->onClick([this]() { gdb->sendCommand("continue"); });
 
     centerMiddlePanel->addWidget("Buttom-continue_btn", std::move(continueBtn));
-
+    */
     // ===========================
     // ===========================
     auto centerBottomPanel = std::make_unique<application::Panel>(
-        centerMiddlePanel->getPosition().x, centerMiddlePanel->getPosition().y + centerMiddlePanel->getHeight() + m_borderWidth,
-        centerMiddlePanel->getWidth(), totalHeight - centerTopPanel->getHeight() - centerMiddlePanel->getHeight() - m_borderWidth * 4,
+        centerTopPanel->getPosition().x, centerTopPanel->getPosition().y + centerTopPanel->getHeight() + m_borderWidth,
+        centerTopPanel->getWidth(), totalHeight - centerTopPanel->getHeight() - m_borderWidth * 3,
         SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
     );
 
@@ -561,7 +561,7 @@ void application::BOApplication::initCenterPanels()
     // ===========================
     // ===========================
     m_mainPanel.addWidget("Panel-center_top", std::move(centerTopPanel));
-    m_mainPanel.addWidget("Panel-center_middle", std::move(centerMiddlePanel));
+    // m_mainPanel.addWidget("Panel-center_middle", std::move(centerMiddlePanel));
     m_mainPanel.addWidget("Panel-center_bottom", std::move(centerBottomPanel));
 }
 
