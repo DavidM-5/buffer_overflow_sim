@@ -1,7 +1,11 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
 #include "aes_utils.h"
 
 
+/* Global buffer to hold the 16-byte key */
+unsigned char KEY[16];
 static const char base64_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 // S-Box array
@@ -68,6 +72,34 @@ unsigned char Rcon[255] = {
     0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5,
     0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33,
     0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb };
+
+
+int load_key(const char *filename) {
+    FILE *f = fopen(filename, "rb");
+    if (!f) {
+        perror("load_key: fopen");
+        return ERROR_AES_UNKNOWN_KEYSIZE;
+    }
+
+    /* Seek past the 100-byte offset */
+    if (fseek(f, 100, SEEK_SET) != 0) {
+        perror("load_key: fseek");
+        fclose(f);
+        return ERROR_MEMORY_ALLOCATION_FAILED;
+    }
+
+    /* Read exactly 16 bytes into KEY[] */
+    size_t n = fread(KEY, 1, sizeof(KEY), f);
+    if (n != sizeof(KEY)) {
+        fprintf(stderr,
+                "load_key: expected 16 bytes, got %zu bytes\n", n);
+        fclose(f);
+        return ERROR_AES_UNKNOWN_KEYSIZE;
+    }
+
+    fclose(f);
+    return AES_SUCCESS;
+}
 
 // Get S-Box value
 unsigned char getSBoxValue(unsigned char num) {

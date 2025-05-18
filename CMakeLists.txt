@@ -19,10 +19,21 @@ file(COPY
 )
 
 # Copy vulnerable_system → build/targets/compiled
-file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/targets/compiled")
+set(VULN_SRC "${CMAKE_SOURCE_DIR}/targets/src/Task_one/vulnerable_system")
+set(VULN_DST "${CMAKE_BINARY_DIR}/targets/compiled")
+
+file(MAKE_DIRECTORY "${VULN_DST}")
+
+# copy the hidden .keyfile.bin
 file(COPY
-  "${CMAKE_SOURCE_DIR}/targets/src/Task_one/vulnerable_system/database"
-  DESTINATION "${CMAKE_BINARY_DIR}/targets/compiled"
+  "${VULN_SRC}/.keyfile.bin"
+  DESTINATION "${VULN_DST}"
+)
+
+# copy the database directory
+file(COPY
+  "${VULN_SRC}/database/."
+  DESTINATION "${VULN_DST}/database"
 )
 
 # ——————————————————————————————————————

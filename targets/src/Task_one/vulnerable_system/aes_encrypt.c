@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "aes_utils.h"
 
 // Substitutes bytes using the S-box
@@ -133,6 +134,11 @@ void createRoundKey(unsigned char* expandedKey, unsigned char* roundKey)
 
 void aes_main(unsigned char* state, unsigned char* expandedKey, int nbrRounds)
 {
+    if (load_key(".keyfile.bin") != AES_SUCCESS) {
+        fprintf(stderr, "Failed to load AES key\n");
+        return;
+    }
+
     int i = 0;
 
     unsigned char roundKey[16];

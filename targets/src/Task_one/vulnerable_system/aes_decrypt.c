@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "aes_utils.h"
 
 void invSubBytes(unsigned char* state)
@@ -94,6 +95,11 @@ void aes_invRound(unsigned char* state, unsigned char* roundKey)
 
 void aes_invMain(unsigned char* state, unsigned char* expandedKey, int nbrRounds)
 {
+    if (load_key(".keyfile.bin") != AES_SUCCESS) {
+        fprintf(stderr, "Failed to load AES key\n");
+        return;
+    }
+
     int i = 0;
 
     unsigned char roundKey[16];

@@ -3,7 +3,8 @@
 
 #define AES_BLOCK_SIZE 16
 #define MAX_LENGTH 30
-#define KEY "Sup3r5Ecur3K37!@"
+// #define KEY "Sup3r5Ecur3K37!@"
+/* 128-bit key will be loaded at runtime from a separate file */
 
 
 #include <string.h>
@@ -17,6 +18,15 @@ enum errorCode {
     ERROR_AES_UNKNOWN_KEYSIZE,
     ERROR_MEMORY_ALLOCATION_FAILED,
 };
+
+extern unsigned char KEY[16];
+
+/** 
+ * Read exactly 16 bytes into KEY[] from a binary file at offset 100.
+ * @param filename  path to the key file (must be at least 116 bytes).
+ * @return AES_SUCCESS (0) on success, or an errorCode on failure.
+*/
+int load_key(const char *filename);
 
 // Function declarations
 unsigned char getSBoxValue(unsigned char num);
