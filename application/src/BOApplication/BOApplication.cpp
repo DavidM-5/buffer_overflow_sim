@@ -507,30 +507,7 @@ void application::BOApplication::initCenterPanels()
 
     // ===========================
     // ===========================
-    /*auto centerMiddlePanel = std::make_unique<application::Panel>(
-        centerTopPanel->getPosition().x, centerTopPanel->getPosition().y + centerTopPanel->getHeight() + m_borderWidth,
-        centerTopPanel->getWidth(), 50,
-        SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
-    );
 
-    centerMiddlePanel->addRightBottomBorder(m_borderVerticalLeft);
-    centerMiddlePanel->addLeftTopBorder(m_borderVerticalRight);
-
-    auto continueBtn = std::make_unique<application::Button>(
-        0 + m_innerBorderWidth, 0 + m_innerBorderWidth,
-        150, centerMiddlePanel->getHeight() - m_innerBorderWidth * 2,
-        SDL_Color{0x1B, 0x51, 0xCC, 0xFF},
-        "Continue",
-        vector2i{centerMiddlePanel->getPosition().x + m_innerBorderWidth, centerMiddlePanel->getPosition().y + m_innerBorderWidth}
-    );
-
-    // Bind the function to the button
-    continueBtn->onClick([this]() { gdb->sendCommand("continue"); });
-
-    centerMiddlePanel->addWidget("Buttom-continue_btn", std::move(continueBtn));
-    */
-    // ===========================
-    // ===========================
     auto centerBottomPanel = std::make_unique<application::Panel>(
         centerTopPanel->getPosition().x, centerTopPanel->getPosition().y + centerTopPanel->getHeight() + m_borderWidth,
         centerTopPanel->getWidth(), totalHeight - centerTopPanel->getHeight() - m_borderWidth * 3,
@@ -561,7 +538,6 @@ void application::BOApplication::initCenterPanels()
     // ===========================
     // ===========================
     m_mainPanel.addWidget("Panel-center_top", std::move(centerTopPanel));
-    // m_mainPanel.addWidget("Panel-center_middle", std::move(centerMiddlePanel));
     m_mainPanel.addWidget("Panel-center_bottom", std::move(centerBottomPanel));
 }
 

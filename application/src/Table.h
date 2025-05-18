@@ -21,7 +21,9 @@ namespace application
         std::string getText(const vector2i& coord);
         void setText(const vector2i& coord, const std::string& text);
 
-        vector2i getSize();
+        void resize(int cols, int rows);
+
+        vector2i getDim();
     
     private:
         int m_rows, m_columns;

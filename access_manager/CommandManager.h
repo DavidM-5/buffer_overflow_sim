@@ -7,6 +7,8 @@
 #include <fstream>
 #include <filesystem>
 #include <algorithm>
+#include <ctime>
+#include <iomanip>
 #include "config.h"
 
 class CommandManager
@@ -24,7 +26,11 @@ private:
     void handleList(const std::vector<std::string>& args);
     void handleExit(const std::vector<std::string>& args);
     void handleEcho(const std::vector<std::string>& args);
+    void handleHelp(const std::vector<std::string>& args);
+    void handleReset(const std::vector<std::string>& args);
 
     void parseAndExecute(const std::string& input);
     void updateConfigFile();
+
+    void logAction(const std::string& action);
 };

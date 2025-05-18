@@ -3,13 +3,25 @@
 #include "config.h"
 #include "CommandManager.h"
 
+std::string PATH;
 std::vector<Inode> inodes;
 
 std::vector<Inode> loadInodesFromFile(const std::string& filepath);
 
 int main(int argc, char const *argv[])
 {
-    inodes = loadInodesFromFile("config/config.txt");
+    if (argc < 2) {
+        PATH = "config/config.txt";
+    }
+    else {
+        std::string modelName = argv[1];
+        PATH = "models/" + modelName + "/config/config.txt";
+    }
+
+    inodes = loadInodesFromFile(PATH);
+
+    if (inodes.size() == 0)
+        return 1;
 
     CommandManager mngr;
 
@@ -58,4 +70,35 @@ std::vector<Inode> loadInodesFromFile(const std::string& filepath) {
     }
     
     return inodes;
+}
+
+void replaceFileContents(const std::string& srcPath, const std::string& destPath) {
+    // 1) Open source file for binary reading
+    std::ifstream src(srcPath, std::ios::in | std::ios::binary);
+    if (!src.is_open()) {
+        std::cerr << "Error: cannot open source file '" << srcPath << "' for reading.\n";
+        return;
+    }
+
+    // 2) Open (or create) destination file for binary writing, truncating any existing data
+    std::ofstream dst(destPath, std::ios::out | std::ios::binary | std::ios::trunc);
+    if (!dst.is_open()) {
+        std::cerr << "Error: cannot open destination file '" << destPath << "' for writing.\n";
+        return;
+    }
+
+    // 3) Copy all data from source to destination
+    dst << src.rdbuf();
+
+    // 4) Check for write errors
+    if (!dst.good()) {
+        std::cerr << "Error: failed while writing to '" << destPath << "'.\n";
+        return;
+    }
+}
+
+void resetInodeList() {
+    replaceFileContents(PATH + "backup", PATH);
+
+    inodes = loadInodesFromFile(PATH);
 }

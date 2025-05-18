@@ -182,8 +182,13 @@ void application::TextLine::fitWidthToText()
     if (!m_texture.isValid())
         return;
 
-    m_transform.w = m_texture.getWidth();
-    m_updated = true;
+    int w, h;
+
+    if (TTF_SizeUTF8(s_fonts[m_fontName][m_fontSize], m_text.c_str(), &w, &h) == 0) {
+        // success: w = pixel width, h = pixel height of the bounding box
+        m_transform.w = w;
+        m_updated = true;
+    }
 }
 
 void application::TextLine::fitHeightToText()

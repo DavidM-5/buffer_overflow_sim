@@ -1,16 +1,1 @@
-hilo
-Hello?
-BEGIN filename
-alice 1 1 0
-bob 0 1 0
-ENDhello World!
-\n\n
-Hello?
-BEGIN filename
-alice 1 1 0
-bob 0 1 0
-ENDHello?
-BEGIN filename
-alice 1 1 0
-bob 0 1 0
-END
+This is the contents of file2.

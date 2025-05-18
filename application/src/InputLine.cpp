@@ -1,21 +1,20 @@
 #include "InputLine.h"
 
-application::InputLine::InputLine(int posX, int posY, int w, int h, SDL_Color color, const std::string& label) : 
+application::InputLine::InputLine(int posX, int posY, int w, int h, SDL_Color color, const std::string& label, const std::string& input) : 
                                   Widget(posX, posY, w, h, color),
-                                  m_input(""),
+                                  m_inputLabel(input),
                                   m_label(label),
-                                  m_lastInput(""),
                                   m_thisWidgetSelected(false)
 {
-    m_labelTextLine.useFont("JetBrainsMono-Medium.ttf", 14);
-    m_inputTextLine.useFont("JetBrainsMono-Medium.ttf", 14);
+    m_labelTextLine.useFont("JetBrainsMono-Medium.ttf", 16);
+    m_inputTextLine.useFont("JetBrainsMono-Medium.ttf", 16);
 
-    m_labelTextLine.appendText(m_label);
+    m_labelTextLine.appendText(m_label, true);
 
     m_labelTextLine.setPosition({posX, posY});
-    m_labelTextLine.fitWidthToText();
+    m_labelTextLine.setWidth(125);
 
-    m_inputTextLine.appendText("test text");
+    m_inputTextLine.appendText(input, true);
 
     m_inputTextLine.setPosition({posX + m_labelTextLine.getWidth(), posY});
     m_inputTextLine.setWidth(m_transform.w - m_labelTextLine.getWidth());
@@ -38,8 +37,7 @@ void application::InputLine::handleEvents(const core::InputManager &inputMngr)
     std::string input = inputMngr.getPressedKey();
 
     if (input == "\n") {
-        m_lastInput = m_inputTextLine.getText();
-        m_inputTextLine.clear();
+
     }
     else if (input == "\b") {
         if (m_inputTextLine.getLenght() > 0)

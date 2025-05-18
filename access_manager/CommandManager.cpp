@@ -27,6 +27,7 @@ void CommandManager::handleCreate(const std::vector<std::string> &args)
     if (!fs::exists("files")) {
         if (!fs::create_directory("files")) {
             std::cout << "Failed to create 'files' directory!" << std::endl;
+            logAction("Failed to create 'files' directory");
             return;
         }
     }
@@ -41,6 +42,7 @@ void CommandManager::handleCreate(const std::vector<std::string> &args)
     std::ofstream file(path);
     if (!file.is_open()) {
         std::cout << "Error: Failed to create file." << std::endl;
+        logAction("Failed to create '" + filename + "' file");
         return;
     }
 
@@ -51,6 +53,8 @@ void CommandManager::handleCreate(const std::vector<std::string> &args)
     
     inodes.push_back(newInode);
     updateConfigFile();
+
+    logAction("Created file '" + filename + "'");
 }
 
 void CommandManager::handleChmod(const std::vector<std::string> &args)
@@ -92,6 +96,7 @@ void CommandManager::handleChmod(const std::vector<std::string> &args)
     }
 
     updateConfigFile();
+    logAction("Chmod success: set permissions '" + permissions + "' for user '" + user + "' on file '" + file + "'");
 }
 
 void CommandManager::handleDelete(const std::vector<std::string> &args)
@@ -117,6 +122,7 @@ void CommandManager::handleDelete(const std::vector<std::string> &args)
     std::string path = "files/" + filename;
     if (std::remove(path.c_str()) != 0) {
         std::cout << "Failed to delete file from disk." << std::endl;
+        logAction("Failed to delete file '" + filename + "'");
         return;
     }
 
@@ -125,6 +131,7 @@ void CommandManager::handleDelete(const std::vector<std::string> &args)
 
     // Update the config file
     updateConfigFile();
+    logAction("Deleted file '" + filename + "'");
 }
 
 void CommandManager::handleList(const std::vector<std::string> &args)
@@ -153,12 +160,58 @@ void CommandManager::handleEcho(const std::vector<std::string> &args)
     if (args.empty()) {
         std::cout << "Usage:\n";
         std::cout << "  echo \"<text>\" or echo <file>\n";
+        std::cout << "  echo <user> <file>\n";
         std::cout << "  echo <user> \"<text>\" >> <file>\n";
         std::cout << "  echo <user> <file1> >> <file2>\n";
         return;
     }
 
-    // Find ">>" if it exists
+    // ——— 1) echo <user> <file> : permission-checked read
+    if (args.size() == 2
+        && args[0].find_first_of("\"") == std::string::npos
+        && args[1].find_first_of("\"") == std::string::npos)
+    {
+        const std::string &user     = args[0];
+        const std::string &filename = args[1];
+
+        // locate inode
+        Inode* inode = nullptr;
+        for (auto &node : inodes) {
+            if (node.filename == filename) {
+                inode = &node;
+                break;
+            }
+        }
+        if (!inode) {
+            std::cout << "No such file: " << filename << std::endl;
+            logAction("Echo failed: read, file not found: " + filename);
+            return;
+        }
+
+        // check READ permission
+        if (!inode->userPermissions[user][READ]) {
+            std::cout << "Permission denied: user '"
+                      << user << "' cannot read " << filename << std::endl;
+            logAction("Echo failed: read-permission denied for user '" + user + "' on '" + filename + "'");
+            return;
+        }
+
+        // dump file
+        std::ifstream file("files/" + filename);
+        if (!file.is_open()) {
+            std::cout << "Failed to open file: " << filename << std::endl;
+            logAction("Echo failed: could not open '" + filename + "'");
+            return;
+        }
+        std::string line;
+        while (std::getline(file, line)) {
+            std::cout << line << std::endl;
+        }
+        logAction("Echo success: read file '" + filename + "' by user '" + user + "'");
+        return;
+    }
+
+    // ——— 2) detect append-mode ("echo <user> ... >> <file>")
     bool appendMode = false;
     int appendIndex = -1;
     for (size_t i = 0; i < args.size(); ++i) {
@@ -170,148 +223,181 @@ void CommandManager::handleEcho(const std::vector<std::string> &args)
     }
 
     if (appendMode) {
-        // Check minimum required arguments
-        if (appendIndex < 2 || appendIndex + 1 >= args.size()) {
+        // validate
+        if (appendIndex < 2 || appendIndex + 1 >= (int)args.size()) {
             std::cout << "Invalid usage for append mode." << std::endl;
+            logAction("Echo failed: invalid append-mode usage");
             return;
         }
 
-        std::string user = args[0];
-        std::string targetFile = args[appendIndex + 1];
+        const std::string user       = args[0];
+        const std::string targetFile = args[appendIndex + 1];
         std::string content;
 
-        // Check if content is quoted
+        // quoted text?
         if (args[1].size() >= 2 && args[1][0] == '"') {
-            // Rebuild quoted content
-            content = args[1].substr(1);  // Remove opening quote
+            content = args[1].substr(1);
             if (content.back() == '"') {
-                content.pop_back();  // Remove closing quote if in first arg
+                content.pop_back();
             } else {
-                // Find closing quote in subsequent args
                 for (int i = 2; i < appendIndex; ++i) {
                     content += " " + args[i];
                     if (args[i].back() == '"') {
-                        content.pop_back();  // Remove closing quote
+                        content.pop_back();
                         break;
                     }
                 }
             }
         } else {
-            // Treat as filename
-            content = args[1];
+            content = args[1];  // treat as filename
         }
 
-        // Find destination inode
+        // locate destination inode
         Inode* destInode = nullptr;
-        for (Inode& node : inodes) {
+        for (auto &node : inodes) {
             if (node.filename == targetFile) {
                 destInode = &node;
                 break;
             }
         }
-
         if (!destInode) {
-            std::cout << "Destination file does not exist: " << targetFile << std::endl;
+            std::cout << "Destination file does not exist: "
+                      << targetFile << std::endl;
+            logAction("Echo failed: destination file not found: " + targetFile);
             return;
         }
 
+        // check WRITE permission
         if (!destInode->userPermissions[user][WRITE]) {
-            std::cout << "Permission denied: user '" << user << "' cannot write to " << targetFile << std::endl;
+            std::cout << "Permission denied: user '"
+                      << user << "' cannot write to "
+                      << targetFile << std::endl;
+            logAction("Echo failed: write-permission denied for user '" + user + "' on '" + targetFile + "'");
             return;
         }
 
-        // Check if content is a file (only if not quoted)
+        // if unquoted, could be source file → append file contents
         if (args[1][0] != '"') {
-            for (Inode& node : inodes) {
+            bool foundSrc = false;
+            for (auto &node : inodes) {
                 if (node.filename == content) {
-                    // Found source file - check permissions
+                    foundSrc = true;
                     if (!node.userPermissions[user][READ]) {
-                        std::cout << "Permission denied: user '" << user << "' cannot read from " << content << std::endl;
+                        std::cout << "Permission denied: user '"
+                                  << user << "' cannot read from "
+                                  << content << std::endl;
+                        logAction("Echo failed: read-permission denied for user '" + user + "' on source file '" + content + "'");
                         return;
                     }
-
-                    // Append file content
                     std::ifstream src("files/" + content);
-                    std::ofstream dst("files/" + targetFile, std::ios::app);
+                    std::ofstream dst("files/" + targetFile,
+                                      std::ios::app);
                     if (!src.is_open() || !dst.is_open()) {
                         std::cout << "Failed to open files." << std::endl;
+                        logAction("Echo failed: unable to open source or destination for append");
                         return;
                     }
                     dst << src.rdbuf();
+                    logAction("Echo success: appended content of '" + content + "' to '" + targetFile + "' by user '" + user + "'");
                     return;
                 }
             }
+
+            // source file not found in inodes
+            std::cout << "No such source file: " << content << std::endl;
+            logAction("Echo failed: source file not found: " + content);
+            return;
         }
 
-        // Append text content
+        // append literal text
         std::ofstream dst("files/" + targetFile, std::ios::app);
         if (!dst.is_open()) {
             std::cout << "Failed to open file: " << targetFile << std::endl;
+            logAction("Echo failed: unable to open '" + targetFile + "' for append text");
             return;
         }
         dst << content << std::endl;
+        logAction("Echo success: appended text to '" + targetFile + "' by user '" + user + "': \"" + content + "\"");
     }
     else {
-        // Simple echo - check if quoted
+        // ——— 3) non-append: quoted-text or fallback file dump
         if (args[0].size() >= 2 && args[0][0] == '"') {
-            // Process quoted text
-            std::string content = args[0].substr(1);  // Remove opening quote
-            
-            // Search for closing quote
-            bool foundClosingQuote = false;
+            std::string content = args[0].substr(1);
+            bool foundClosing = false;
             if (content.back() == '"') {
                 content.pop_back();
-                foundClosingQuote = true;
+                foundClosing = true;
             } else {
                 for (size_t i = 1; i < args.size(); ++i) {
                     content += " " + args[i];
                     if (args[i].back() == '"') {
-                        content.pop_back();  // Remove closing quote
-                        foundClosingQuote = true;
+                        content.pop_back();
+                        foundClosing = true;
                         break;
                     }
                 }
             }
-            
-            if (foundClosingQuote) {
-                std::cout << content << std::endl;
+            if (!foundClosing) {
+                std::cout << "Error: Unclosed quote in text" << std::endl;
+                logAction("Echo failed: unclosed quote");
             } else {
-                std::cout << "Error: Unclosed quote in text." << std::endl;
+                std::cout << content << std::endl;
+                logAction("Echo success: printed text: \"" + content + "\"");
             }
         } else {
-            // Try as filename
-            std::string filename = args[0];
+            // fallback: echo <file> (no user)
+            const std::string filename = args[0];
             bool isFile = false;
-            
-            for (Inode& node : inodes) {
+            for (auto &node : inodes) {
                 if (node.filename == filename) {
                     isFile = true;
                     std::ifstream file("files/" + filename);
                     if (!file.is_open()) {
-                        std::cout << "Failed to open file: " << filename << std::endl;
+                        std::cout << "Failed to open file: "
+                                  << filename << std::endl;
+                        logAction("Echo failed: could not open '" + filename + "'");
                         return;
                     }
-
                     std::string line;
                     while (std::getline(file, line)) {
                         std::cout << line << std::endl;
                     }
+                    logAction("Echo success (no-user-default): dumped file '" + filename + "'");
                     break;
                 }
             }
-            
             if (!isFile) {
-                // Provide error for non-quoted text
-                std::string content;
+                std::string combined;
                 for (size_t i = 0; i < args.size(); ++i) {
-                    if (i > 0) content += " ";
-                    content += args[i];
+                    if (i) combined += " ";
+                    combined += args[i];
                 }
-                std::cout << "Text must be in quotes. Did you mean: echo \"" << content << "\"?" << std::endl;
+                std::cout << "Text must be in quotes. Did you mean: echo \""
+                          << combined << "\"?" << std::endl;
+                logAction("Echo failed: non-quoted text without file; suggested echo \"" + combined + "\"");
             }
         }
     }
 }
+
+void CommandManager::handleHelp(const std::vector<std::string> &args)
+{
+    std::cout << "List of all the commands: "<< std::endl;
+    std::cout << "create" << std::endl;
+    std::cout << "chmod" << std::endl;
+    std::cout << "delete" << std::endl;
+    std::cout << "list" << std::endl;
+    std::cout << "exit" << std::endl;
+    std::cout << "echo" << std::endl;
+    std::cout << "reset" << std::endl;
+    std::cout << "help" << std::endl;
+}
+
+void CommandManager::handleReset(const std::vector<std::string>& args)
+{
+    resetInodeList();
+}
+
 
 void CommandManager::parseAndExecute(const std::string &input)
 {
@@ -339,7 +425,11 @@ void CommandManager::parseAndExecute(const std::string &input)
         handleChmod(tokens);
     } else if (command == "echo") {
         handleEcho(tokens);
-    } else if (command == "e" || command == "exit") {
+    } else if (command == "reset") {
+        handleReset(tokens);
+    } else if (command == "help") {
+        handleHelp(tokens); 
+    } else if (command == "e" || command == "exit" || command == "q") {
         handleExit(tokens);
     } else {
         std::cout << "Unknown command: " << command << std::endl;
@@ -373,4 +463,18 @@ void CommandManager::updateConfigFile()
         // Write file footer (END)
         configFile << "END" << std::endl;
     }
+}
+
+void CommandManager::logAction(const std::string &action)
+{
+    std::ofstream log("config/log.txt", std::ios::app);
+    if (!log.is_open()) {
+        std::cerr << "Failed to open log file!" << std::endl;
+        return;
+    }
+
+    auto t = std::time(nullptr);
+    auto tm = *std::localtime(&t);
+
+    log << "[" << std::put_time(&tm, "%Y-%m-%d %H:%M:%S") << "] " << action << std::endl;
 }

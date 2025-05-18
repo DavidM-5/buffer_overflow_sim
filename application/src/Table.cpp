@@ -65,7 +65,44 @@ void application::Table::setText(const vector2i &coord, const std::string &text)
     m_table[coord.y][coord.x].appendText(text, true);
 }
 
-vector2i application::Table::getSize() {
+void application::Table::resize(int cols, int rows)
+{
+    if (cols <= 0 || rows <= 0) {
+        std::cerr << "Table::resize error: cols and rows must be > 0\n";
+        return;
+    }
+
+    // Update the number of columns and rows
+    m_columns = cols;
+    m_rows    = rows;
+
+    // Recalculate slot sizes so total width/height remains unchanged
+    m_slotW = m_transform.w / m_columns;
+    m_slotH = m_transform.h / m_rows;
+
+    // Resize the 2D table structure and reposition each TextLine
+    m_table.resize(m_rows);
+    for (int j = 0; j < m_rows; ++j) {
+        m_table[j].resize(m_columns);
+        for (int i = 0; i < m_columns; ++i) {
+            // Calculate destination rectangle for this cell
+            SDL_Rect dstRect = {
+                m_transform.x + i * m_slotW,
+                m_transform.y + j * m_slotH,
+                m_slotW,
+                m_slotH
+            };
+
+            auto &cell = m_table[j][i];
+            cell.setWidth(dstRect.w - 5);
+            cell.setHeight(dstRect.h);
+            cell.setPosition({ dstRect.x + 5, dstRect.y });
+            cell.useFont(m_font, m_fontSize);
+        }
+    }
+}
+
+vector2i application::Table::getDim() {
     return vector2i{m_columns, m_rows};
 }
 

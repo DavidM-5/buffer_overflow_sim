@@ -46,8 +46,7 @@ namespace application
 
         std::unique_ptr<ConsoleProccess> m_accessManager;
 
-        application::Table testTable;
-        application::InputLine iline;
+        application::Table m_capabilityTable;
         
     private:
         void update(SDL_Event& event);
@@ -58,9 +57,18 @@ namespace application
 
         void loadCapabilityTable();
 
-        void runBLP();
-
         bool isDirectory(const std::string& path);
+
+        // Copies src to dst with all spaces removed, then uppercase
+        static std::string normalize(const std::string& in);
+
+        // Returns true if input was R, W, RW or WR (ignoring case & spaces),
+        // and sets outPerms to "+r/+w" (lowercase)
+        bool parseAccessString(const std::string& input, std::string& outPerms);
+
+        void sendUserInputBypass();
+        void sendUserInputFix();
+        void resetModel();
 
     };
 

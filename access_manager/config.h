@@ -18,3 +18,5 @@ struct Inode {
 
 
 extern std::vector<Inode> inodes;
+
+void resetInodeList();
