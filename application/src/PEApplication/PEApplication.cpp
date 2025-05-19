@@ -1,6 +1,6 @@
 #include "PEApplication.h"
 
-application::PEApplication::PEApplication() : m_window("Privilege Escalation Simulator", WINDOW_WIDTH, WINDOW_HEIGHT),
+application::PEApplication::PEApplication() : m_window("Access Control Simulator", WINDOW_WIDTH, WINDOW_HEIGHT),
                                               m_mainPanel(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, {0x2D, 0x2D, 0x2D, 0xFF}),
                                               m_capabilityTable(50, 75, 750, 250, SDL_Color{255, 255, 255, 255}, 4, 4)
 {

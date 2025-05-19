@@ -125,6 +125,10 @@ namespace application
         void fillStackViewLoginFunc();
         void showFunctionsAddresses();
 
+        std::string padHexAddress(const std::string& addr, std::size_t width = 16);
+        std::string repeatPattern(const std::string& input);
+        std::string toHexAscii(const std::string& input);
+
         std::string getRequieredAddressInput();
 
         void markTaskDone(int taskNum);

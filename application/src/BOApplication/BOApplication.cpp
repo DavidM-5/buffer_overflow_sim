@@ -250,10 +250,20 @@ void application::BOApplication::update(SDL_Event& event)
         }
 
         std::string userInput = m_targetConsole->getCurrentInput();
-        int neededLenght = 10 + m_requieredAddressInput.length(); // 10 A's (dummy input) + the function address
+        int dummyInputLen = 18; // 10 for the username and 8 to override bp
+        int neededLenght = dummyInputLen + m_requieredAddressInput.length(); // dummy input + the function address
 
-        if (userInput.length() < neededLenght) { /* do nothing */ }
-        else if (userInput.substr(10, m_requieredAddressInput.length()) == m_requieredAddressInput) {
+        std::string workAddr;
+        std::string reqAddr = repeatPattern(userInput);
+        if (!reqAddr.empty()) {
+            workAddr = reqAddr;
+        }
+        else {
+            workAddr = userInput;
+        }
+
+        if (workAddr.length() < neededLenght) { /* do nothing */ }
+        else if (workAddr.substr(dummyInputLen, m_requieredAddressInput.length()) == m_requieredAddressInput) {
             if (m_inputMngr.getPressedKey() == "\n") { // the user sent the correct input
                 std::string userCorrectInput = m_targetConsole->getCurrentInput();
                 m_targetConsole->printToConsole(userCorrectInput);
@@ -262,6 +272,20 @@ void application::BOApplication::update(SDL_Event& event)
                 std::stringstream ss;
                 ss << "0x" << std::hex << std::setw(16) << std::setfill('0') << m_requieredFunctionAddress;
                 m_stackView->editSlot(0, ss.str());
+
+
+                std::string usernameInput = workAddr.substr(0, 10);
+                std::reverse(usernameInput.begin(), usernameInput.end());
+                usernameInput = toHexAscii(usernameInput.substr(0, 10));
+
+                m_stackView->editSlot(3, "0x" + usernameInput.substr(16) + "000000000000");
+                m_stackView->editSlot(2, "0x" + usernameInput.substr(0, 16));
+
+                std::cout << workAddr.substr(10, 8) << std::endl;
+                std::string bpOverride = workAddr.substr(10, 8);
+                std::reverse(bpOverride.begin(), bpOverride.end());
+                bpOverride = toHexAscii(bpOverride);
+                m_stackView->editSlot(1, "0x" + bpOverride);
                 
                 std::string gdbComm = "set *((void **)($rbp + 8)) = (void *)" + ss.str();
                 // set *((int *)($rbp + 8)) = 0x55555555e867
@@ -749,7 +773,7 @@ void application::BOApplication::fillStackViewLoginFunc()
     while (iss2 >> word2) {
         count++;
         if (count == 2) {
-            m_stackView->push(word2);
+            m_stackView->push(padHexAddress(word2));
             break;
         }
     }
@@ -773,11 +797,80 @@ void application::BOApplication::showFunctionsAddresses()
     application::TextBlock* textBlock = static_cast<application::TextBlock*>(w);
     
     for (const std::string& funcName : functions) {
-        std::string fullLine = funcName + " - " + gdb->getAddress(funcName);
+        std::string addr = gdb->getAddress(funcName);
+        if (addr.empty())
+            continue;
+
+        std::string fullLine = funcName + " - " + addr;
         
         textBlock->addLine(fullLine, true);
         textBlock->addLine("\n", true);
     }
+}
+
+std::string application::BOApplication::padHexAddress(const std::string &addr, std::size_t width)
+{
+    // must start with "0x"
+    if (addr.size() < 3 || addr[0] != '0' || addr[1] != 'x') {
+        return addr;
+    }
+    std::string hexPart = addr.substr(2);
+    if (hexPart.size() >= width) {
+        return addr;  // nothing to do
+    }
+    // how many zeroes we need
+    std::size_t nZeros = width - hexPart.size();
+    return "0x" + std::string(nZeros, '0') + hexPart;
+}
+
+std::string application::BOApplication::repeatPattern(const std::string &input)
+{
+    // 1) find the '*'  
+    auto star = input.find('*');
+    if (star == std::string::npos) return "";  // no repeat marker
+
+    // 2) parse the repeat count  
+    int count;
+    try {
+        count = std::stoi(input.substr(0, star));
+    } catch (...) {
+        return "";  // malformed count
+    }
+
+    // 3) look for the first "\0x" (backslash, '0', 'x') after the '*'
+    const std::string addrMarker = R"(\0x)";
+    auto addrPos = input.find(addrMarker, star + 1);
+
+    // 4) split into pattern / suffix
+    std::string pattern, suffix;
+    if (addrPos != std::string::npos) {
+        pattern = input.substr(star + 1, addrPos - (star + 1));
+        suffix  = input.substr(addrPos);
+    } else {
+        // no suffix found → repeat all after '*'
+        pattern = input.substr(star + 1);
+    }
+
+    // 5) build output: pattern×count, then suffix
+    std::string out;
+    out.reserve(pattern.size() * count + suffix.size());
+    for (int i = 0; i < count; ++i) {
+        out += pattern;
+    }
+    out += suffix;
+    return out;
+}
+
+std::string application::BOApplication::toHexAscii(const std::string &input)
+{
+    std::ostringstream oss;
+    oss << std::hex << std::setfill('0');  // use hex mode, pad with '0'
+
+    for (unsigned char c : input) {
+        // setw(2) ensures each byte is represented by exactly two hex digits
+        oss << std::setw(2) << static_cast<int>(c);
+    }
+    return oss.str();
 }
 
 std::string application::BOApplication::getRequieredAddressInput()

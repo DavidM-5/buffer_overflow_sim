@@ -94,8 +94,8 @@ void application::Application::initButtons()
         200, 320,
         350, 50,
         SDL_Color{0x1B, 0x51, 0xCC, 0xFF},
-        "Privilege Escalation",
-        vector2i{200, 320},
+        "Access Control",
+        vector2i{220, 320},
         180
     );
 
