@@ -281,7 +281,6 @@ void application::BOApplication::update(SDL_Event& event)
                 m_stackView->editSlot(3, "0x" + usernameInput.substr(16) + "000000000000");
                 m_stackView->editSlot(2, "0x" + usernameInput.substr(0, 16));
 
-                std::cout << workAddr.substr(10, 8) << std::endl;
                 std::string bpOverride = workAddr.substr(10, 8);
                 std::reverse(bpOverride.begin(), bpOverride.end());
                 bpOverride = toHexAscii(bpOverride);
