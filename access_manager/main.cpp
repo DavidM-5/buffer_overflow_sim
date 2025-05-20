@@ -1,12 +1,15 @@
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 #include "config.h"
 #include "CommandManager.h"
 
-std::string PATH;
-std::vector<Inode> inodes;
 
-std::vector<Inode> loadInodesFromFile(const std::string& filepath);
+std::string PATH;
+std::unordered_map<std::string, Inode> inodes;
+
+
+std::unordered_map<std::string, Inode> loadInodesFromFile(const std::string& filepath);
 
 int main(int argc, char const *argv[])
 {
@@ -24,15 +27,14 @@ int main(int argc, char const *argv[])
         return 1;
 
     CommandManager mngr;
-
     mngr.run();
 
     return 0;
 }
 
 
-std::vector<Inode> loadInodesFromFile(const std::string& filepath) {
-    std::vector<Inode> inodes;
+std::unordered_map<std::string, Inode> loadInodesFromFile(const std::string& filepath) {
+    std::unordered_map<std::string, Inode> inodes;
     std::ifstream file(filepath);
     
     if (!file) {
@@ -50,21 +52,28 @@ std::vector<Inode> loadInodesFromFile(const std::string& filepath) {
         iss >> token;
         
         if (token == "BEGIN") {
+            // start a new inode
             iss >> currentInode.filename;
             currentInode.userPermissions.clear();
             readingInode = true;
         }
         else if (token == "END") {
+            // finish this inode and insert into map
             if (readingInode) {
-                inodes.push_back(currentInode);
+                inodes.emplace(currentInode.filename, std::move(currentInode));
                 readingInode = false;
             }
         }
         else if (readingInode) {
+            // parse a permission line:  username p1 p2 p3
             std::string username = token;
             int p1, p2, p3;
             if (iss >> p1 >> p2 >> p3) {
-                currentInode.userPermissions[username] = { static_cast<bool>(p1), static_cast<bool>(p2), static_cast<bool>(p3) };
+                currentInode.userPermissions[username] = {
+                    static_cast<bool>(p1),
+                    static_cast<bool>(p2),
+                    static_cast<bool>(p3)
+                };
             }
         }
     }

@@ -11,6 +11,15 @@ void CommandManager::run()
     }
 }
 
+Inode *CommandManager::findInode(std::unordered_map<std::string, Inode> &inodes, const std::string &filename)
+{
+    auto it = inodes.find(filename);
+    if (it != inodes.end())
+        return &it->second;
+
+    return nullptr;
+}
+
 void CommandManager::handleCreate(const std::vector<std::string> &args)
 {
     if (args.size() != 1) {
@@ -51,7 +60,7 @@ void CommandManager::handleCreate(const std::vector<std::string> &args)
     Inode newInode;
     newInode.filename = filename;
     
-    inodes.push_back(newInode);
+    inodes[filename] = newInode;
     updateConfigFile();
 
     logAction("Created file '" + filename + "'");
@@ -68,13 +77,7 @@ void CommandManager::handleChmod(const std::vector<std::string> &args)
     std::string user = args[1];
     std::string permissions = args[2];
     
-    Inode* inode = nullptr;
-    // Check if file exists
-    for (Inode& node : inodes) {
-        if (node.filename == file) {
-            inode = &node;
-        }
-    }
+    Inode* inode = findInode(inodes, file);
 
     if (!inode) {
         std::cout << "No such file exist." << std::endl;
@@ -108,10 +111,8 @@ void CommandManager::handleDelete(const std::vector<std::string> &args)
 
     std::string filename = args[0];
 
-    // Find inode
-    auto it = std::find_if(inodes.begin(), inodes.end(), [&](const Inode& inode) {
-        return inode.filename == filename;
-    });
+    // Find inode by key
+    auto it = inodes.find(filename);
 
     if (it == inodes.end()) {
         std::cout << "No such file: " << filename << std::endl;
@@ -136,10 +137,10 @@ void CommandManager::handleDelete(const std::vector<std::string> &args)
 
 void CommandManager::handleList(const std::vector<std::string> &args)
 {
-    for (auto& i : inodes) {
-        std::cout << i.filename << std::endl;
+    for (const auto& [filename, inode] : inodes) {
+        std::cout << filename << std::endl;
         
-        for (const auto& pair : i.userPermissions) {
+        for (const auto& pair : inode.userPermissions) {
             std::cout << pair.first << ": ";
             std::cout << pair.second[READ] << " ";
             std::cout << pair.second[WRITE] << " ";
@@ -159,7 +160,7 @@ void CommandManager::handleEcho(const std::vector<std::string> &args)
 {
     if (args.empty()) {
         std::cout << "Usage:\n";
-        std::cout << "  echo \"<text>\" or echo <file>\n";
+        std::cout << "  echo \"<text>\"\n";
         std::cout << "  echo <user> <file>\n";
         std::cout << "  echo <user> \"<text>\" >> <file>\n";
         std::cout << "  echo <user> <file1> >> <file2>\n";
@@ -175,13 +176,8 @@ void CommandManager::handleEcho(const std::vector<std::string> &args)
         const std::string &filename = args[1];
 
         // locate inode
-        Inode* inode = nullptr;
-        for (auto &node : inodes) {
-            if (node.filename == filename) {
-                inode = &node;
-                break;
-            }
-        }
+        Inode* inode = findInode(inodes, filename);
+        
         if (!inode) {
             std::cout << "No such file: " << filename << std::endl;
             logAction("Echo failed: read, file not found: " + filename);
@@ -253,13 +249,8 @@ void CommandManager::handleEcho(const std::vector<std::string> &args)
         }
 
         // locate destination inode
-        Inode* destInode = nullptr;
-        for (auto &node : inodes) {
-            if (node.filename == targetFile) {
-                destInode = &node;
-                break;
-            }
-        }
+        Inode* destInode = findInode(inodes, targetFile);
+        
         if (!destInode) {
             std::cout << "Destination file does not exist: "
                       << targetFile << std::endl;
@@ -279,7 +270,7 @@ void CommandManager::handleEcho(const std::vector<std::string> &args)
         // if unquoted, could be source file → append file contents
         if (args[1][0] != '"') {
             bool foundSrc = false;
-            for (auto &node : inodes) {
+            for (auto& [filename, node] : inodes) {
                 if (node.filename == content) {
                     foundSrc = true;
                     if (!node.userPermissions[user][READ]) {
@@ -345,37 +336,12 @@ void CommandManager::handleEcho(const std::vector<std::string> &args)
                 logAction("Echo success: printed text: \"" + content + "\"");
             }
         } else {
-            // fallback: echo <file> (no user)
-            const std::string filename = args[0];
-            bool isFile = false;
-            for (auto &node : inodes) {
-                if (node.filename == filename) {
-                    isFile = true;
-                    std::ifstream file("files/" + filename);
-                    if (!file.is_open()) {
-                        std::cout << "Failed to open file: "
-                                  << filename << std::endl;
-                        logAction("Echo failed: could not open '" + filename + "'");
-                        return;
-                    }
-                    std::string line;
-                    while (std::getline(file, line)) {
-                        std::cout << line << std::endl;
-                    }
-                    logAction("Echo success (no-user-default): dumped file '" + filename + "'");
-                    break;
-                }
-            }
-            if (!isFile) {
-                std::string combined;
-                for (size_t i = 0; i < args.size(); ++i) {
-                    if (i) combined += " ";
-                    combined += args[i];
-                }
-                std::cout << "Text must be in quotes. Did you mean: echo \""
-                          << combined << "\"?" << std::endl;
-                logAction("Echo failed: non-quoted text without file; suggested echo \"" + combined + "\"");
-            }
+            std::cout << "Usage:\n";
+            std::cout << "  echo \"<text>\"";
+            std::cout << "  echo <user> <file>\n";
+            std::cout << "  echo <user> \"<text>\" >> <file>\n";
+            std::cout << "  echo <user> <file1> >> <file2>\n";
+            return;
         }
     }
 }
@@ -444,7 +410,7 @@ void CommandManager::updateConfigFile()
         return;
     }
 
-    for (const auto& inode : inodes) {
+    for (const auto& [filename, inode] : inodes) {
         // Write file header (BEGIN filename)
         configFile << "BEGIN " << inode.filename << std::endl;
 

@@ -17,6 +17,6 @@ struct Inode {
 };
 
 
-extern std::vector<Inode> inodes;
+extern std::unordered_map<std::string, Inode> inodes;
 
 void resetInodeList();

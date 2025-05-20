@@ -20,6 +20,8 @@ public:
     void run();
 
 private:
+    Inode* findInode(std::unordered_map<std::string, Inode>& inodes, const std::string& filename);
+
     void handleCreate(const std::vector<std::string>& args);
     void handleChmod(const std::vector<std::string>& args);
     void handleDelete(const std::vector<std::string>& args);

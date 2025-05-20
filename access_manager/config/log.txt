@@ -22,3 +22,16 @@
 [2025-05-18 16:18:36] Chmod success: set permissions '-r-w-x' for user 'fred' on file 'file2'
 [2025-05-18 16:20:16] Chmod success: set permissions '-r-w-x' for user 'fred' on file 'file2'
 [2025-05-18 16:20:38] Chmod success: set permissions '-r+w+x' for user 'dave' on file 'test'
+[2025-05-20 22:17:20] Echo success: printed text: "hi"
+[2025-05-20 22:41:13] Echo success: printed text: "Hello"
+[2025-05-20 22:41:18] Echo success (no-user-default): dumped file 'file2'
+[2025-05-20 22:41:36] Echo success: printed text: "hello awd"
+[2025-05-20 22:41:42] Echo success (no-user-default): dumped file 'file2'
+[2025-05-20 22:42:03] Echo failed: invalid append-mode usage
+[2025-05-20 22:42:40] Echo success: read file 'file1' by user 'alice'
+[2025-05-20 22:43:03] Echo success: appended text to 'file1' by user 'alice': "HelloFromNow"
+[2025-05-20 22:43:43] Echo failed: read-permission denied for user 'fred' on source file 'fe'
+[2025-05-20 22:43:56] Echo success: appended content of 'file2' to 'fe' by user 'fred'
+[2025-05-20 22:44:58] Echo success: read file 'file1' by user 'alice'
+[2025-05-20 22:46:44] Echo success (no-user-default): dumped file 'file2'
+[2025-05-20 22:46:49] Echo success (no-user-default): dumped file 'file2'
