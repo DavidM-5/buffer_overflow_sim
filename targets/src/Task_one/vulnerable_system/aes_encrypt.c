@@ -43,14 +43,23 @@ unsigned char galois_multiplication(unsigned char a, unsigned char b)
     unsigned char p = 0;
     unsigned char counter;
     unsigned char hi_bit_set;
+
+    // examine each bit of b. If a bit is 1, add (XOR) a to the result p
     for (counter = 0; counter < 8; counter++)
     {
+        // This is the "if bit is set, add a" part of the Russian peasant method, with XOR as addition
         if ((b & 1) == 1)
             p ^= a;
+
+        // multiply a by x (shift left by 1). If the highest bit (bit 7) is set, the result will be a degree ≥ 8 polynomial, which must be reduced
         hi_bit_set = (a & 0x80);
         a <<= 1;
+
+        // mimics reduction modulo the irreducible polynomial 0x11B, but since 0x11B - 0x100 = 0x1B, use XOR with 0x1B to perform the modulo
         if (hi_bit_set == 0x80)
             a ^= 0x1b;
+
+        // Move to the next bit of b
         b >>= 1;
     }
     return p;

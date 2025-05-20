@@ -192,6 +192,17 @@ char* base64_encode_buf(const unsigned char* input, size_t len, char* output, si
     size_t encodedLen = 4 * ((len + 2) / 3);
     if (outSize < encodedLen + 1) return NULL;
 
+    /*
+        Processes 3 bytes at a time:
+
+        Combines them into a 24-bit integer (triple).
+
+        Extracts 4 groups of 6 bits each using bit shifts and masks:
+
+        triple:  aaaaaaaa bbbbbbbb cccccccc
+        shift:   |----18---|---12---|---6----|---0---|
+        Each group is a number between 0–63 → used to index into the Base64 table
+    */
     size_t i, j;
     for (i = 0, j = 0; i < len;) {
         unsigned int octet_a = i < len ? input[i++] : 0;
@@ -206,6 +217,12 @@ char* base64_encode_buf(const unsigned char* input, size_t len, char* output, si
         output[j++] = base64_table[triple & 0x3F];
     }
 
+    /*
+        Adds = to the last characters:
+        If input is 1 byte → 2 '='
+        If input is 2 bytes → 1 '='
+        If input is 3 bytes → no '='
+    */
     for (size_t k = 0; k < (3 - (len % 3)) % 3; k++)
         output[encodedLen - 1 - k] = '=';
 
@@ -223,9 +240,11 @@ unsigned char base64_reverse(char c) {
 }
 
 unsigned char* base64_decode(const char* input, size_t* out_len) {
+    // Base64 strings must have a length that's a multiple of 4
     size_t len = strlen(input);
     if (len % 4 != 0) return NULL;
 
+    // check the last two characters to determine how much padding exists
     size_t padding = 0;
     if (len >= 2 && input[len - 1] == '=' && input[len - 2] == '=') padding = 2;
     else if (len >= 1 && input[len - 1] == '=') padding = 1;
@@ -234,13 +253,19 @@ unsigned char* base64_decode(const char* input, size_t* out_len) {
     unsigned char* output = malloc(*out_len);
     if (!output) return NULL;
 
+    // read 4 Base64 characters at a time and decode them into 3 bytes
     size_t i, j;
     for (i = 0, j = 0; i < len;) {
+        // Base64_reverse(char c) converts a Base64 character back to its 6-bit integer index ('A' → 0, '/' → 63).
+        // If the character is '=', treat its value as 0 (neutral in bitwise operations)
+        //    6 bits     6 bits     6 bits     6 bits
+        // [ sextet_a | sextet_b | sextet_c | sextet_d ]
         unsigned int sextet_a = input[i] == '=' ? 0 & i++ : base64_reverse(input[i++]);
         unsigned int sextet_b = input[i] == '=' ? 0 & i++ : base64_reverse(input[i++]);
         unsigned int sextet_c = input[i] == '=' ? 0 & i++ : base64_reverse(input[i++]);
         unsigned int sextet_d = input[i] == '=' ? 0 & i++ : base64_reverse(input[i++]);
 
+        // packs the 4 sextets into one 24-bit block
         unsigned int triple = (sextet_a << 18) | (sextet_b << 12) | (sextet_c << 6) | sextet_d;
 
         if (j < *out_len) output[j++] = (triple >> 16) & 0xFF;
