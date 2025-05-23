@@ -35,3 +35,9 @@
 [2025-05-20 22:44:58] Echo success: read file 'file1' by user 'alice'
 [2025-05-20 22:46:44] Echo success (no-user-default): dumped file 'file2'
 [2025-05-20 22:46:49] Echo success (no-user-default): dumped file 'file2'
+[2025-05-21 15:43:17] Failed to delete file 'testFile'
+[2025-05-21 15:44:14] Failed to delete file 'testFile.txt'
+[2025-05-21 15:44:32] Failed to delete file 'testFile.txt'
+[2025-05-21 15:45:14] Failed to delete file 'testFile.txt'
+[2025-05-21 15:52:15] Deleted file 'testFile.txt'
+

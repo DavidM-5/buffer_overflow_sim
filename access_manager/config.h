@@ -17,6 +17,8 @@ struct Inode {
 };
 
 
+extern std::string PATH_CONFIG;
+extern std::string PATH_ROOT;
 extern std::unordered_map<std::string, Inode> inodes;
 
 void resetInodeList();

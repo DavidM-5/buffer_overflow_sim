@@ -1,0 +1,19 @@
+BEGIN file1
+terry 0 1 1
+alice 1 1 1
+bob 0 0 1
+END
+BEGIN file2
+terry 1 0 0
+alice 0 1 1
+bob 0 1 0
+END
+BEGIN file3
+terry 1 1 0
+bob 1 1 0
+END
+BEGIN file4
+terry 1 1 0
+alice 0 0 1
+bob 1 1 0
+END

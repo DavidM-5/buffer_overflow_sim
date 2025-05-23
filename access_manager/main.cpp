@@ -5,7 +5,8 @@
 #include "CommandManager.h"
 
 
-std::string PATH;
+std::string PATH_CONFIG;
+std::string PATH_ROOT = "./";
 std::unordered_map<std::string, Inode> inodes;
 
 
@@ -14,17 +15,15 @@ std::unordered_map<std::string, Inode> loadInodesFromFile(const std::string& fil
 int main(int argc, char const *argv[])
 {
     if (argc < 2) {
-        PATH = "config/config.txt";
+        PATH_CONFIG = "config/config.txt";
     }
     else {
         std::string modelName = argv[1];
-        PATH = "models/" + modelName + "/config/config.txt";
+        PATH_CONFIG = "models/" + modelName + "/config/config.txt";
+        PATH_ROOT = "models/" + modelName;
     }
 
-    inodes = loadInodesFromFile(PATH);
-
-    if (inodes.size() == 0)
-        return 1;
+    inodes = loadInodesFromFile(PATH_CONFIG);
 
     CommandManager mngr;
     mngr.run();
@@ -107,7 +106,7 @@ void replaceFileContents(const std::string& srcPath, const std::string& destPath
 }
 
 void resetInodeList() {
-    replaceFileContents(PATH + "backup", PATH);
+    replaceFileContents(PATH_CONFIG + "backup", PATH_CONFIG);
 
-    inodes = loadInodesFromFile(PATH);
+    inodes = loadInodesFromFile(PATH_CONFIG);
 }

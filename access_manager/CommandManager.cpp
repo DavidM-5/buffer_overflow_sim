@@ -28,7 +28,7 @@ void CommandManager::handleCreate(const std::vector<std::string> &args)
     }
 
     const std::string& filename = args[0];
-    std::string path = "files/" + filename;
+    std::string path = PATH_ROOT + "/files/" + filename;
 
     namespace fs = std::filesystem;
 
@@ -120,7 +120,7 @@ void CommandManager::handleDelete(const std::vector<std::string> &args)
     }
 
     // Try to delete the file from the filesystem
-    std::string path = "files/" + filename;
+    std::string path = PATH_ROOT + "/files/" + filename;
     if (std::remove(path.c_str()) != 0) {
         std::cout << "Failed to delete file from disk." << std::endl;
         logAction("Failed to delete file '" + filename + "'");
@@ -404,7 +404,7 @@ void CommandManager::parseAndExecute(const std::string &input)
 
 void CommandManager::updateConfigFile()
 {
-    std::ofstream configFile("config/config.txt", std::ios::trunc);  // Open config file for writing (overwrite mode)
+    std::ofstream configFile(PATH_ROOT + "/config/config.txt", std::ios::trunc);  // Open config file for writing (overwrite mode)
     if (!configFile.is_open()) {
         std::cout << "Error: Failed to open config file for writing!" << std::endl;
         return;
@@ -433,7 +433,7 @@ void CommandManager::updateConfigFile()
 
 void CommandManager::logAction(const std::string &action)
 {
-    std::ofstream log("config/log.txt", std::ios::app);
+    std::ofstream log(PATH_ROOT + "/config/log.txt", std::ios::app);
     if (!log.is_open()) {
         std::cerr << "Failed to open log file!" << std::endl;
         return;
