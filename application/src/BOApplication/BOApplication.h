@@ -82,11 +82,8 @@ namespace application
         application::Border m_borderVerticalLeft;
         application::Border m_borderVerticalRight;
         
-        /*
-        application::Border m_borderHorizontalCenterPanelTop;
-        application::Border m_borderHorizontalCenterPanelBottom;
+        application::Border m_borderHorizontalCenterPanel;
         application::Border m_borderHorizontalRightPanel;
-        */
 
         std::unordered_map<std::string, SDL_Color> formatMap; // temp
 

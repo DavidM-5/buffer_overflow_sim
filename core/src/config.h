@@ -3,6 +3,11 @@
 extern int WINDOW_WIDTH;
 extern int WINDOW_HEIGHT;
 
+extern int WINDOW_WIDTH_DELTA;
+extern int WINDOW_HEIGHT_DELTA;
+
+extern bool WINODW_RESIZED;
+
 
 typedef enum {
     MOUSE_BUTTON_LEFT,

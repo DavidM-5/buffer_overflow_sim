@@ -3,6 +3,11 @@
 int WINDOW_WIDTH = 1080;
 int WINDOW_HEIGHT = 720;
 
+int WINDOW_WIDTH_DELTA = 0;
+int WINDOW_HEIGHT_DELTA = 0;
+
+bool WINODW_RESIZED = false;
+
 
 core::Window::Window(const std::string& title, int width, int height) :
                         m_title(title), m_width(width), m_height(height),
@@ -60,9 +65,13 @@ void core::Window::handleEvents(SDL_Event& event)
     }
     else if (event.type == SDL_WINDOWEVENT) {
         if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+            WINDOW_WIDTH_DELTA = event.window.data1 - WINDOW_WIDTH;
+            WINDOW_HEIGHT_DELTA = event.window.data2 - WINDOW_HEIGHT;
+
             WINDOW_WIDTH = event.window.data1; // updated width
             WINDOW_HEIGHT = event.window.data2; // updated height
 
+            WINODW_RESIZED = true;
         }
     }
     

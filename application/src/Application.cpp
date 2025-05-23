@@ -62,6 +62,12 @@ void application::Application::update(SDL_Event &event)
 {
     m_inputMngr.update(event);
 
+    if (WINODW_RESIZED) {
+        m_guiPanel.addDeltaTransform(0, 0, WINDOW_WIDTH_DELTA, WINDOW_HEIGHT_DELTA);
+
+        WINODW_RESIZED = false;
+    }
+
     m_guiPanel.handleEvents(m_inputMngr);
 }
 

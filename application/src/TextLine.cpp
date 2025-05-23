@@ -205,7 +205,7 @@ void application::TextLine::fitHeightToText()
 
 void application::TextLine::addDeltaTransform(int x, int y, int w, int h)
 {
-    Widget::addDeltaTransform(x, y, w, h);
+    Widget::addDeltaTransform(x, y, w, 0);
 
     m_updated = true;
 }

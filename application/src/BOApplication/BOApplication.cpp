@@ -13,6 +13,13 @@ m_borderHorizontalCenterPanelBottom(false,
                                     m_mainPanel.getWidth() / 3 - m_borderWidth + 50,
                                     m_borderWidth,
                                     SDL_Color{255, 120, 255, 120}),
+
+
+auto rightTopPanel = std::make_unique<application::Panel>(
+        m_mainPanel.getPosition().x + 2 * totalWidth / 3, m_mainPanel.getPosition().y + m_borderWidth,
+        totalWidth / 3 - m_borderWidth, totalHeight / 3 - m_borderWidth * 2,
+        SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
+    );
 */
 
 application::BOApplication::BOApplication() : m_window("Buffer Overflow Simulator", WINDOW_WIDTH, WINDOW_HEIGHT),
@@ -30,6 +37,18 @@ application::BOApplication::BOApplication() : m_window("Buffer Overflow Simulato
                                                                 m_borderWidth,
                                                                 m_mainPanel.getHeight() - m_borderWidth * 2,
                                                                 SDL_Color{0xFF, 0xFF, 0xFF, 0x00}),
+                                          m_borderHorizontalCenterPanel(false,
+                                                                m_mainPanel.getPosition().x + m_mainPanel.getWidth() / 3 - 50,
+                                                                1.8 * m_mainPanel.getHeight() / 3 - m_borderWidth,
+                                                                m_mainPanel.getWidth() / 3 - m_borderWidth + 50,
+                                                                m_borderWidth,
+                                                                SDL_Color{255, 120, 255, 120}),
+                                          m_borderHorizontalRightPanel(false,
+                                                                m_mainPanel.getPosition().x + 2 * m_mainPanel.getWidth() / 3,
+                                                                m_mainPanel.getHeight() / 3 - m_borderWidth,
+                                                                m_mainPanel.getWidth() / 3 - m_borderWidth,
+                                                                m_borderWidth,
+                                                                SDL_Color{255, 120, 255, 120}),
                                           m_mainPanel(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, {0x2D, 0x2D, 0x2D, 0xFF}),
                                           m_borderWidth(10), m_innerBorderWidth(10),
                                           m_userLatestBreakpoint(0),
@@ -38,6 +57,10 @@ application::BOApplication::BOApplication() : m_window("Buffer Overflow Simulato
                                           m_stackView(nullptr)
 {
     initFormatMap();
+
+    m_borderVerticalLeft.addRightBottomWidget(&m_borderHorizontalCenterPanel);
+    m_borderVerticalRight.addLeftTopWidget(&m_borderHorizontalCenterPanel);
+    m_borderVerticalRight.addRightBottomWidget(&m_borderHorizontalRightPanel);
 }
 
 bool application::BOApplication::init()
@@ -205,11 +228,30 @@ void application::BOApplication::update(SDL_Event& event)
 {
     m_inputMngr.update(event);
 
-    m_mainPanel.handleEvents(m_inputMngr);
+    if (WINODW_RESIZED) {
+        application::Widget* widget = m_mainPanel.getWidget("Panel-right_bottom");
+        widget->addDeltaTransform(0, 0, WINDOW_WIDTH_DELTA, WINDOW_HEIGHT_DELTA);
 
+        widget = m_mainPanel.getWidget("Panel-right_top");
+        widget->addDeltaTransform(0, 0, WINDOW_WIDTH_DELTA, 0);
+        
+        widget = m_mainPanel.getWidget("Panel-center_bottom");
+        widget->addDeltaTransform(0, 0, 0, WINDOW_HEIGHT_DELTA);
+
+        widget = m_mainPanel.getWidget("Panel-left");
+        widget->addDeltaTransform(0, 0, 0, WINDOW_HEIGHT_DELTA);
+
+        m_borderHorizontalRightPanel.addDeltaTransform(0, 0, WINDOW_WIDTH_DELTA, 0);
+
+        WINODW_RESIZED = false;
+    }
+
+    m_mainPanel.handleEvents(m_inputMngr);
 
     m_borderVerticalLeft.handleEvents(m_inputMngr);
     m_borderVerticalRight.handleEvents(m_inputMngr);
+    m_borderHorizontalCenterPanel.handleEvents(m_inputMngr);
+    m_borderHorizontalRightPanel.handleEvents(m_inputMngr);
 
     static bool sentContinueComm = false;
     
@@ -329,10 +371,12 @@ void application::BOApplication::update(SDL_Event& event)
 
 void application::BOApplication::render()
 {
-    m_renderer.clear({0, 0, 0, 255});
+    m_renderer.clear({0x2D, 0x2D, 0x2D, 0xFF});
 
     m_mainPanel.render(m_renderer);
     
+    m_borderHorizontalCenterPanel.render(m_renderer);
+    m_borderHorizontalRightPanel.render(m_renderer);
     // They are transparent
     // m_borderVerticalLeft.render(m_renderer);
     // m_borderVerticalRight.render(m_renderer);
@@ -507,6 +551,7 @@ void application::BOApplication::initCenterPanels()
 
     centerTopPanel->addRightBottomBorder(m_borderVerticalLeft);
     centerTopPanel->addLeftTopBorder(m_borderVerticalRight);
+    centerTopPanel->addLeftTopBorder(m_borderHorizontalCenterPanel);
 
     auto label = std::make_unique<application::TextLine>(
         0 + m_innerBorderWidth, 0 + m_innerBorderWidth,
@@ -539,6 +584,7 @@ void application::BOApplication::initCenterPanels()
 
     centerBottomPanel->addRightBottomBorder(m_borderVerticalLeft);
     centerBottomPanel->addLeftTopBorder(m_borderVerticalRight);
+    centerBottomPanel->addRightBottomBorder(m_borderHorizontalCenterPanel);
 
     label = std::make_unique<application::TextLine>(
         0 + m_innerBorderWidth, 0 + m_innerBorderWidth,
@@ -576,6 +622,7 @@ void application::BOApplication::initRightPanels()
     );
 
     rightTopPanel->addRightBottomBorder(m_borderVerticalRight);
+    rightTopPanel->addLeftTopBorder(m_borderHorizontalRightPanel);
 
     auto label = std::make_unique<application::TextLine>(
         0 + m_innerBorderWidth, 0 + m_innerBorderWidth,
@@ -605,6 +652,7 @@ void application::BOApplication::initRightPanels()
     );
 
     rightBottomPanel->addRightBottomBorder(m_borderVerticalRight);
+    rightBottomPanel->addRightBottomBorder(m_borderHorizontalRightPanel);
 
     label = std::make_unique<application::TextLine>(
         0 + m_innerBorderWidth, 0 + m_innerBorderWidth,

@@ -125,7 +125,7 @@ void application::Paragraph::addDeltaTransform(int x, int y, int w, int h)
     Widget::addDeltaTransform(x, y, w, h);
 
     for (TextLine& tline : m_lines) {
-        tline.addDeltaTransform(x, y, w, h);
+        tline.addDeltaTransform(0, 0, w, 0);
     }
 }
 

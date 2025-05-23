@@ -67,7 +67,7 @@ void application::PEApplication::update(SDL_Event &event)
 
 void application::PEApplication::render()
 {
-    m_renderer.clear({0, 0, 0, 255});
+    m_renderer.clear({0x2D, 0x2D, 0x2D, 0xFF});
 
     m_mainPanel.render(m_renderer);
 
