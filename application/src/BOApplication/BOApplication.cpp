@@ -1,27 +1,5 @@
 #include "BOApplication.h"
 
-/*
-m_borderHorizontalCenterPanelTop(false,
-                                m_mainPanel.getPosition().x + m_mainPanel.getWidth() / 3 - 50,
-                                1.8 * m_mainPanel.getHeight() / 3 - m_borderWidth,
-                                m_mainPanel.getWidth() / 3 - m_borderWidth + 50,
-                                m_borderWidth,
-                                SDL_Color{255, 120, 255, 120}),
-m_borderHorizontalCenterPanelBottom(false,
-                                    m_mainPanel.getPosition().x + m_mainPanel.getWidth() / 3 - 50,
-                                    1.8 * m_mainPanel.getHeight() / 3 + 50,
-                                    m_mainPanel.getWidth() / 3 - m_borderWidth + 50,
-                                    m_borderWidth,
-                                    SDL_Color{255, 120, 255, 120}),
-
-
-auto rightTopPanel = std::make_unique<application::Panel>(
-        m_mainPanel.getPosition().x + 2 * totalWidth / 3, m_mainPanel.getPosition().y + m_borderWidth,
-        totalWidth / 3 - m_borderWidth, totalHeight / 3 - m_borderWidth * 2,
-        SDL_Color{0x1E, 0x1E, 0x1E, 0xFF}
-    );
-*/
-
 application::BOApplication::BOApplication() : m_window("Buffer Overflow Simulator", WINDOW_WIDTH, WINDOW_HEIGHT),
                                           m_bordVert(true, 2*WINDOW_WIDTH/3-105, 0, 10, WINDOW_HEIGHT),
                                           m_bordHor(false, 0, 2*WINDOW_HEIGHT/3-5, 2*WINDOW_WIDTH/3-100, 10),
@@ -42,13 +20,13 @@ application::BOApplication::BOApplication() : m_window("Buffer Overflow Simulato
                                                                 1.8 * m_mainPanel.getHeight() / 3 - m_borderWidth,
                                                                 m_mainPanel.getWidth() / 3 - m_borderWidth + 50,
                                                                 m_borderWidth,
-                                                                SDL_Color{255, 120, 255, 120}),
+                                                                SDL_Color{255, 120, 255, 0}),
                                           m_borderHorizontalRightPanel(false,
                                                                 m_mainPanel.getPosition().x + 2 * m_mainPanel.getWidth() / 3,
                                                                 m_mainPanel.getHeight() / 3 - m_borderWidth,
                                                                 m_mainPanel.getWidth() / 3 - m_borderWidth,
                                                                 m_borderWidth,
-                                                                SDL_Color{255, 120, 255, 120}),
+                                                                SDL_Color{255, 120, 255, 0}),
                                           m_mainPanel(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, {0x2D, 0x2D, 0x2D, 0xFF}),
                                           m_borderWidth(10), m_innerBorderWidth(10),
                                           m_userLatestBreakpoint(0),
@@ -100,27 +78,8 @@ bool application::BOApplication::init()
     return true;
 }
 
-// temp
-std::string hexToString(uint64_t hexValue) {
-    std::stringstream ss; 
-    ss << std::hex << hexValue;  // Convert to hex
-    return ss.str();
-}
-// temp /\/\
-
 void application::BOApplication::run()
 {
-    /*
-    ============================
-        IDEA!!!
-        Instead of passing the actual string value to gdb,
-        just claculate the number of 'A', needed ( ($rbp+8) - (&username) ),
-        and when the user enters the correct string run the command:
-        set *((int *)($rbp + 8)) = 0x55555555e867
-        in gdb.
-    ============================
-    */
-
     gdb = std::make_shared<GDBController>("./t1", "./targets/compiled");
 
     gdb->sendCommand("break gets");
@@ -164,53 +123,7 @@ void application::BOApplication::run()
         while (SDL_PollEvent(&event))
         {
             m_window.handleEvents(event);
-            /*
-            if (!m_inputMngr.getPressedKey().empty()) {
-                // temporary \/\/\/
-                if (m_inputMngr.getPressedKey() == "k") {
-                    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
-                    application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");
-                    application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(w);
-                    // ABCDEFAB  CDEFABCD
-                    stackV->push(hexToString(count++));
-                }
-                if (m_inputMngr.getPressedKey() == "i") {
-                    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
-                    application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");
-                    application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(w);
-                    stackV->pop();
-                } 
-                
-                if (m_inputMngr.getPressedKey() == "m") {
-                    // std::cout << "Memory dump:" << std::endl;
-                    gdb->sendCommand("i b");
-
-                    std::string rawOutput = gdb->getGdbOutput();
-
-                    std::cout << rawOutput << std::endl;
-                }
-
-                if (m_inputMngr.getPressedKey() == "b") {
-                    std::cout << "breakpoint: " << gdb->isAtBreakpoint() << std::endl;
-                }
-
-                if (m_inputMngr.getPressedKey() == "r") {
-                    gdb->sendCommand("info registers rbp");
-
-                    std::string rawOutput = gdb->getGdbOutput();
-
-                    std::cout << "registers:\n" << rawOutput << std::endl;
-                }
-
-                if (m_inputMngr.getPressedKey() == "n") {
-                    std::cout << "-> Memory dump" << std::endl;
-
-                    fillStackViewLoginFunc();
-                }
-                
-                // temporary end /\/\/\.
-            }
-            */
+            
             BOApplication::update(event);
         }
 
@@ -374,12 +287,6 @@ void application::BOApplication::render()
     m_renderer.clear({0x2D, 0x2D, 0x2D, 0xFF});
 
     m_mainPanel.render(m_renderer);
-    
-    m_borderHorizontalCenterPanel.render(m_renderer);
-    m_borderHorizontalRightPanel.render(m_renderer);
-    // They are transparent
-    // m_borderVerticalLeft.render(m_renderer);
-    // m_borderVerticalRight.render(m_renderer);
 
     m_renderer.present();
 }
