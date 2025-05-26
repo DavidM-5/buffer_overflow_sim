@@ -1,7 +1,6 @@
 #include "GDBController.h"
 
 GDBController::GDBController(const std::string &filename, const std::string &targetDir) : 
-                               m_lastGdbOutput(""),
                                m_hitBreakpoint(false)
 {
     m_targetAppProcess = std::make_unique<ConsoleProccess>(filename, targetDir);
@@ -46,75 +45,6 @@ std::string GDBController::getTargetOutput()
 
     m_hitBreakpoint = false;
     return out;
-}
-
-bool GDBController::isAtBreakpoint()
-{
-    int status;
-    pid_t result = waitpid(m_targetAppProcess->getTargetPid(), &status, WNOHANG);
-    
-    if (result > 0) {
-        // Check if process is stopped due to a trap (breakpoint)
-        if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGTRAP) {
-            return true;
-        }
-    }
-    return false;
-}
-
-std::vector<std::string> GDBController::getMemoryDump(const std::string &startAddr, size_t numOfAddresses)
-{
-    // "x/10xg $rbp-80" <- print $rbp+8 (the ret address), $rbp, and 8 addresses below $rbp;
-    std::ostringstream oss;
-    oss << "x/" << numOfAddresses << "xg " << startAddr << "-" << (numOfAddresses - 2) * 8;
-
-    std::string command = oss.str();
-
-    // getGdbOutput(); // clear the buffer
-    m_gdbProcess->sendInput(command);
-
-    std::string out = getGdbOutput();
-
-    std::vector<std::string> addressess;
-    std::istringstream ss(out);
-    std::string line;
-
-    // Parse the string and extract the adressess values
-    while (std::getline(ss, line)) {
-        // Clean up any leading/trailing whitespace
-        line.erase(0, line.find_first_not_of(" \n\r\t"));  // Remove leading whitespaces
-        line.erase(line.find_last_not_of(" \n\r\t") + 1);  // Remove trailing whitespaces
-
-        // Skip empty lines
-        if (line.empty()) {
-            continue;
-        }
-
-        std::istringstream lineStream(line);
-        std::string address, value1, value2;
-
-        // Extract address and values
-        lineStream >> address >> value1 >> value2;
-
-        if (value1.substr(0, 2) != "0x") {
-            value1 = value2;
-
-            if (lineStream.eof())
-                value2.clear();
-            else
-                lineStream >> value2;
-        }
-
-        // Add values to vector
-        if (!value1.empty() && value1.substr(0, 2) == "0x")
-            addressess.push_back(value1);
-
-        if (!value2.empty() && value2.substr(0, 2) == "0x")
-            addressess.push_back(value2);
-    }
-
-    std::reverse(addressess.begin(), addressess.end());
-    return addressess;
 }
 
 std::string GDBController::getAddress(const std::string &name)

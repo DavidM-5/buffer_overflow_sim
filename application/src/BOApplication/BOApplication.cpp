@@ -676,21 +676,6 @@ bool application::BOApplication::compileFile(const std::string &commandPath)
     return false;
 }
 
-void application::BOApplication::memoryDumpToStackView(const std::string &startAddr, int numOfAddresses)
-{
-    std::vector<std::string> addresses = gdb->getMemoryDump("$rbp", numOfAddresses);
-
-    application::Widget* parentWidget = m_mainPanel.getWidget("Panel-right_bottom");
-    application::Widget* w = parentWidget->getWidget("StackVisualizer-stack_view");
-    application::StackVisualizer* stackV = static_cast<application::StackVisualizer*>(w);
-
-    for (const std::string& addr : addresses) {
-        stackV->push(addr);
-    }
-
-    gdb->getGdbOutput(); // Clear buffers
-}
-
 void application::BOApplication::fillStackViewLoginFunc()
 {
     // std::vector<std::string> addresses = gdb->getMemoryDump("$rbp", 2); // clear gdb buffers

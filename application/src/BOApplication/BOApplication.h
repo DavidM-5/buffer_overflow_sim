@@ -118,7 +118,6 @@ namespace application
         bool fileExists(const std::string& filePath);
         bool compileFile(const std::string& commandPath);
 
-        void memoryDumpToStackView(const std::string& startAddr = "$rbp", int numOfAddresses = 10);
         void fillStackViewLoginFunc();
         void showFunctionsAddresses();
 
