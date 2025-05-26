@@ -1,4 +1,1 @@
-BEGIN filename
-alice 1 1 0
-bob 0 1 0
-END
+Hello from file1!
